@@ -130,6 +130,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<UIWidgetCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   // Keyboard shortcut: '/' focuses search input
@@ -159,6 +160,26 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
       return matchesCategory && matchesSearch;
     });
   }, [selectedCategory, searchQuery]);
+
+  // Reset highlight index when search results change
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [searchQuery, selectedCategory]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(filteredWidgets.length - 1, prev + 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(0, prev - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredWidgets[highlightedIndex]) {
+        onInsertWidget(filteredWidgets[highlightedIndex]);
+      }
+    }
+  };
 
   const groupedWidgets = useMemo(() => {
     if (selectedCategory !== 'all') {
@@ -192,9 +213,10 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             ref={searchInputRef}
             type="text"
             className={styles.searchInput}
-            placeholder="Search widgets..."
+            placeholder="Search widgets (use ↑↓, Enter)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
           <kbd className={styles.searchKbd}>/</kbd>
         </div>
@@ -222,12 +244,14 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
               <div className={styles.widgetGrid}>
                 {group.items.map((widget) => {
                   const IconComp = ICON_MAP[widget.icon] || Box;
+                  const isHighlighted =
+                    filteredWidgets[highlightedIndex]?.type === widget.type;
                   return (
                     <div
                       key={widget.type}
-                      className={styles.widgetCard}
+                      className={`${styles.widgetCard} ${isHighlighted ? styles.widgetCardHighlighted : ''}`}
                       onClick={() => onInsertWidget(widget)}
-                      title={`Click to add ${widget.name} to canvas`}
+                      title={`Click or press Enter to add ${widget.name}`}
                     >
                       <div className={styles.widgetIconBox}>
                         <IconComp size={16} strokeWidth={1.5} />

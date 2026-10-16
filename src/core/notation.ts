@@ -28,7 +28,7 @@ function getEffectiveProp(type: string, key: string, val?: any): any {
 }
 
 /**
- * Formats an IRNode into MarkDraw v2.6 bracket-tag semantic notation.
+ * Formats an IRNode into MarkDraw v2.7 bracket-tag semantic notation.
  * e.g. [btn "Send"], [card "Profile" elevated], [para], [input "Email..."]
  * When label/content is untouched default, emits bare tag e.g. [btn], [card], [img]
  */
@@ -322,7 +322,7 @@ export function formatSemanticNotation(node: IRNode): string {
 }
 
 export const DYNAMIC_LEGEND_MARKDOWN = `## MarkDraw Semantic Legend
-**MarkDraw v2.6 — Semantic Layout**
+**MarkDraw v2.7 — Semantic Layout**
 _Text shown as \`───\` lines on canvas; actual text preserved here._
 _bare tags (e.g. [btn]) mean the user left the content unspecified — generate appropriate content._
 _Placement: header/body/footer = position band within the page; nested = inside another container._

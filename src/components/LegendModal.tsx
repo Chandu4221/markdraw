@@ -63,7 +63,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13 }}>
             <BookOpen size={16} strokeWidth={1.5} />
-            <span>MarkDraw Semantic Legend (v2.6)</span>
+            <span>MarkDraw Semantic Legend (v2.7)</span>
           </div>
           <button
             onClick={onClose}

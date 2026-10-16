@@ -22,7 +22,7 @@ import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
 import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
 import { detectSiblingPatterns } from './patterns';
 
-export const MARKDRAW_VERSION = '2.6';
+export const MARKDRAW_VERSION = '2.7';
 
 function capitalize(str: string): string {
   if (!str) return '';
@@ -93,9 +93,13 @@ export class MarkDrawCompiler {
     const jsonAst = serializeIRToJsonAst(ir.roots);
 
     const legendPrefix = opts.includeLegend ? `${DYNAMIC_LEGEND_MARKDOWN}\n\n---\n\n` : '';
+    const warningSuffix =
+      ir.skippedShapes && ir.skippedShapes > 0
+        ? `\n\n_Warning: ${ir.skippedShapes} shape(s) skipped due to processing errors._`
+        : '';
 
     return {
-      markdownSpec: `${legendPrefix}${specBody}`,
+      markdownSpec: `${legendPrefix}${specBody}${warningSuffix}`,
       markdownGrid: `${legendPrefix}${gridBody}`,
       markdownAscii: `${legendPrefix}${asciiBody}`,
       jsonAst,

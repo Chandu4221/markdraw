@@ -39,6 +39,7 @@ export interface IRNode {
 export interface IRTree {
   elementCount: number;
   roots: IRNode[];
+  skippedShapes?: number;
 }
 
 export function resolveWidgetRole(widgetType: string): string {
@@ -170,66 +171,72 @@ export function buildIRTree(
   }
 
   const items: IntermediateItem[] = [];
+  let skippedShapes = 0;
 
   for (const s of widgetShapes) {
-    const props = (s.props || {}) as Record<string, any>;
-    const widgetType = (props.widgetType as string) || 'unknown';
+    try {
+      const props = (s.props || {}) as Record<string, any>;
+      const widgetType = (props.widgetType as string) || 'unknown';
 
-    let x = s.x;
-    let y = s.y;
-    let w = typeof props.w === 'number' ? props.w : 100;
-    let h = typeof props.h === 'number' ? props.h : 100;
+      let x = s.x;
+      let y = s.y;
+      let w = typeof props.w === 'number' ? props.w : 100;
+      let h = typeof props.h === 'number' ? props.h : 100;
 
-    if (editor && typeof (editor as any).getShapePageBounds === 'function') {
-      const pageBounds = (editor as any).getShapePageBounds(s);
-      if (pageBounds) {
-        x = pageBounds.x;
-        y = pageBounds.y;
-        w = pageBounds.w;
-        h = pageBounds.h;
+      if (editor && typeof (editor as any).getShapePageBounds === 'function') {
+        const pageBounds = (editor as any).getShapePageBounds(s);
+        if (pageBounds) {
+          x = pageBounds.x;
+          y = pageBounds.y;
+          w = pageBounds.w;
+          h = pageBounds.h;
+        }
       }
+
+      // Filter micro-dots / ghost elements (< 4px)
+      if (w < 4 || h < 4) continue;
+
+      const bounds: IRBounds = { x, y, w, h };
+      const aabb = computeAABB(bounds);
+      const rawLabel = (props.label || props.placeholder || widgetType || '') as string;
+      const label = sanitizeMarkdown(rawLabel);
+
+      const textProps: IRTextProps = {};
+      if (props.label !== undefined && props.label !== '') textProps.label = props.label;
+      if (props.placeholder !== undefined && props.placeholder !== '') textProps.placeholder = props.placeholder;
+      if (props.subtext !== undefined && props.subtext !== '') textProps.subtext = props.subtext;
+      if (props.altText !== undefined && props.altText !== '') textProps.altText = props.altText;
+      if (props.options !== undefined && props.options !== '') textProps.options = props.options;
+      if (typeof props.value === 'number') textProps.value = props.value;
+      if (typeof props.checked === 'boolean') textProps.checked = props.checked;
+      if (props.variant !== undefined && props.variant !== '') textProps.variant = props.variant;
+      if (typeof props.showText === 'boolean') textProps.showText = props.showText;
+      if (props.iconName !== undefined && props.iconName !== '') textProps.iconName = props.iconName;
+
+      const role = resolveWidgetRole(widgetType);
+
+      const node: IRNode = {
+        bounds,
+        children: [],
+        direction: 'Leaf',
+        id: s.id,
+        label: label || `${widgetType}_${s.id.slice(-4)}`,
+        parent: null,
+        path: 'Root',
+        role,
+        textProps,
+        widgetType
+      };
+
+      items.push({
+        aabb,
+        area: w * h,
+        node
+      });
+    } catch (err) {
+      console.warn(`[MarkDraw] Skipped corrupt shape ${s?.id}:`, err);
+      skippedShapes++;
     }
-
-    // Filter micro-dots / ghost elements (< 4px)
-    if (w < 4 || h < 4) continue;
-
-    const bounds: IRBounds = { x, y, w, h };
-    const aabb = computeAABB(bounds);
-    const rawLabel = (props.label || props.placeholder || widgetType || '') as string;
-    const label = sanitizeMarkdown(rawLabel);
-
-    const textProps: IRTextProps = {};
-    if (props.label !== undefined && props.label !== '') textProps.label = props.label;
-    if (props.placeholder !== undefined && props.placeholder !== '') textProps.placeholder = props.placeholder;
-    if (props.subtext !== undefined && props.subtext !== '') textProps.subtext = props.subtext;
-    if (props.altText !== undefined && props.altText !== '') textProps.altText = props.altText;
-    if (props.options !== undefined && props.options !== '') textProps.options = props.options;
-    if (typeof props.value === 'number') textProps.value = props.value;
-    if (typeof props.checked === 'boolean') textProps.checked = props.checked;
-    if (props.variant !== undefined && props.variant !== '') textProps.variant = props.variant;
-    if (typeof props.showText === 'boolean') textProps.showText = props.showText;
-    if (props.iconName !== undefined && props.iconName !== '') textProps.iconName = props.iconName;
-
-    const role = resolveWidgetRole(widgetType);
-
-    const node: IRNode = {
-      bounds,
-      children: [],
-      direction: 'Leaf',
-      id: s.id,
-      label: label || `${widgetType}_${s.id.slice(-4)}`,
-      parent: null,
-      path: 'Root',
-      role,
-      textProps,
-      widgetType
-    };
-
-    items.push({
-      aabb,
-      area: w * h,
-      node
-    });
   }
 
   // Sort descending by area to establish containment hierarchy
@@ -291,7 +298,8 @@ export function buildIRTree(
 
   return {
     elementCount: items.length,
-    roots
+    roots,
+    skippedShapes
   };
 }
 

@@ -193,6 +193,12 @@
   box-shadow: var(--md-shadow-card);
 }
 
+.widgetCardHighlighted {
+  border-color: var(--md-accent) !important;
+  background: var(--md-surface) !important;
+  box-shadow: var(--md-shadow-interactive) !important;
+}
+
 .widgetCard:active {
   transform: translate(1px, 1px);
   box-shadow: 0px 0px 0px transparent;

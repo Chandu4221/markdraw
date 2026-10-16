@@ -31,20 +31,25 @@ const COMMON_ICONS = [
   'Calendar'
 ];
 
+const PAGE_RESOLUTIONS: Record<string, number> = {
+  fullhd: 1920,
+  hd: 1280,
+  desktop: 1440,
+  laptop: 1366,
+  tablet: 768,
+  mobile: 375
+};
+
 export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
-  const [selectedShape, setSelectedShape] = useState<TLShape | null>(null);
+  const [selectedShapes, setSelectedShapes] = useState<TLShape[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (!editor) return;
 
     const updateSelection = () => {
-      const selected = editor.getSelectedShapes();
-      if (selected.length === 1 && selected[0].type === 'ui-widget') {
-        setSelectedShape(selected[0]);
-      } else {
-        setSelectedShape(null);
-      }
+      const selected = editor.getSelectedShapes().filter((s) => s.type === 'ui-widget');
+      setSelectedShapes(selected);
     };
 
     updateSelection();
@@ -58,44 +63,50 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
     };
   }, [editor]);
 
-  if (!editor || !selectedShape || selectedShape.type !== 'ui-widget') {
+  if (!editor || selectedShapes.length === 0) {
     return null;
   }
 
-  const props = (selectedShape.props || {}) as Record<string, any>;
-  const widgetType = props.widgetType || 'widget';
+  const count = selectedShapes.length;
+  const types = Array.from(
+    new Set(selectedShapes.map((s) => ((s.props as any)?.widgetType as string) || 'widget'))
+  );
+  const isSameType = types.length === 1;
+  const primaryWidgetType = types[0];
 
-  const PAGE_RESOLUTIONS: Record<string, number> = {
-    fullhd: 1920,
-    hd: 1280,
-    desktop: 1440,
-    laptop: 1366,
-    tablet: 768,
-    mobile: 375
+  const getPropStatus = (key: string) => {
+    const values = selectedShapes.map((s) => (s.props as any)?.[key]);
+    const firstVal = values[0];
+    const isMixed = values.some((v) => v !== firstVal);
+    return { isMixed, value: isMixed ? undefined : firstVal };
   };
 
   const updateProp = (key: string, val: any) => {
-    const updatedProps: Record<string, any> = {
-      ...selectedShape.props,
-      [key]: val
-    };
+    const updates = selectedShapes.map((shape) => {
+      const updatedProps: Record<string, any> = {
+        ...shape.props,
+        [key]: val
+      };
 
-    if (key === 'variant' && widgetType === 'page') {
-      const fixedWidth = PAGE_RESOLUTIONS[val];
-      if (fixedWidth) {
-        updatedProps.w = fixedWidth;
+      if (key === 'variant' && (shape.props as any)?.widgetType === 'page') {
+        const fixedWidth = PAGE_RESOLUTIONS[val];
+        if (fixedWidth) {
+          updatedProps.w = fixedWidth;
+        }
       }
-    }
 
-    editor.updateShape({
-      id: selectedShape.id,
-      type: 'ui-widget',
-      props: updatedProps
+      return {
+        id: shape.id,
+        type: 'ui-widget' as const,
+        props: updatedProps
+      };
     });
+
+    editor.updateShapes(updates);
   };
 
   const getVariantOptions = () => {
-    switch (widgetType) {
+    switch (primaryWidgetType) {
       case 'page':
         return ['fullhd', 'hd', 'desktop', 'laptop', 'tablet', 'mobile'];
       case 'button':
@@ -121,21 +132,38 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
     }
   };
 
-  const isInput = ['input', 'search', 'password', 'textarea', 'date_picker', 'select'].includes(widgetType);
-  const isToggleable = ['checkbox', 'radio', 'toggle'].includes(widgetType);
-  const hasOptions = ['select', 'radio', 'tabs', 'navbar', 'menubar', 'breadcrumbs', 'footer_nav'].includes(widgetType);
-  const hasValue = ['slider', 'progress_bar', 'stepper', 'list'].includes(widgetType);
-  const hasSubtext = ['card', 'stat_kpi', 'hero', 'banner', 'empty_state'].includes(widgetType);
-  const isParagraph = ['paragraph', 'blockquote'].includes(widgetType);
-  const isMedia = ['image_frame', 'video_frame'].includes(widgetType);
-  const canHaveIcon = ['button', 'icon', 'chip', 'banner', 'toast', 'input'].includes(widgetType);
+  const isInput = isSameType && ['input', 'search', 'password', 'textarea', 'date_picker', 'select'].includes(primaryWidgetType);
+  const isToggleable = isSameType && ['checkbox', 'radio', 'toggle'].includes(primaryWidgetType);
+  const hasOptions = isSameType && ['select', 'radio', 'tabs', 'navbar', 'menubar', 'breadcrumbs', 'footer_nav'].includes(primaryWidgetType);
+  const hasValue = isSameType && ['slider', 'progress_bar', 'stepper', 'list'].includes(primaryWidgetType);
+  const hasSubtext = isSameType && ['card', 'stat_kpi', 'hero', 'banner', 'empty_state'].includes(primaryWidgetType);
+  const isParagraph = isSameType && ['paragraph', 'blockquote'].includes(primaryWidgetType);
+  const isMedia = isSameType && ['image_frame', 'video_frame'].includes(primaryWidgetType);
+  const canHaveIcon = isSameType && ['button', 'icon', 'chip', 'banner', 'toast', 'input'].includes(primaryWidgetType);
+
+  const labelStatus = getPropStatus('label');
+  const variantStatus = getPropStatus('variant');
+  const checkedStatus = getPropStatus('checked');
+  const showTextStatus = getPropStatus('showText');
+  const placeholderStatus = getPropStatus('placeholder');
+  const iconStatus = getPropStatus('iconName');
+  const subtextStatus = getPropStatus('subtext');
+  const valueStatus = getPropStatus('value');
+  const optionsStatus = getPropStatus('options');
+  const altTextStatus = getPropStatus('altText');
 
   return (
     <div className={styles.panelContainer}>
       <div className={styles.panelHeader}>
         <div className={styles.headerTitle}>
           <Sliders size={13} strokeWidth={1.5} />
-          <span className={styles.widgetBadge}>{widgetType}</span>
+          <span className={styles.widgetBadge}>
+            {count === 1
+              ? primaryWidgetType
+              : isSameType
+              ? `${count} × ${primaryWidgetType}s`
+              : `${count} widgets selected`}
+          </span>
         </div>
         <button
           className={styles.collapseBtn}
@@ -149,100 +177,125 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
       {!isCollapsed && (
         <div className={styles.panelBody}>
           {/* Label Field */}
-          {widgetType !== 'divider' && widgetType !== 'spacer' && (
+          {(!isSameType || (primaryWidgetType !== 'divider' && primaryWidgetType !== 'spacer')) && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Label / Title</label>
+              <label className={styles.label}>
+                Label / Title {labelStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <input
                 type="text"
                 className={styles.input}
-                value={props.label || ''}
+                value={labelStatus.isMixed ? '' : (labelStatus.value as string) || ''}
                 onChange={(e) => updateProp('label', e.target.value)}
-                placeholder="Label..."
+                placeholder={labelStatus.isMixed ? '— mixed —' : 'Label...'}
               />
             </div>
           )}
 
-          {/* Placeholder for Inputs */}
+          {/* Placeholder for Inputs (Same Type) */}
           {isInput && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Placeholder</label>
+              <label className={styles.label}>
+                Placeholder {placeholderStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <input
                 type="text"
                 className={styles.input}
-                value={props.placeholder || ''}
+                value={placeholderStatus.isMixed ? '' : (placeholderStatus.value as string) || ''}
                 onChange={(e) => updateProp('placeholder', e.target.value)}
-                placeholder="Placeholder text..."
+                placeholder={placeholderStatus.isMixed ? '— mixed —' : 'Placeholder text...'}
               />
             </div>
           )}
 
-          {/* Variant Dropdown */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Variant</label>
-            <select
-              className={styles.select}
-              value={props.variant || getVariantOptions()[0]}
-              onChange={(e) => updateProp('variant', e.target.value)}
-            >
-              {getVariantOptions().map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Variant Dropdown (Same Type) */}
+          {isSameType && (
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Variant {variantStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
+              <select
+                className={styles.select}
+                value={variantStatus.isMixed ? '' : (variantStatus.value as string) || getVariantOptions()[0]}
+                onChange={(e) => updateProp('variant', e.target.value)}
+              >
+                {variantStatus.isMixed && (
+                  <option value="" disabled hidden>
+                    — mixed —
+                  </option>
+                )}
+                {getVariantOptions().map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          {/* Checked State */}
+          {/* Checked State (Same Type) */}
           {isToggleable && (
             <div className={styles.formGroup}>
               <label className={styles.checkboxRow}>
                 <input
                   type="checkbox"
                   className={styles.checkbox}
-                  checked={props.checked ?? false}
+                  checked={(checkedStatus.value as boolean) ?? false}
                   onChange={(e) => updateProp('checked', e.target.checked)}
                 />
-                <span>Active / Checked</span>
+                <span>Active / Checked {checkedStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}</span>
               </label>
             </div>
           )}
 
-          {/* Comma-separated Options */}
+          {/* Comma-separated Options (Same Type) */}
           {hasOptions && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Options (comma-separated)</label>
+              <label className={styles.label}>
+                Options (comma-separated) {optionsStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <input
                 type="text"
                 className={styles.input}
-                value={props.options || ''}
+                value={optionsStatus.isMixed ? '' : (optionsStatus.value as string) || ''}
                 onChange={(e) => updateProp('options', e.target.value)}
-                placeholder="e.g. Option A, Option B"
+                placeholder={optionsStatus.isMixed ? '— mixed —' : 'e.g. Option A, Option B'}
               />
             </div>
           )}
 
-          {/* Numeric Value */}
+          {/* Numeric Value (Same Type) */}
           {hasValue && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Value</label>
+              <label className={styles.label}>
+                Value {valueStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <input
                 type="number"
                 className={styles.input}
-                value={props.value ?? 0}
+                value={valueStatus.isMixed ? '' : (valueStatus.value as number) ?? 0}
                 onChange={(e) => updateProp('value', parseFloat(e.target.value) || 0)}
+                placeholder={valueStatus.isMixed ? '— mixed —' : '0'}
               />
             </div>
           )}
 
-          {/* Icon Selector */}
+          {/* Icon Selector (Same Type) */}
           {canHaveIcon && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Icon</label>
+              <label className={styles.label}>
+                Icon {iconStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <select
                 className={styles.select}
-                value={props.iconName || ''}
+                value={iconStatus.isMixed ? '' : (iconStatus.value as string) || ''}
                 onChange={(e) => updateProp('iconName', e.target.value)}
               >
+                {iconStatus.isMixed && (
+                  <option value="" disabled hidden>
+                    — mixed —
+                  </option>
+                )}
                 {COMMON_ICONS.map((icon) => (
                   <option key={icon} value={icon}>
                     {icon || 'None'}
@@ -252,16 +305,18 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Subtext */}
+          {/* Subtext (Same Type) */}
           {hasSubtext && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Subtext</label>
+              <label className={styles.label}>
+                Subtext {subtextStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <input
                 type="text"
                 className={styles.input}
-                value={props.subtext || ''}
+                value={subtextStatus.isMixed ? '' : (subtextStatus.value as string) || ''}
                 onChange={(e) => updateProp('subtext', e.target.value)}
-                placeholder="Supporting text..."
+                placeholder={subtextStatus.isMixed ? '— mixed —' : 'Supporting text...'}
               />
             </div>
           )}
@@ -273,7 +328,7 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
                 <input
                   type="checkbox"
                   className={styles.checkbox}
-                  checked={props.showText ?? false}
+                  checked={(showTextStatus.value as boolean) ?? false}
                   onChange={(e) => updateProp('showText', e.target.checked)}
                 />
                 <span>Show text on canvas (disable glyphs)</span>
@@ -284,13 +339,15 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Alt Text for media */}
           {isMedia && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Alt / Filename</label>
+              <label className={styles.label}>
+                Alt / Filename {altTextStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+              </label>
               <input
                 type="text"
                 className={styles.input}
-                value={props.altText || ''}
+                value={altTextStatus.isMixed ? '' : (altTextStatus.value as string) || ''}
                 onChange={(e) => updateProp('altText', e.target.value)}
-                placeholder="hero-banner"
+                placeholder={altTextStatus.isMixed ? '— mixed —' : 'hero-banner'}
               />
             </div>
           )}
