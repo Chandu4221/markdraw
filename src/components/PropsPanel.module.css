@@ -1,0 +1,128 @@
+.panelContainer {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 260px;
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius-md, 8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  font-family: var(--md-font-sans, sans-serif);
+  color: var(--md-text);
+  z-index: 400;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--md-surface-raised);
+  border-bottom: 1px solid var(--md-border);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--md-text);
+  font-family: var(--md-font-mono, monospace);
+}
+
+.widgetBadge {
+  background: var(--md-accent-subtle);
+  color: var(--md-text);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--md-border);
+}
+
+.collapseBtn {
+  background: none;
+  border: none;
+  color: var(--md-text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.collapseBtn:hover {
+  color: var(--md-text);
+  background: var(--md-surface);
+}
+
+.panelBody {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--md-text-muted);
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--md-bg);
+  border: 1px solid var(--md-border);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--md-text);
+  font-family: var(--md-font-sans, sans-serif);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--md-accent);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--md-text);
+}
+
+.checkbox {
+  cursor: pointer;
+}

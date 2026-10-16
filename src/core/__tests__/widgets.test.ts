@@ -143,8 +143,8 @@ describe('Custom UI Widgets System', () => {
 
     const result = MarkDrawCompiler.compile([nav, btn]);
     expect(result.markdownGrid).toContain('### Spatial Grid Layout Table');
-    expect(result.markdownGrid).toContain('[Navbar: "TopNavigation"]');
-    expect(result.markdownGrid).toContain('[Button: "ActionBtn"]');
+    expect(result.markdownGrid).toContain('[nav "TopNavigation"]');
+    expect(result.markdownGrid).toContain('[btn "ActionBtn"]');
   });
 
   it('prepends semantic legend table when includeLegend is true', () => {
@@ -152,8 +152,8 @@ describe('Custom UI Widgets System', () => {
     const result = MarkDrawCompiler.compile([btn], null, { includeLegend: true });
 
     expect(result.markdownSpec).toContain('## MarkDraw Semantic Legend');
-    expect(result.markdownSpec).toContain('| `[Section]` |');
-    expect(result.markdownSpec).toContain('| `[Card]` |');
+    expect(result.markdownSpec).toContain('[btn "Text" variant]');
+    expect(result.markdownSpec).toContain('Text shown as `───` lines on canvas');
     expect(result.markdownGrid).toContain('## MarkDraw Semantic Legend');
   });
 

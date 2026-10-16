@@ -38,8 +38,8 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
     >
       <div
         style={{
-          width: 520,
-          maxHeight: '80vh',
+          width: 580,
+          maxHeight: '85vh',
           background: 'var(--md-surface)',
           border: '1px solid var(--md-border-strong)',
           borderRadius: 'var(--md-radius-lg)',
@@ -63,7 +63,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13 }}>
             <BookOpen size={16} strokeWidth={1.5} />
-            <span>MarkDraw Semantic Legend</span>
+            <span>MarkDraw Semantic Legend (v2.5)</span>
           </div>
           <button
             onClick={onClose}
@@ -81,9 +81,22 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
 
         <div style={{ padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <p style={{ fontSize: 12, color: 'var(--md-text-muted)', lineHeight: 1.5 }}>
-            This semantic legend is automatically prepended to exported markdown so receiving Large Language Models
-            parse layout hierarchies, flex flows, and widget contracts without ambiguity.
+            This semantic notation is automatically prepended to exported markdown so receiving AI agents
+            parse layout hierarchies and widget contracts without ambiguity.
           </p>
+          <div
+            style={{
+              fontSize: 11,
+              fontStyle: 'italic',
+              color: 'var(--md-accent)',
+              padding: '6px 10px',
+              background: 'var(--md-accent-subtle)',
+              borderRadius: 4,
+              border: '1px solid var(--md-border)'
+            }}
+          >
+            Line-glyph convention: text is rendered as ─── horizontal lines on canvas; actual text is preserved in markdown.
+          </div>
 
           <table
             style={{
@@ -101,16 +114,33 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
             </thead>
             <tbody>
               {[
-                { notation: '[Section]', meaning: 'Page-level structural band' },
-                { notation: '[Card]', meaning: 'Grouped content container (variants: outline/elevated/flat)' },
-                { notation: '[Button]', meaning: 'Interactive click target' },
-                { notation: '<Input>', meaning: 'Form input (kinds: text/search/password/date/file)' },
-                { notation: '(Icon)', meaning: 'Graphical node; name in parentheses' },
-                { notation: '---', meaning: 'Divider / Separator' },
-                { notation: '> direction', meaning: 'Row / Column layout of container children' }
+                { notation: '[btn "Text" variant]', meaning: 'Button (solid, ghost, dashed)' },
+                { notation: '[header "Title" h1]', meaning: 'Heading typography (h1, h2, h3)' },
+                { notation: '[para]', meaning: 'Body paragraph (line glyph on canvas)' },
+                { notation: '[input "Placeholder"]', meaning: 'Text / form input field' },
+                { notation: '[search "Query"]', meaning: 'Search input with caret glyph' },
+                { notation: '[check "Label" on/off]', meaning: 'Checkbox with active state' },
+                { notation: '[radio "Label" on/off]', meaning: 'Radio button with active state' },
+                { notation: '[toggle on/off]', meaning: 'Switch toggle with state' },
+                { notation: '[select "A\\|B\\|C"]', meaning: 'Dropdown select options' },
+                { notation: '[slider N]', meaning: 'Range slider with value N' },
+                { notation: '[nav "A, B, C"]', meaning: 'Navbar navigation list' },
+                { notation: '[tabs "A\\|B\\|C"]', meaning: 'Tab selection group' },
+                { notation: '[section "Title"]', meaning: 'Structural container band' },
+                { notation: '[card "Title" variant]', meaning: 'Card container (outline, elevated)' },
+                { notation: '[hero]', meaning: 'Hero marketing banner' },
+                { notation: '[modal "Title"]', meaning: 'Dialog modal window' },
+                { notation: '[split]', meaning: 'Split-pane container' },
+                { notation: '[grid 3x2]', meaning: 'Grid gallery container' },
+                { notation: '[table 4x3]', meaning: 'Tabular data grid' },
+                { notation: '[img "Alt"]', meaning: 'Image placeholder with ✕ cross' },
+                { notation: '[video "File"]', meaning: 'Video player placeholder with ✕ cross' },
+                { notation: '[avatar]', meaning: 'Line-art avatar circle' },
+                { notation: '[divider]', meaning: 'Horizontal divider line' },
+                { notation: '[toast "Text"]', meaning: 'Notification toast' }
               ].map((row, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid var(--md-border)' }}>
-                  <td style={{ padding: '6px 10px', fontFamily: 'var(--md-font-mono)', fontWeight: 600 }}>
+                  <td style={{ padding: '6px 10px', fontFamily: 'var(--md-font-mono)', fontWeight: 600, color: 'var(--md-text)' }}>
                     {row.notation}
                   </td>
                   <td style={{ padding: '6px 10px', color: 'var(--md-text-muted)' }}>{row.meaning}</td>
@@ -128,8 +158,8 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: 8,
-            background: 'var(--md-surface-raised)'
+            background: 'var(--md-surface-raised)',
+            gap: 8
           }}
         >
           <button
@@ -139,12 +169,11 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
               alignItems: 'center',
               gap: 6,
               padding: '6px 12px',
-              borderRadius: 'var(--md-radius-md)',
               background: 'var(--md-surface)',
-              border: '1px solid var(--md-border-strong)',
+              border: '1px solid var(--md-border)',
+              borderRadius: 'var(--md-radius-sm)',
               color: 'var(--md-text)',
               fontSize: 12,
-              fontWeight: 600,
               cursor: 'pointer'
             }}
           >

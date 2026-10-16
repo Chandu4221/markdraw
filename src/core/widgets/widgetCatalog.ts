@@ -465,7 +465,9 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     defaultHeight: 48,
     icon: 'AlignLeft',
     defaultProps: {
-      widgetType: 'paragraph'
+      widgetType: 'paragraph',
+      label: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      showText: false
     }
   },
   {
@@ -555,7 +557,8 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icon: 'Image',
     defaultProps: {
       widgetType: 'image_frame',
-      label: 'Hero Illustration'
+      label: 'Hero Illustration',
+      altText: 'hero-banner'
     }
   },
   {

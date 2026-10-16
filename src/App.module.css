@@ -296,3 +296,72 @@ body, html, #root {
   background: var(--md-surface);
   flex-shrink: 0;
 }
+
+/* Canvas Floating Controls & Toast (Part 5) */
+.canvasControlBar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  z-index: 300;
+}
+
+.canvasControlBtn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--md-text-muted);
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.canvasControlBtn:hover {
+  color: var(--md-text);
+  background: var(--md-surface-raised);
+  border-color: var(--md-border);
+}
+
+.canvasControlBtnActive {
+  color: var(--md-accent);
+  background: var(--md-accent-subtle);
+  border-color: var(--md-border-strong);
+}
+
+.canvasControlDivider {
+  width: 1px;
+  height: 18px;
+  background: var(--md-border);
+  margin: 0 4px;
+}
+
+.toast {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--md-surface-raised);
+  color: var(--md-text);
+  border: 1px solid var(--md-border-strong);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--md-font-sans);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}

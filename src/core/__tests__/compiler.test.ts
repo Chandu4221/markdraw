@@ -92,8 +92,8 @@ describe('Compiler Hierarchy & Serializers', () => {
 
     const md = MarkDrawCompiler.serializeSpecTable(roots);
     expect(md).toContain('### MarkDraw UI Specification');
-    expect(md).toContain('| `Root` | **MobileFrame** |');
-    expect(md).toContain('[Button: "SaveButton"]');
+    expect(md).toContain('[section "MobileFrame"]');
+    expect(md).toContain('[btn "SaveButton"]');
   });
 
   it('serializes spatial grid to tabular Markdown', () => {

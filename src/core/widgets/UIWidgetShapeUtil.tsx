@@ -1,7 +1,7 @@
 import React from 'react';
 import { BaseBoxShapeUtil, HTMLContainer, T } from '@tldraw/tldraw';
 import { IUIWidgetShape } from './types';
-import { WidgetPreview } from './WidgetPreview';
+import { WireframePreview } from './WireframePreview';
 
 export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
   static override type = 'ui-widget' as const;
@@ -17,7 +17,9 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
     options: T.string,
     iconName: T.string,
     subtext: T.string,
-    value: T.number
+    value: T.number,
+    showText: T.optional(T.boolean),
+    altText: T.optional(T.string)
   };
 
   override getDefaultProps(): IUIWidgetShape['props'] {
@@ -32,8 +34,18 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
       options: '',
       iconName: '',
       subtext: '',
-      value: 0
+      value: 0,
+      showText: false,
+      altText: ''
     };
+  }
+
+  override canEdit(_shape: IUIWidgetShape): boolean {
+    return true;
+  }
+
+  override canEditInReadonly(_shape: IUIWidgetShape): boolean {
+    return false;
   }
 
   override indicator(shape: IUIWidgetShape) {
@@ -41,8 +53,29 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
   }
 
   override component(shape: IUIWidgetShape) {
+    const isEditing = this.editor.getEditingShapeId() === shape.id;
+
+    const handleCommitEdit = (newText: string) => {
+      const type = shape.props.widgetType;
+      const isInputType = ['input', 'search', 'password', 'textarea', 'date_picker'].includes(type);
+      const propKey = isInputType ? 'placeholder' : 'label';
+
+      this.editor.updateShape({
+        id: shape.id,
+        type: 'ui-widget',
+        props: { [propKey]: newText }
+      });
+      this.editor.setEditingShape(null);
+    };
+
+    const handleCancelEdit = () => {
+      this.editor.setEditingShape(null);
+    };
+
     const handleWidgetClick = (e: React.MouseEvent) => {
-      // Interactive toggles for checkbox, toggle, stepper
+      if (isEditing) return;
+
+      // Interactive toggles for checkbox, toggle
       if (shape.props.widgetType === 'checkbox' || shape.props.widgetType === 'toggle') {
         e.stopPropagation();
         this.editor.updateShape({
@@ -59,11 +92,18 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
           width: '100%',
           height: '100%',
           pointerEvents: 'all',
-          cursor: 'default'
+          cursor: isEditing ? 'text' : 'default'
         }}
         onClick={handleWidgetClick}
       >
-        <WidgetPreview props={shape.props} />
+        <WireframePreview
+          props={shape.props}
+          isEditing={isEditing}
+          onCommitEdit={handleCommitEdit}
+          onCancelEdit={handleCancelEdit}
+          width={shape.props.w}
+          height={shape.props.h}
+        />
       </HTMLContainer>
     );
   }

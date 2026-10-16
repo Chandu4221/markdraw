@@ -1,7 +1,9 @@
+import { IRNode } from './ir';
 import { LayoutNode } from './types';
+import { formatSemanticNotation } from './notation';
 
 export class AsciiSerializer {
-  public static serialize(roots: LayoutNode[], rootWidth: number = 78): string {
+  public static serialize(roots: (IRNode | LayoutNode)[], rootWidth: number = 78): string {
     if (!roots || roots.length === 0) {
       return '_Canvas is empty. Draw shapes or add UI components to generate the ASCII layout._';
     }
@@ -9,7 +11,8 @@ export class AsciiSerializer {
     const output: string[] = [];
     output.push('```text');
 
-    for (const root of roots) {
+    for (const rawRoot of roots) {
+      const root = this.toIRNode(rawRoot);
       const boxLines = this.renderNode(root, rootWidth);
       output.push(boxLines.join('\n'));
       output.push('');
@@ -19,23 +22,42 @@ export class AsciiSerializer {
     return output.join('\n');
   }
 
-  private static renderNode(node: LayoutNode, targetWidth: number): string[] {
+  private static toIRNode(node: IRNode | LayoutNode): IRNode {
+    if ('bounds' in node && 'textProps' in node) {
+      return node as IRNode;
+    }
+    const ln = node as LayoutNode;
+    return {
+      id: ln.id,
+      widgetType: ln.widgetType || (ln.role === 'container' ? 'section' : ln.role === 'button' ? 'button' : 'heading'),
+      role: ln.role,
+      label: ln.label,
+      textProps: (ln.widgetProps as any) || { label: ln.shape?.text || ln.label },
+      bounds: ln.shape?.bounds || { x: 0, y: 0, w: 100, h: 40 },
+      children: (ln.children || []).map((c) => this.toIRNode(c)),
+      parent: ln.parent,
+      direction: ln.direction,
+      path: ln.path
+    };
+  }
+
+  private static renderNode(node: IRNode, targetWidth: number): string[] {
     const width = Math.max(20, Math.min(120, targetWidth));
-    const roleTag = node.widgetType ? `<${node.widgetType}>` : `[${node.role}]`;
+    const notation = formatSemanticNotation(node);
     const flowTag = node.direction !== 'Leaf' ? ` (${node.direction})` : '';
-    const title = ` ${node.label} ${roleTag}${flowTag} `;
+    const title = ` ${notation}${flowTag} `;
 
     const remainingDashes = Math.max(0, width - 3 - title.length);
     const topLine = `┌─${title}${'─'.repeat(remainingDashes)}┐`;
     const botLine = `└${'─'.repeat(Math.max(0, width - 2))}┘`;
 
-    // Leaf node: render text or component preview
+    // Leaf node: render content preview
     if (node.children.length === 0) {
-      const detail = node.widgetProps?.label
-        ? `"${node.widgetProps.label}"`
-        : node.shape.text
-          ? `"${node.shape.text}"`
-          : node.label;
+      const p = node.textProps || {};
+      let detail = p.label || p.placeholder || node.label;
+      if (node.widgetType === 'paragraph') {
+        detail = '─── ─── ───';
+      }
 
       const innerText = `  ${detail}  `;
       const clampedText = innerText.slice(0, width - 4);

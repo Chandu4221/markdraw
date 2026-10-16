@@ -87,6 +87,8 @@ export interface UIWidgetProps {
   iconName: string;
   subtext: string;
   value: number;
+  showText?: boolean;
+  altText?: string;
 }
 
 export type IUIWidgetShape = TLBaseShape<'ui-widget', UIWidgetProps>;

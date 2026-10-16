@@ -43,8 +43,7 @@ describe('AsciiSerializer', () => {
     const output = AsciiSerializer.serialize([node], 40);
 
     expect(output).toContain('┌─');
-    expect(output).toContain('SaveButton');
-    expect(output).toContain('<button>');
+    expect(output).toContain('[btn "SaveButton"]');
     expect(output).toContain('└─');
   });
 

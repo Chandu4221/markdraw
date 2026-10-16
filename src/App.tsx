@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Tldraw, Editor } from '@tldraw/tldraw';
+import { Tldraw, Editor, TLUiComponents } from '@tldraw/tldraw';
 import { MarkDrawCompiler } from './core/compiler';
 import { CompilationResult, CompilationOptions } from './core/types';
 import { UIWidgetShapeUtil } from './core/widgets/UIWidgetShapeUtil';
 import { ComponentPalette } from './components/ComponentPalette';
+import { PropsPanel } from './components/PropsPanel';
 import { WidgetCatalogItem } from './core/widgets/types';
 import { WIDGET_CATALOG } from './core/widgets/widgetCatalog';
 import { LegendModal } from './components/LegendModal';
@@ -19,11 +20,31 @@ import {
   BookOpen,
   Sliders,
   Sun,
-  Moon
+  Moon,
+  MousePointer,
+  Hand,
+  Undo2,
+  Redo2,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Trash2,
+  AlertCircle
 } from 'lucide-react';
 import styles from './App.module.css';
 
 const customShapeUtils = [UIWidgetShapeUtil];
+
+// Part 5: Lockdown default tldraw UI
+const tldrawComponents: TLUiComponents = {
+  Toolbar: null,
+  PageMenu: null,
+  MainMenu: null,
+  StylePanel: null,
+  NavigationPanel: null,
+  QuickActions: null,
+  HelperButtons: null
+};
 
 const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   containmentThreshold: 0.85,
@@ -41,6 +62,22 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [canvasPercent, setCanvasPercent] = useState<number>(55);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  // Canvas tool state & editor state
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [activeTool, setActiveTool] = useState<string>('select');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<number | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+    setToastMessage(msg);
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+    }, 3200);
+  }, []);
 
   // Theme Management (monochrome dark/light)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -80,21 +117,22 @@ export const App: React.FC = () => {
     markdownSpec: 'Draw elements on the canvas or pick UI components to compile.',
     markdownGrid: '',
     markdownAscii: '',
-    jsonAst: '{}',
+    jsonAst: '[]',
     timestamp: '',
     elementCount: 0
   });
 
   const editorRef = useRef<Editor | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
+  const warnedRef = useRef<boolean>(false);
 
   const triggerCompile = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
+    const currentEditor = editorRef.current;
+    if (!currentEditor) return;
 
     try {
-      const shapes = editor.getCurrentPageShapes();
-      const result = MarkDrawCompiler.compile(shapes, editor, options);
+      const shapes = currentEditor.getCurrentPageShapes();
+      const result = MarkDrawCompiler.compile(shapes, currentEditor, options);
       setCompilation(result);
     } catch (err) {
       console.error('MarkDraw compilation error:', err);
@@ -102,14 +140,37 @@ export const App: React.FC = () => {
   }, [options]);
 
   const handleEditorMount = useCallback(
-    (editor: Editor) => {
-      editorRef.current = editor;
+    (mountedEditor: Editor) => {
+      editorRef.current = mountedEditor;
+      setEditor(mountedEditor);
+
+      // Part 5: Restrict tools and lock instance state to wireframe shapes
+      try {
+        mountedEditor.updateInstanceState({ isToolLocked: true, isGridMode: true });
+      } catch (err) {
+        console.error('Lockdown configuration error:', err);
+      }
+
+      // Safety net: check for any non-ui-widget shapes and remove them
+      const enforceWidgetOnly = () => {
+        const shapes = mountedEditor.getCurrentPageShapes();
+        const invalidShapes = shapes.filter((s) => s.type !== 'ui-widget');
+        if (invalidShapes.length > 0) {
+          if (!warnedRef.current) {
+            warnedRef.current = true;
+            showToast('MarkDraw supports wireframe components only.');
+          }
+          mountedEditor.deleteShapes(invalidShapes.map((s) => s.id));
+        }
+      };
 
       // Initial compile
       triggerCompile();
 
-      // Listen to all shape changes and debounce compilation
-      const dispose = editor.store.listen(() => {
+      // Listen to store updates
+      const dispose = mountedEditor.store.listen(() => {
+        enforceWidgetOnly();
+        setActiveTool(mountedEditor.getCurrentToolId());
         if (debounceTimerRef.current) {
           window.clearTimeout(debounceTimerRef.current);
         }
@@ -123,7 +184,7 @@ export const App: React.FC = () => {
         dispose();
       };
     },
-    [triggerCompile]
+    [triggerCompile, showToast]
   );
 
   // Re-compile when settings change
@@ -160,15 +221,15 @@ export const App: React.FC = () => {
   }, [isDragging]);
 
   const handleInsertWidget = (item: WidgetCatalogItem) => {
-    const editor = editorRef.current;
-    if (!editor) return;
+    const currentEditor = editorRef.current;
+    if (!currentEditor) return;
 
     try {
-      const bounds = editor.getViewportPageBounds();
+      const bounds = currentEditor.getViewportPageBounds();
       const centerX = (bounds as any).center?.x ?? bounds.x + bounds.w / 2;
       const centerY = (bounds as any).center?.y ?? bounds.y + bounds.h / 2;
 
-      editor.createShape({
+      currentEditor.createShape({
         type: 'ui-widget',
         x: centerX - item.defaultWidth / 2,
         y: centerY - item.defaultHeight / 2,
@@ -183,11 +244,23 @@ export const App: React.FC = () => {
           options: item.defaultProps.options || '',
           iconName: item.defaultProps.iconName || '',
           subtext: item.defaultProps.subtext || '',
-          value: item.defaultProps.value ?? 0
+          value: item.defaultProps.value ?? 0,
+          showText: item.defaultProps.showText ?? false,
+          altText: item.defaultProps.altText || ''
         }
       });
     } catch (err) {
       console.error('Failed to insert widget:', err);
+    }
+  };
+
+  const handleSelectTool = (toolId: string) => {
+    if (!editorRef.current) return;
+    try {
+      editorRef.current.setCurrentTool(toolId);
+      setActiveTool(toolId);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -239,7 +312,7 @@ export const App: React.FC = () => {
         <div className={styles.brand}>
           <div className={styles.logoBadge}>MD</div>
           <span className={styles.brandTitle}>MarkDraw</span>
-          <span className={styles.versionBadge}>v2.0</span>
+          <span className={styles.versionBadge}>v2.5</span>
         </div>
 
         <div className={styles.headerControls}>
@@ -276,7 +349,7 @@ export const App: React.FC = () => {
           <button
             className={styles.iconBtn}
             onClick={() => setIsLegendOpen(true)}
-            title="View Semantic Legend"
+            title="View Semantic Legend (Part 4)"
           >
             <BookOpen size={15} strokeWidth={1.5} />
           </button>
@@ -318,8 +391,96 @@ export const App: React.FC = () => {
           <Tldraw
             persistenceKey="markdraw"
             shapeUtils={customShapeUtils}
+            components={tldrawComponents}
             onMount={handleEditorMount}
           />
+
+          {/* Properties Mini-Panel (Part 2.2) */}
+          <PropsPanel editor={editor} />
+
+          {/* Minimal Floating Canvas Controls (Part 5) */}
+          <div className={styles.canvasControlBar}>
+            <button
+              className={`${styles.canvasControlBtn} ${activeTool === 'select' ? styles.canvasControlBtnActive : ''}`}
+              onClick={() => handleSelectTool('select')}
+              title="Select Tool (V)"
+            >
+              <MousePointer size={14} strokeWidth={1.5} />
+            </button>
+            <button
+              className={`${styles.canvasControlBtn} ${activeTool === 'hand' ? styles.canvasControlBtnActive : ''}`}
+              onClick={() => handleSelectTool('hand')}
+              title="Hand / Pan Tool (H)"
+            >
+              <Hand size={14} strokeWidth={1.5} />
+            </button>
+
+            <div className={styles.canvasControlDivider} />
+
+            <button
+              className={styles.canvasControlBtn}
+              onClick={() => editorRef.current?.undo()}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 size={14} strokeWidth={1.5} />
+            </button>
+            <button
+              className={styles.canvasControlBtn}
+              onClick={() => editorRef.current?.redo()}
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 size={14} strokeWidth={1.5} />
+            </button>
+
+            <div className={styles.canvasControlDivider} />
+
+            <button
+              className={styles.canvasControlBtn}
+              onClick={() => editorRef.current?.zoomIn()}
+              title="Zoom In"
+            >
+              <ZoomIn size={14} strokeWidth={1.5} />
+            </button>
+            <button
+              className={styles.canvasControlBtn}
+              onClick={() => editorRef.current?.zoomOut()}
+              title="Zoom Out"
+            >
+              <ZoomOut size={14} strokeWidth={1.5} />
+            </button>
+            <button
+              className={styles.canvasControlBtn}
+              onClick={() => editorRef.current?.zoomToFit()}
+              title="Zoom to Fit"
+            >
+              <Maximize size={14} strokeWidth={1.5} />
+            </button>
+
+            <div className={styles.canvasControlDivider} />
+
+            <button
+              className={styles.canvasControlBtn}
+              onClick={() => {
+                const current = editorRef.current;
+                if (!current) return;
+                const selected = current.getSelectedShapeIds();
+                if (selected.length > 0) {
+                  current.deleteShapes(selected);
+                }
+              }}
+              title="Delete Selected"
+            >
+              <Trash2 size={14} strokeWidth={1.5} />
+            </button>
+          </div>
+
+          {/* Non-widget Warning Toast (Part 5) */}
+          {toastMessage && (
+            <div className={styles.toast}>
+              <AlertCircle size={14} />
+              <span>{toastMessage}</span>
+            </div>
+          )}
         </div>
 
         {/* Resizer Divider */}
