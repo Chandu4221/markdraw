@@ -229,7 +229,6 @@ export function touchDocument(
 export function getDemoCanvasShapes(): any[] {
   return [
     {
-      id: `shape_page_${Date.now()}`,
       type: 'ui-widget',
       x: 80,
       y: 60,
@@ -242,7 +241,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_header_${Date.now()}`,
       type: 'ui-widget',
       x: 80,
       y: 96,
@@ -255,7 +253,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_hero_${Date.now()}`,
       type: 'ui-widget',
       x: 220,
       y: 180,
@@ -268,7 +265,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_section_${Date.now()}`,
       type: 'ui-widget',
       x: 220,
       y: 430,
@@ -280,7 +276,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_card1_${Date.now()}`,
       type: 'ui-widget',
       x: 250,
       y: 480,
@@ -293,7 +288,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_card2_${Date.now()}`,
       type: 'ui-widget',
       x: 575,
       y: 480,
@@ -306,7 +300,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_card3_${Date.now()}`,
       type: 'ui-widget',
       x: 900,
       y: 480,
@@ -319,7 +312,6 @@ export function getDemoCanvasShapes(): any[] {
       }
     },
     {
-      id: `shape_footer_${Date.now()}`,
       type: 'ui-widget',
       x: 80,
       y: 972,

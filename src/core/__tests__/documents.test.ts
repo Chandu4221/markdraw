@@ -5,6 +5,7 @@ import {
   renameDocument,
   deleteDocument,
   duplicateDocumentMeta,
+  getDemoCanvasShapes,
   serializeDocToFile,
   validateImportFile,
   MIGRATION_FLAG_KEY
@@ -94,6 +95,20 @@ describe('Document Management & Registry', () => {
     expect(registry.docs.length).toBe(2);
     expect(newDoc.name).toBe('Untitled (Copy)');
     expect(registry.activeDocId).toBe(newDoc.id);
+  });
+
+  it('generates demo canvas shapes with valid ui-widget types and no invalid id prefix', () => {
+    const demoShapes = getDemoCanvasShapes();
+    expect(demoShapes.length).toBeGreaterThan(0);
+    for (const shape of demoShapes) {
+      expect(shape.type).toBe('ui-widget');
+      expect(shape.props).toBeDefined();
+      expect(shape.props.widgetType).toBeDefined();
+      // Either id is omitted (so tldraw generates valid shape ID) or it must start with "shape:"
+      if (shape.id !== undefined) {
+        expect(shape.id.startsWith('shape:')).toBe(true);
+      }
+    }
   });
 });
 

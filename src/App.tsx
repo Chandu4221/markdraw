@@ -277,12 +277,20 @@ export const App: React.FC = () => {
       if (pendingShapesRef.current && pendingShapesRef.current.length > 0) {
         const toCreate = pendingShapesRef.current;
         pendingShapesRef.current = null;
-        mountedEditor.createShapes(toCreate);
+        try {
+          mountedEditor.createShapes(toCreate);
+        } catch (err) {
+          console.error('[MarkDraw] Failed to create pending shapes:', err);
+        }
       } else {
         // Otherwise, if canvas is completely empty, seed with demo layout (Task 1.6)
         const currentShapes = mountedEditor.getCurrentPageShapes();
         if (currentShapes.length === 0) {
-          mountedEditor.createShapes(getDemoCanvasShapes());
+          try {
+            mountedEditor.createShapes(getDemoCanvasShapes());
+          } catch (err) {
+            console.error('[MarkDraw] Failed to seed demo shapes:', err);
+          }
         }
       }
 
@@ -473,7 +481,12 @@ export const App: React.FC = () => {
       }
 
       const { registry, newDoc } = createDocument(res.docName);
-      pendingShapesRef.current = res.shapes;
+      pendingShapesRef.current = res.shapes.map((s) => ({
+        type: 'ui-widget' as const,
+        x: s.x,
+        y: s.y,
+        props: { ...s.props }
+      }));
       setDocsRegistry(registry);
       showToast(`Imported "${newDoc.name}" (${res.shapes.length} widgets)`);
     };
