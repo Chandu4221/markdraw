@@ -167,11 +167,15 @@ const CATEGORY_STYLES: Record<string, {
 
 interface ComponentPaletteProps {
   isOpen: boolean;
+  width?: number;
+  isDragging?: boolean;
   onInsertWidget: (item: WidgetCatalogItem) => void;
 }
 
 export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   isOpen,
+  width = 260,
+  isDragging = false,
   onInsertWidget
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<UIWidgetCategory | 'all'>('all');
@@ -184,6 +188,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === '/' &&
+        isOpen &&
         document.activeElement?.tagName !== 'INPUT' &&
         document.activeElement?.tagName !== 'TEXTAREA'
       ) {
@@ -193,7 +198,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isOpen]);
 
   const filteredWidgets = useMemo(() => {
     return WIDGET_CATALOG.filter((w) => {
@@ -240,14 +245,23 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
       .filter((g) => g.items.length > 0);
   }, [selectedCategory, filteredWidgets]);
 
-  if (!isOpen) return null;
-
   return (
     <aside
       role="region"
       aria-label="Component Catalog"
-      className="w-[260px] h-full flex flex-col shrink-0 border-r border-[var(--md-border)] bg-[var(--md-surface)] select-none"
+      aria-hidden={!isOpen}
+      inert={!isOpen ? true : undefined}
+      className={`h-full flex flex-col shrink-0 bg-[var(--md-surface)] select-none overflow-hidden relative ${
+        isDragging ? 'transition-none' : 'transition-[width] duration-200 ease-out'
+      } ${isOpen ? 'border-r border-[var(--md-border)]' : 'border-r-0 pointer-events-none'}`}
+      style={{
+        width: isOpen ? width : 0
+      }}
     >
+      <div
+        className="h-full flex flex-col shrink-0 overflow-hidden"
+        style={{ width }}
+      >
       {/* Header */}
       <div className="h-10 px-3 border-b border-[var(--md-border)] flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-text-bold)]">
@@ -369,6 +383,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             );
           })
         )}
+      </div>
       </div>
     </aside>
   );

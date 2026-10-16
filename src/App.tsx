@@ -96,16 +96,29 @@ export const App: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
+  const [paletteWidth, setPaletteWidth] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('markdraw_palette_width');
+      if (saved) {
+        const val = Number(saved);
+        if (!isNaN(val) && val >= 180 && val <= 600) return val;
+      }
+    } catch {
+      // fallback
+    }
+    return 260;
+  });
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [canvasPercent, setCanvasPercent] = useState<number>(55);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [activeDrag, setActiveDrag] = useState<'left' | 'right' | null>(null);
   const [activeTool, setActiveTool] = useState<string>('select');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [compileDuration, setCompileDuration] = useState<number | null>(null);
 
+  const workspaceRef = useRef<HTMLDivElement | null>(null);
   const splitAreaRef = useRef<HTMLDivElement | null>(null);
 
   // Document Registry Management (Task 1)
@@ -506,26 +519,45 @@ export const App: React.FC = () => {
     e.target.value = '';
   };
 
-  // Accurate Panel Resizing Logic relative to splitArea
-  const startResizing = useCallback((e: React.MouseEvent) => {
+  // Accurate Panel Resizing Logic
+  const startResizingLeft = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setActiveDrag('left');
+  }, []);
+
+  const startResizingRight = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveDrag('right');
   }, []);
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!activeDrag) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!splitAreaRef.current) return;
-      const rect = splitAreaRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const newPercent = (mouseX / rect.width) * 100;
-      const clamped = Math.min(85, Math.max(15, newPercent));
-      setCanvasPercent(clamped);
+      if (activeDrag === 'left') {
+        const workspaceLeft = workspaceRef.current ? workspaceRef.current.getBoundingClientRect().left : 0;
+        const newWidth = e.clientX - workspaceLeft;
+        const maxW = Math.min(500, Math.round(window.innerWidth * 0.45));
+        const clamped = Math.min(maxW, Math.max(200, newWidth));
+        setPaletteWidth(clamped);
+        try {
+          localStorage.setItem('markdraw_palette_width', String(clamped));
+        } catch {
+          // ignore
+        }
+      } else if (activeDrag === 'right') {
+        if (!splitAreaRef.current) return;
+        const rect = splitAreaRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const newPercent = (mouseX / rect.width) * 100;
+        const clamped = Math.min(85, Math.max(15, newPercent));
+        setCanvasPercent(clamped);
+      }
     };
 
     const handleMouseUp = () => {
-      setIsDragging(false);
+      setActiveDrag(null);
+      window.dispatchEvent(new Event('resize'));
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -535,7 +567,7 @@ export const App: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [activeDrag]);
 
   const handleInsertWidget = (item: WidgetCatalogItem) => {
     const currentEditor = editorRef.current;
@@ -801,26 +833,48 @@ export const App: React.FC = () => {
         </header>
 
         {/* Main Workspace */}
-        <div className="flex-1 flex overflow-hidden relative">
-          {isDragging && <div className="fixed inset-0 z-50 cursor-col-resize select-none" />}
+        <div className="flex-1 flex overflow-hidden relative" ref={workspaceRef}>
+          {activeDrag !== null && <div className="fixed inset-0 z-50 cursor-col-resize select-none" />}
 
           {/* Left Component Palette Rail */}
           <ComponentPalette
             isOpen={isPaletteOpen}
+            width={paletteWidth}
+            isDragging={activeDrag === 'left'}
             onInsertWidget={handleInsertWidget}
           />
+
+          {/* Left Resizer Divider */}
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize component palette"
+            tabIndex={isPaletteOpen ? 0 : -1}
+            className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
+              isPaletteOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
+            } ${
+              activeDrag === 'left' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
+            }`}
+            onMouseDown={isPaletteOpen ? startResizingLeft : undefined}
+            onDoubleClick={() => {
+              setPaletteWidth(260);
+              try {
+                localStorage.setItem('markdraw_palette_width', '260');
+              } catch {}
+            }}
+            title="Drag to resize (Double-click to reset 260px)"
+          >
+            <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
+          </div>
 
           {/* Split Area: Canvas + Resizer + Output */}
           <div className="flex-1 flex h-full overflow-hidden relative" ref={splitAreaRef}>
             {/* Canvas Container */}
             <div
-              className={`h-full relative overflow-hidden bg-[var(--md-bg)] ${
-                isDragging ? 'transition-none' : 'transition-[width] duration-200 ease-out'
-              }`}
+              className="h-full relative overflow-hidden bg-[var(--md-bg)] flex-1 min-w-0"
               data-show-labels={showLabels}
-              style={{
-                width: isRightPanelOpen ? `calc(${canvasPercent}% - 4px)` : '100%',
-                flex: isRightPanelOpen ? 'none' : '1'
+              onTransitionEnd={() => {
+                window.dispatchEvent(new Event('resize'));
               }}
             >
               <Tldraw
@@ -952,35 +1006,40 @@ export const App: React.FC = () => {
             </div>
 
             {/* Split Resizer Divider */}
-            {isRightPanelOpen && (
-              <div
-                role="separator"
-                aria-orientation="vertical"
-                aria-label="Resize canvas and output panels"
-                tabIndex={0}
-                className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-colors select-none ${
-                  isDragging ? 'bg-[var(--md-accent)]' : 'bg-transparent'
-                }`}
-                onMouseDown={startResizing}
-                onDoubleClick={() => setCanvasPercent(55)}
-                title="Drag to resize (Double-click to reset 55/45)"
-              >
-                <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
-              </div>
-            )}
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize canvas and output panels"
+              tabIndex={isRightPanelOpen ? 0 : -1}
+              className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
+                isRightPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
+              } ${
+                activeDrag === 'right' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
+              }`}
+              onMouseDown={isRightPanelOpen ? startResizingRight : undefined}
+              onDoubleClick={() => setCanvasPercent(55)}
+              title="Drag to resize (Double-click to reset 55/45)"
+            >
+              <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
+            </div>
 
             {/* Right Pane: Live Reactive Output */}
-            {isRightPanelOpen && (
-              <aside
-                role="region"
-                aria-label="Live Output"
-                className={`h-full flex flex-col bg-[var(--md-surface)] overflow-hidden shrink-0 border-l border-[var(--md-border)] ${
-                  isDragging ? 'transition-none' : 'transition-[width] duration-200 ease-out'
-                }`}
-                style={{
-                  width: `calc(${100 - canvasPercent}% - 4px)`
-                }}
-              >
+            <aside
+              role="region"
+              aria-label="Live Output"
+              aria-hidden={!isRightPanelOpen}
+              inert={!isRightPanelOpen ? true : undefined}
+              onTransitionEnd={() => {
+                window.dispatchEvent(new Event('resize'));
+              }}
+              className={`h-full flex flex-col bg-[var(--md-surface)] overflow-hidden shrink-0 relative ${
+                activeDrag === 'right' ? 'transition-none' : 'transition-[width] duration-200 ease-out'
+              } ${isRightPanelOpen ? 'border-l border-[var(--md-border)]' : 'border-l-0 pointer-events-none'}`}
+              style={{
+                width: isRightPanelOpen ? `calc(${100 - canvasPercent}% - 5px)` : '0px'
+              }}
+            >
+              <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-[360px]">
                 {/* Output Toolbar */}
                 <div className="h-10 px-2 border-b border-[var(--md-border)] flex items-center justify-between shrink-0 select-none">
                   {/* Tabs */}
@@ -1101,8 +1160,8 @@ export const App: React.FC = () => {
                 <footer className="h-7 px-3 border-t border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between text-[11px] text-[var(--md-text-subtle)] shrink-0 select-none">
                   <span>Semantic layout compiled in real time. Paste directly into LLM prompts.</span>
                 </footer>
-              </aside>
-            )}
+              </div>
+            </aside>
           </div>
         </div>
 
