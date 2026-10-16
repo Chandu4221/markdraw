@@ -11,7 +11,15 @@ import {
   FileText
 } from 'lucide-react';
 import { MarkDrawDocMeta } from '../core/documents';
-import styles from './DocumentMenu.module.css';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 
 interface DocumentMenuProps {
   activeDoc: MarkDrawDocMeta;
@@ -85,151 +93,163 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
     });
   };
 
-  return (
-    <div className={styles.docMenuWrapper}>
-      {isEditing ? (
-        <input
+  if (isEditing) {
+    return (
+      <div className="relative flex items-center">
+        <Input
           ref={inputRef}
           type="text"
-          className={styles.inlineRenameInput}
+          className="h-7 w-48 text-xs font-medium"
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           onBlur={handleCommitRename}
           onKeyDown={handleKeyDown}
         />
-      ) : (
-        <button
-          className={`${styles.docTitleBtn} ${isOpen ? styles.docTitleBtnOpen : ''}`}
-          onClick={() => setIsOpen((prev) => !prev)}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
-          title="Click for document menu · Double-click to rename"
-        >
-          <FileText size={14} strokeWidth={1.5} />
-          <span className={styles.docNameText}>{activeDoc.name}</span>
-          <ChevronDown size={13} strokeWidth={1.5} />
-        </button>
-      )}
+      </div>
+    );
+  }
 
-      {isOpen && (
-        <>
-          <div className={styles.dropdownOverlay} onClick={() => setIsOpen(false)} />
-          <div className={styles.dropdownPanel}>
-            <div className={styles.actionsSection}>
-              <button
-                className={styles.menuActionBtn}
-                onClick={() => {
-                  setIsOpen(false);
-                  onNewDoc();
-                }}
-              >
-                <Plus size={14} strokeWidth={1.5} />
-                <span>New Document</span>
-              </button>
+  return (
+    <div className="relative flex items-center">
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="flex h-7 items-center gap-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-xs font-medium text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] transition-colors cursor-pointer select-none"
+            onDoubleClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOpen(false);
+              setIsEditing(true);
+            }}
+            title="Click to switch/manage documents · Double-click to rename"
+          >
+            <FileText size={13} className="text-[var(--md-text-muted)]" />
+            <span className="max-w-[140px] truncate text-xs">{activeDoc.name}</span>
+            <ChevronDown size={12} className="text-[var(--md-text-muted)] opacity-70" />
+          </button>
+        </DropdownMenuTrigger>
 
-              <button
-                className={styles.menuActionBtn}
-                onClick={() => {
-                  setIsOpen(false);
-                  onDuplicateDoc();
-                }}
-              >
-                <Copy size={14} strokeWidth={1.5} />
-                <span>Duplicate Document</span>
-              </button>
+        <DropdownMenuContent align="start" className="w-64 p-1.5">
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+            onClick={() => {
+              setIsOpen(false);
+              onNewDoc();
+            }}
+          >
+            <Plus size={13} />
+            <span>New Document</span>
+          </DropdownMenuItem>
 
-              <button
-                className={styles.menuActionBtn}
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsEditing(true);
-                }}
-              >
-                <Edit2 size={14} strokeWidth={1.5} />
-                <span>Rename Document</span>
-              </button>
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+            onClick={() => {
+              setIsOpen(false);
+              onDuplicateDoc();
+            }}
+          >
+            <Copy size={13} />
+            <span>Duplicate Document</span>
+          </DropdownMenuItem>
 
-              <div className={styles.divider} />
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+            onClick={() => {
+              setIsOpen(false);
+              setIsEditing(true);
+            }}
+          >
+            <Edit2 size={13} />
+            <span>Rename Document</span>
+          </DropdownMenuItem>
 
-              <button
-                className={styles.menuActionBtn}
-                onClick={() => {
-                  setIsOpen(false);
-                  onExportFile();
-                }}
-              >
-                <Download size={14} strokeWidth={1.5} />
-                <span>Export File (.markdraw.json)</span>
-              </button>
+          <DropdownMenuSeparator />
 
-              <button
-                className={styles.menuActionBtn}
-                onClick={() => {
-                  setIsOpen(false);
-                  fileInputRef.current?.click();
-                }}
-              >
-                <Upload size={14} strokeWidth={1.5} />
-                <span>Import File (.markdraw.json)</span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json,.markdraw.json"
-                style={{ display: 'none' }}
-                onChange={onImportFile}
-              />
-            </div>
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+            onClick={() => {
+              setIsOpen(false);
+              onExportFile();
+            }}
+          >
+            <Download size={13} />
+            <span>Export File (.markdraw.json)</span>
+          </DropdownMenuItem>
 
-            <div className={styles.divider} />
-            <div className={styles.sectionHeader}>Your Documents ({docs.length})</div>
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+            onClick={() => {
+              setIsOpen(false);
+              fileInputRef.current?.click();
+            }}
+          >
+            <Upload size={13} />
+            <span>Import File (.markdraw.json)</span>
+          </DropdownMenuItem>
 
-            <div className={styles.docsList}>
-              {docs.map((doc) => {
-                const isActive = doc.id === activeDoc.id;
-                return (
-                  <div
-                    key={doc.id}
-                    className={`${styles.docItem} ${isActive ? styles.docItemActive : ''}`}
-                    onClick={() => {
-                      if (!isActive) {
-                        onSelectDoc(doc.id);
-                        setIsOpen(false);
-                      }
-                    }}
-                  >
-                    <div className={styles.docItemInfo}>
-                      <span className={styles.docItemTitle}>{doc.name}</span>
-                      <span className={styles.docItemDate}>{formatDate(doc.updatedAt)}</span>
-                    </div>
+          <DropdownMenuSeparator />
 
-                    <div className={styles.docItemActions}>
-                      {isActive ? (
-                        <Check size={14} strokeWidth={2} color="var(--md-text-bold)" />
-                      ) : docs.length > 1 ? (
-                        <button
-                          className={styles.deleteDocBtn}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm(`Delete "${doc.name}"? This cannot be undone.`)) {
-                              onDeleteDoc(doc.id);
-                            }
-                          }}
-                          title="Delete document"
-                        >
-                          <Trash2 size={13} strokeWidth={1.5} />
-                        </button>
-                      ) : null}
-                    </div>
+          <DropdownMenuLabel>
+            Documents ({docs.length})
+          </DropdownMenuLabel>
+
+          <div className="max-h-48 overflow-y-auto space-y-0.5">
+            {docs.map((doc) => {
+              const isActive = doc.id === activeDoc.id;
+              return (
+                <div
+                  key={doc.id}
+                  className={`group flex items-center justify-between rounded-[var(--md-radius-sm)] px-2 py-1.5 text-xs cursor-pointer transition-colors ${
+                    isActive
+                      ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] font-medium'
+                      : 'text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
+                  }`}
+                  onClick={() => {
+                    if (!isActive) {
+                      onSelectDoc(doc.id);
+                      setIsOpen(false);
+                    }
+                  }}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="truncate">{doc.name}</span>
+                    <span className="text-[10px] text-[var(--md-text-subtle)]">
+                      {formatDate(doc.updatedAt)}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="flex items-center shrink-0">
+                    {isActive ? (
+                      <Check size={13} className="text-[var(--md-accent)]" />
+                    ) : docs.length > 1 ? (
+                      <button
+                        className="opacity-0 group-hover:opacity-100 p-1 text-[var(--md-text-subtle)] hover:text-[var(--md-danger)] transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete "${doc.name}"? This cannot be undone.`)) {
+                            onDeleteDoc(doc.id);
+                          }
+                        }}
+                        title="Delete document"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json,.markdraw.json"
+        style={{ display: 'none' }}
+        onChange={onImportFile}
+      />
     </div>
   );
 };

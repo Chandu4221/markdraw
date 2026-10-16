@@ -1,6 +1,17 @@
 import React from 'react';
-import { X, RotateCcw, Sliders } from 'lucide-react';
+import { RotateCcw, Sliders } from 'lucide-react';
 import { CompilationOptions } from '../core/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,220 +26,174 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   options,
   onChange
 }) => {
-  if (!isOpen) return null;
-
   const handleReset = () => {
     onChange({
       containmentThreshold: 0.85,
       rowClusterThreshold: 16,
       gridBandThreshold: 32,
+      sizeBucketTolerance: 2,
+      alignTolerance: 3,
       includeTimestamp: false,
-      includeLegend: true
+      includeLegend: true,
+      pageNote: options.pageNote || ''
     });
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: 440,
-          background: 'var(--md-surface)',
-          border: '1.5px solid var(--md-border-strong)',
-          borderRadius: 'var(--md-radius-lg)',
-          boxShadow: 'var(--md-shadow-modal)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          fontFamily: 'var(--md-font-sans)',
-          color: 'var(--md-text)'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          style={{
-            height: 48,
-            padding: '0 16px',
-            borderBottom: '1.5px solid var(--md-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'var(--md-surface-raised)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13 }}>
-            <Sliders size={16} strokeWidth={1.5} />
-            <span>Compiler & Geometry Settings</span>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+        <DialogHeader className="h-12 px-4 border-b border-[var(--md-border)] flex flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-2">
+            <Sliders size={16} className="text-[var(--md-accent)]" />
+            <DialogTitle className="text-sm font-semibold text-[var(--md-text-bold)]">
+              Compiler Settings
+            </DialogTitle>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--md-text-muted)',
-              cursor: 'pointer',
-              padding: 4
-            }}
-          >
-            <X size={16} />
-          </button>
-        </div>
+          <DialogDescription className="sr-only">
+            Tune spatial containment, tolerances, and output settings
+          </DialogDescription>
+        </DialogHeader>
 
-        <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Containment Threshold */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ fontWeight: 600 }}>Containment Tolerance Threshold</span>
-              <span style={{ fontFamily: 'var(--md-font-mono)', color: 'var(--md-text-muted)' }}>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-medium text-[var(--md-text)]">
+                Containment Threshold
+              </label>
+              <span className="font-mono text-[var(--md-text-muted)]">
                 {Math.round(options.containmentThreshold * 100)}%
               </span>
             </div>
+            <p className="text-[11px] text-[var(--md-text-subtle)] leading-normal">
+              Minimum AABB overlap required to infer parent-child hierarchy.
+            </p>
             <input
               type="range"
-              min="50"
-              max="100"
-              value={Math.round(options.containmentThreshold * 100)}
+              min="0.5"
+              max="1.0"
+              step="0.05"
+              value={options.containmentThreshold}
               onChange={(e) =>
-                onChange({ ...options, containmentThreshold: Number(e.target.value) / 100 })
+                onChange({
+                  ...options,
+                  containmentThreshold: parseFloat(e.target.value)
+                })
               }
-              style={{ width: '100%', accentColor: 'var(--md-text)' }}
+              className="w-full accent-[var(--md-accent)] cursor-pointer"
             />
-            <span style={{ fontSize: 10, color: 'var(--md-text-muted)' }}>
-              Area overlap percentage required for child enclosure (default: 85%).
-            </span>
           </div>
 
-          {/* Row Cluster Threshold */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ fontWeight: 600 }}>Row Clustering Band (Y-axis)</span>
-              <span style={{ fontFamily: 'var(--md-font-mono)', color: 'var(--md-text-muted)' }}>
-                {options.rowClusterThreshold}px
+          {/* Size Bucket Tolerance (A.5) */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-medium text-[var(--md-text)]">
+                Size Bucket Tolerance (±%)
+              </label>
+              <span className="font-mono text-[var(--md-text-muted)]">
+                ±{options.sizeBucketTolerance ?? 2}%
               </span>
             </div>
-            <input
-              type="range"
-              min="4"
-              max="48"
-              value={options.rowClusterThreshold}
+            <p className="text-[11px] text-[var(--md-text-subtle)] leading-normal">
+              Snapping tolerance for width buckets (e.g. 48–52% snaps to 50%).
+            </p>
+            <Input
+              type="number"
+              min="0"
+              max="10"
+              value={options.sizeBucketTolerance ?? 2}
               onChange={(e) =>
-                onChange({ ...options, rowClusterThreshold: Number(e.target.value) })
+                onChange({
+                  ...options,
+                  sizeBucketTolerance: parseInt(e.target.value, 10) || 0
+                })
               }
-              style={{ width: '100%', accentColor: 'var(--md-text)' }}
+              className="h-7 w-20 text-xs font-mono"
             />
-            <span style={{ fontSize: 10, color: 'var(--md-text-muted)' }}>
-              Vertical delta threshold to cluster items into the same horizontal row (default: 16px).
-            </span>
           </div>
 
-          {/* Spatial Grid Band */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ fontWeight: 600 }}>Spatial Grid Band Threshold</span>
-              <span style={{ fontFamily: 'var(--md-font-mono)', color: 'var(--md-text-muted)' }}>
-                {options.gridBandThreshold}px
+          {/* Align Tolerance (A.5) */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-medium text-[var(--md-text)]">
+                Alignment Tolerance (±%)
+              </label>
+              <span className="font-mono text-[var(--md-text-muted)]">
+                ±{options.alignTolerance ?? 3}%
               </span>
             </div>
-            <input
-              type="range"
-              min="16"
-              max="64"
-              value={options.gridBandThreshold}
+            <p className="text-[11px] text-[var(--md-text-subtle)] leading-normal">
+              Center-alignment tolerance within parent container.
+            </p>
+            <Input
+              type="number"
+              min="0"
+              max="10"
+              value={options.alignTolerance ?? 3}
               onChange={(e) =>
-                onChange({ ...options, gridBandThreshold: Number(e.target.value) })
+                onChange({
+                  ...options,
+                  alignTolerance: parseInt(e.target.value, 10) || 0
+                })
               }
-              style={{ width: '100%', accentColor: 'var(--md-text)' }}
+              className="h-7 w-20 text-xs font-mono"
             />
-            <span style={{ fontSize: 10, color: 'var(--md-text-muted)' }}>
-              Row clustering threshold for 2D pipe tables (default: 32px).
-            </span>
           </div>
 
-          {/* Toggles */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
+          {/* Output Toggles */}
+          <div className="pt-2 border-t border-[var(--md-border)] space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-[var(--md-text)]">
+                  Include Semantic Legend
+                </div>
+                <div className="text-[11px] text-[var(--md-text-subtle)]">
+                  Appends bracket-tag documentation to markdown output
+                </div>
+              </div>
+              <Switch
                 checked={options.includeLegend}
-                onChange={(e) => onChange({ ...options, includeLegend: e.target.checked })}
+                onCheckedChange={(checked) =>
+                  onChange({ ...options, includeLegend: checked })
+                }
               />
-              <span>Prepend Semantic Legend to Markdown Outputs</span>
-            </label>
+            </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-[var(--md-text)]">
+                  Include Timestamp
+                </div>
+                <div className="text-[11px] text-[var(--md-text-subtle)]">
+                  Disabled by default for byte-for-byte determinism
+                </div>
+              </div>
+              <Switch
                 checked={options.includeTimestamp}
-                onChange={(e) => onChange({ ...options, includeTimestamp: e.target.checked })}
+                onCheckedChange={(checked) =>
+                  onChange({ ...options, includeTimestamp: checked })
+                }
               />
-              <span>Include Generation Timestamp (disable for byte-for-byte determinism)</span>
-            </label>
+            </div>
           </div>
         </div>
 
-        <div
-          style={{
-            height: 48,
-            padding: '0 16px',
-            borderTop: '1.5px solid var(--md-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'var(--md-surface-raised)'
-          }}
-        >
-          <button
+        <DialogFooter className="h-12 px-4 border-t border-[var(--md-border)] flex items-center justify-between sm:justify-between bg-[var(--md-surface)]">
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleReset}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              background: 'transparent',
-              border: '1.5px solid var(--md-border)',
-              borderRadius: 'var(--md-radius-sm)',
-              padding: '4px 8px',
-              color: 'var(--md-text)',
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
+            className="gap-1.5 text-xs text-[var(--md-text-muted)]"
           >
-            <RotateCcw size={13} />
+            <RotateCcw size={12} />
             <span>Reset Defaults</span>
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--md-radius-sm)',
-              background: 'var(--md-text)',
-              border: '1.5px solid var(--md-text)',
-              color: 'var(--md-bg)',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: 'var(--md-shadow-interactive)'
-            }}
-          >
+          </Button>
+
+          <Button variant="default" size="sm" onClick={onClose} className="text-xs">
             Done
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

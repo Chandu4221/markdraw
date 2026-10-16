@@ -21,8 +21,9 @@ import { AsciiSerializer } from './ascii';
 import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
 import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
 import { detectSiblingPatterns } from './patterns';
+import { AI_DIRECTIVE_HEADER } from './directive';
 
-export const MARKDRAW_VERSION = '2.7';
+export const MARKDRAW_VERSION = '2.8';
 
 function capitalize(str: string): string {
   if (!str) return '';
@@ -39,7 +40,21 @@ export function inferPlacement(
     if (node.widgetType === 'page') {
       return '—';
     }
+    if (node.widgetType === 'navbar' || node.widgetType === 'header') {
+      return 'header';
+    }
+    if (node.widgetType === 'footer') {
+      return 'footer';
+    }
     return 'body';
+  }
+
+  // Widget TYPE wins: footer/navbar widgets emit placement:type, never contradicted
+  if (node.widgetType === 'navbar' || node.widgetType === 'header') {
+    return 'header';
+  }
+  if (node.widgetType === 'footer') {
+    return 'footer';
   }
 
   // If direct child of a [page] root, infer from geometry relative to the page box
@@ -49,20 +64,25 @@ export function inferPlacement(
     const pageW = pageBounds.w;
 
     const relTop = node.bounds.y - pageBounds.y;
-    const relBottom = pageBounds.y + pageH - (node.bounds.y + node.bounds.h);
     const widthRatio = node.bounds.w / pageW;
-
-    const isTopBand = relTop <= 0.15 * pageH;
-    const isBottomBand =
-      relBottom <= 0.15 * pageH || node.bounds.y >= pageBounds.y + 0.85 * pageH;
     const isWideEnough = widthRatio >= 0.70;
 
-    if (isTopBand && isWideEnough) {
+    // Top 15% band
+    if (relTop <= 0.15 * pageH && isWideEnough) {
       return 'header';
     }
-    if (isBottomBand && isWideEnough) {
-      return 'footer';
+
+    // Geometric footer: last top-level band AND top edge within bottom 35% of page
+    const isBottom35 = node.bounds.y >= pageBounds.y + 0.65 * pageH;
+    if (isBottom35 && isWideEnough) {
+      const hasSiblingBelow = parent.children.some(
+        (sib) => sib.id !== node.id && sib.bounds.y > node.bounds.y + 20
+      );
+      if (!hasSiblingBelow) {
+        return 'footer';
+      }
     }
+
     return 'body';
   }
 
@@ -80,18 +100,22 @@ export class MarkDrawCompiler {
       containmentThreshold: options?.containmentThreshold ?? 0.85,
       rowClusterThreshold: options?.rowClusterThreshold ?? 16,
       gridBandThreshold: options?.gridBandThreshold ?? 32,
+      sizeBucketTolerance: options?.sizeBucketTolerance ?? 2,
+      alignTolerance: options?.alignTolerance ?? 3,
       includeTimestamp: options?.includeTimestamp ?? false,
-      includeLegend: options?.includeLegend ?? true
+      includeLegend: options?.includeLegend ?? true,
+      pageNote: options?.pageNote ?? ''
     };
 
     // Part 3: All compilation flows strictly Shapes -> IR -> Serializers
-    const ir: IRTree = buildIRTree(shapes, editor, opts.containmentThreshold);
+    const ir: IRTree = buildIRTree(shapes, editor, opts.containmentThreshold, opts);
 
     const specBody = this.serializeSpecTable(ir.roots, opts);
     const gridBody = this.serializeSpatialGrid(ir.roots, opts.gridBandThreshold);
     const asciiBody = AsciiSerializer.serialize(ir.roots);
     const jsonAst = serializeIRToJsonAst(ir.roots);
 
+    const directivePrefix = `${AI_DIRECTIVE_HEADER}\n\n`;
     const legendPrefix = opts.includeLegend ? `${DYNAMIC_LEGEND_MARKDOWN}\n\n---\n\n` : '';
     const warningSuffix =
       ir.skippedShapes && ir.skippedShapes > 0
@@ -99,7 +123,7 @@ export class MarkDrawCompiler {
         : '';
 
     return {
-      markdownSpec: `${legendPrefix}${specBody}${warningSuffix}`,
+      markdownSpec: `${directivePrefix}${legendPrefix}${specBody}${warningSuffix}`,
       markdownGrid: `${legendPrefix}${gridBody}`,
       markdownAscii: `${legendPrefix}${asciiBody}`,
       jsonAst,
@@ -157,58 +181,105 @@ export class MarkDrawCompiler {
 
   public static formatProps(node: IRNode | LayoutNode): string {
     const p = (node as any).textProps || (node as any).widgetProps;
-    if (!p) return '—';
+    const style = (node as any).style;
+    if (!p && !style) return '—';
 
     const type = (node as any).widgetType || '';
     const defaults = getCatalogDefaultProps(type);
-    const pairs: string[] = [];
+    const propsPairs: string[] = [];
 
-    if (
-      p.variant &&
-      p.variant !== defaults.variant &&
-      p.variant !== 'default' &&
-      p.variant !== 'solid'
-    ) {
-      pairs.push(`variant="${p.variant}"`);
-    }
-    if (p.placeholder && p.placeholder !== defaults.placeholder) {
-      pairs.push(`placeholder="${p.placeholder}"`);
-    }
-    if (
-      typeof p.checked === 'boolean' &&
-      p.checked === true &&
-      p.checked !== defaults.checked
-    ) {
-      pairs.push(`checked=${p.checked}`);
-    }
-    if (p.options && p.options !== defaults.options) {
-      pairs.push(`options=[${p.options}]`);
-    }
-    if (
-      typeof p.value === 'number' &&
-      p.value > 0 &&
-      p.value !== defaults.value
-    ) {
-      pairs.push(`value=${p.value}`);
-    }
-    if (p.iconName && p.iconName !== defaults.iconName) {
-      pairs.push(`icon="${p.iconName}"`);
-    }
-    if (p.subtext && p.subtext !== defaults.subtext) {
-      pairs.push(`subtext="${p.subtext}"`);
-    }
-    if (p.altText && p.altText !== defaults.altText) {
-      pairs.push(`alt="${p.altText}"`);
-    }
-    if (
-      typeof p.showText === 'boolean' &&
-      p.showText === true &&
-      p.showText !== defaults.showText
-    ) {
-      pairs.push(`showText=${p.showText}`);
+    if (p) {
+      if (
+        p.variant &&
+        p.variant !== defaults.variant &&
+        p.variant !== 'default' &&
+        p.variant !== 'solid'
+      ) {
+        propsPairs.push(`variant="${p.variant}"`);
+      }
+      if (p.placeholder && p.placeholder !== defaults.placeholder) {
+        propsPairs.push(`placeholder="${p.placeholder}"`);
+      }
+      if (
+        typeof p.checked === 'boolean' &&
+        p.checked === true &&
+        p.checked !== defaults.checked
+      ) {
+        propsPairs.push(`checked=${p.checked}`);
+      }
+      if (p.options && p.options !== defaults.options) {
+        propsPairs.push(`options=[${p.options}]`);
+      }
+      if (
+        typeof p.value === 'number' &&
+        p.value > 0 &&
+        p.value !== defaults.value
+      ) {
+        propsPairs.push(`value=${p.value}`);
+      }
+      if (p.iconName && p.iconName !== defaults.iconName) {
+        propsPairs.push(`icon="${p.iconName}"`);
+      }
+      if (p.subtext && p.subtext !== defaults.subtext) {
+        propsPairs.push(`subtext="${p.subtext}"`);
+      }
+      if (p.altText && p.altText !== defaults.altText) {
+        propsPairs.push(`alt="${p.altText}"`);
+      }
+      if (
+        typeof p.showText === 'boolean' &&
+        p.showText === true &&
+        p.showText !== defaults.showText
+      ) {
+        propsPairs.push(`showText=${p.showText}`);
+      }
     }
 
-    return pairs.length > 0 ? pairs.join(', ') : '—';
+    const styleTokens: string[] = [];
+
+    if (style) {
+      if (style.widthToken) {
+        styleTokens.push(style.widthToken);
+      }
+      if (style.heightToken) {
+        styleTokens.push(`height:${style.heightToken}`);
+      }
+      if (style.align) {
+        styleTokens.push(`align:${style.align}`);
+      }
+      if (style.alignY) {
+        styleTokens.push(`align-y:${style.alignY}`);
+      }
+      if (style.dist) {
+        styleTokens.push(style.dist);
+      }
+      if (style.rel) {
+        styleTokens.push(`rel:${style.rel}`);
+      }
+      if (Array.isArray(style.behaviors) && style.behaviors.length > 0) {
+        styleTokens.push(...style.behaviors);
+      }
+      if (style.note) {
+        styleTokens.push(`note:"${style.note}"`);
+      }
+    } else if (p) {
+      if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
+        styleTokens.push(...p.behaviors);
+      }
+      if (typeof p.note === 'string' && p.note.trim() !== '') {
+        styleTokens.push(`note:"${p.note.trim()}"`);
+      }
+    }
+
+    const propsStr = propsPairs.join(', ');
+    const styleStr = styleTokens.join(' ');
+
+    if (propsStr && styleStr) {
+      return `${propsStr} ${styleStr}`;
+    }
+    if (propsStr) return propsStr;
+    if (styleStr) return styleStr;
+    return '—';
   }
 
   private static toIRNode(node: IRNode | LayoutNode): IRNode {
@@ -226,13 +297,14 @@ export class MarkDrawCompiler {
       children: (ln.children || []).map((c) => this.toIRNode(c)),
       parent: ln.parent,
       direction: ln.direction,
-      path: ln.path
+      path: ln.path,
+      style: (ln as any).style
     };
   }
 
   public static serializeSpecTable(
     roots: (IRNode | LayoutNode)[],
-    options?: { includeTimestamp?: boolean }
+    options?: CompilationOptions
   ): string {
     if (!roots || roots.length === 0) {
       return '_Canvas is empty. Draw shapes or drop UI components to generate the specification._';
@@ -244,6 +316,14 @@ export class MarkDrawCompiler {
     if (options?.includeTimestamp) {
       rows.push(`**Generated:** ${new Date().toISOString()}  `);
     }
+
+    const rootPage = irRoots.find((r) => r.widgetType === 'page');
+    const effectivePageNote =
+      options?.pageNote || (rootPage?.textProps as any)?.note || (rootPage?.style as any)?.note;
+    if (effectivePageNote) {
+      rows.push(`**Page note:** ${effectivePageNote}  `);
+    }
+
     rows.push(`**Roots Detected:** ${irRoots.length} view(s)\n`);
     rows.push('#### Semantic Hierarchy Table');
     rows.push(

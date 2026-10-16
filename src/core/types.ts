@@ -158,8 +158,11 @@ export interface CompilationOptions {
   containmentThreshold?: number; // default 0.85
   rowClusterThreshold?: number;  // default 16
   gridBandThreshold?: number;    // default 32
+  sizeBucketTolerance?: number;  // default 2 (±2% tolerance)
+  alignTolerance?: number;       // default 3 (±3% tolerance)
   includeTimestamp?: boolean;    // default false (for determinism)
   includeLegend?: boolean;       // default true
+  pageNote?: string;             // page-level note in document header
 }
 
 export interface CompilationResult {

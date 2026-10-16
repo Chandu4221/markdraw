@@ -28,11 +28,23 @@ function getEffectiveProp(type: string, key: string, val?: any): any {
 }
 
 /**
- * Formats an IRNode into MarkDraw v2.7 bracket-tag semantic notation.
+ * Formats an IRNode into MarkDraw v2.8 bracket-tag semantic notation.
  * e.g. [btn "Send"], [card "Profile" elevated], [para], [input "Email..."]
  * When label/content is untouched default, emits bare tag e.g. [btn], [card], [img]
+ * Behavior flags are emitted in-tag after variant: [navbar "Home, Menu" floating sticky]
  */
 export function formatSemanticNotation(node: IRNode): string {
+  const baseTag = formatBaseNotation(node);
+  const p = node.textProps || {};
+  if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
+    if (baseTag.endsWith(']')) {
+      return `${baseTag.slice(0, -1)} ${p.behaviors.join(' ')}]`;
+    }
+  }
+  return baseTag;
+}
+
+function formatBaseNotation(node: IRNode): string {
   const type = node.widgetType;
   const p = node.textProps || {};
   const primaryLabel = getEffectiveLabel(type, p.label || node.label);
@@ -214,6 +226,13 @@ export function formatSemanticNotation(node: IRNode): string {
       return txt ? `[card "${escapeNotation(txt)}"${varSuffix}]` : (varSuffix ? `[card${varSuffix}]` : '[card]');
     }
 
+    case 'carousel': {
+      const txt = primaryLabel;
+      const v = p.variant;
+      const varSuffix = v && v !== 'default' && v !== 'contained' ? ` ${v}` : '';
+      return txt ? `[carousel "${escapeNotation(txt)}"${varSuffix}]` : (varSuffix ? `[carousel${varSuffix}]` : '[carousel]');
+    }
+
     case 'hero': {
       const txt = primaryLabel;
       return txt ? `[hero "${escapeNotation(txt)}"]` : '[hero]';
@@ -322,10 +341,12 @@ export function formatSemanticNotation(node: IRNode): string {
 }
 
 export const DYNAMIC_LEGEND_MARKDOWN = `## MarkDraw Semantic Legend
-**MarkDraw v2.7 — Semantic Layout**
+**MarkDraw v2.8 — Semantic Layout**
 _Text shown as \`───\` lines on canvas; actual text preserved here._
 _bare tags (e.g. [btn]) mean the user left the content unspecified — generate appropriate content._
 _Placement: header/body/footer = position band within the page; nested = inside another container._
+_align describes position within the parent container; do not relocate elements to conventional positions._
+_note = free-text style hint (non-binding); bracket tags are the binding contract._
 _N × [pattern] = N visually repeated sibling groups; treat as list/grid items with per-item content variation._
 
 | Notation | Meaning | Example |
@@ -347,6 +368,7 @@ _N × [pattern] = N visually repeated sibling groups; treat as list/grid items w
 | \`[pag 1/5]\` | Pagination indicator | \`[pag 1/5]\` |
 | \`[section "Title"]\` | Page structural band | \`[section "Portfolio"]\` |
 | \`[card "Title" variant]\` | Content card container | \`[card "Profile" elevated]\` |
+| \`[carousel "Title"]\` | Carousel / media slider container | \`[carousel "Hero" autoplay]\` |
 | \`[hero]\` / \`[modal "Title"]\` | Hero banner or dialog modal | \`[hero]\`, \`[modal "Confirm"]\` |
 | \`[split]\` / \`[grid 3x2]\` | Split-pane or grid container | \`[split]\`, \`[grid 3x2]\` |
 | \`[table 4x3]\` | Data table rows x cols | \`[table 4x3]\` |
@@ -356,5 +378,12 @@ _N × [pattern] = N visually repeated sibling groups; treat as list/grid items w
 | \`[divider]\` / \`[spacer]\` | Visual separator or layout spacer | \`[divider]\` |
 | \`[toast "Text"]\` / \`[banner]\` | Feedback toast or warning banner | \`[toast "Saved!"]\` |
 | \`[code "Cmd"]\` / \`[kpi "1.2k"]\` | Monospaced code block or KPI stat | \`[code "npm install"]\` |
-| \`[unknown]\` | Fallback / unmapped widget | \`[unknown]\` |`;
+| \`[unknown]\` | Fallback / unmapped widget | \`[unknown]\` |
 
+**Style semantics**
+| \`width:50%\` / \`full-width\` / \`overflow\` | measured span relative to parent |
+| \`align:left\\|center\\|right\`, \`align-y\` | position within parent (default: stretch/left) |
+| \`dist:space-between\\|center\\|grid\\|wrap\` | how siblings distribute along the flow |
+| \`rel:overflow\\|overlap\\|inset\` | edge relationship with parent/siblings |
+| \`sticky, floating, overlay, fixed, fullscreen, autoplay, parallax, expandable, draggable, scroll-snap\` | user-declared behavior; implement literally |
+| \`note:"..."\` | free-text hint, non-binding |`;

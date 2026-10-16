@@ -1,24 +1,57 @@
-/* MarkDraw Unified Monochrome Design Tokens */
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* MarkDraw v2.8 Unified Design Tokens & Tailwind Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Google+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-border: var(--md-border);
+  --color-border-strong: var(--md-border-strong);
+  --color-input: var(--md-border);
+  --color-ring: var(--md-accent-ring);
+  --color-background: var(--md-bg);
+  --color-foreground: var(--md-text);
+  
+  --color-primary: var(--md-text-bold);
+  --color-primary-foreground: var(--md-bg);
+  --color-secondary: var(--md-surface-raised);
+  --color-secondary-foreground: var(--md-text);
+  --color-muted: var(--md-surface);
+  --color-muted-foreground: var(--md-text-muted);
+  --color-accent: var(--md-surface-raised);
+  --color-accent-foreground: var(--md-text-bold);
+  --color-popover: var(--md-surface);
+  --color-popover-foreground: var(--md-text);
+  --color-card: var(--md-surface);
+  --color-card-foreground: var(--md-text);
+  --color-brand: var(--md-accent);
+  --color-brand-foreground: #ffffff;
+
+  --radius-sm: var(--md-radius-sm);
+  --radius-md: var(--md-radius-md);
+  --radius-lg: var(--md-radius-lg);
+  --radius-xl: var(--md-radius-xl);
+
+  --font-sans: var(--md-font-sans);
+  --font-mono: var(--md-font-mono);
+}
 
 :root {
   /* Default: Dark Theme (Calibrated Neutral Ramp 0 to 9 - WCAG 2.1 AAA Compliant) */
   --md-neutral-0: #09090b;
   --md-neutral-1: #121216;
   --md-neutral-2: #1c1c22;
-  --md-neutral-3: #35353d;
-  --md-neutral-4: #62626a;
-  --md-neutral-5: #82828c;
-  --md-neutral-6: #a8a8b2;
-  --md-neutral-7: #ceced6;
+  --md-neutral-3: #2d2d36;
+  --md-neutral-4: #4a4a56;
+  --md-neutral-5: #6d6d7a;
+  --md-neutral-6: #9898a6;
+  --md-neutral-7: #c5c5d2;
   --md-neutral-8: #f0f0f4;
   --md-neutral-9: #ffffff;
 
-  /* Single Accent Token */
-  --md-accent: #ffffff;
-  --md-accent-contrast: #09090b;
-  --md-accent-subtle: #272730;
-  --md-accent-ring: rgba(255, 255, 255, 0.35);
+  /* Functional Accent (Dark) */
+  --md-accent: #3b82f6;
+  --md-accent-contrast: #ffffff;
+  --md-accent-subtle: rgba(59, 130, 246, 0.15);
+  --md-accent-ring: rgba(59, 130, 246, 0.4);
 
   /* Semantic Mappings */
   --md-bg: var(--md-neutral-0);
@@ -30,45 +63,46 @@
   --md-text-muted: var(--md-neutral-7);
   --md-text: var(--md-neutral-8);
   --md-text-bold: var(--md-neutral-9);
-  --md-danger: var(--md-neutral-6);
+  --md-danger: #ef4444;
 
   /* Typography */
-  --md-font-sans: 'Google Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --md-font-sans: 'Inter', 'Google Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --md-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
 
-  /* Architectural Neubrutalist Tokens */
-  --md-border-width: 1.5px;
-  --md-shadow-interactive: 2px 2px 0px var(--md-border-strong);
-  --md-shadow-card: 2px 2px 0px var(--md-border-strong);
-  --md-shadow-panel: 4px 4px 0px #000000;
-  --md-shadow-modal: 6px 6px 0px #000000;
-  --md-shadow-canvas-bar: 3px 3px 0px #000000;
+  /* Modern Linear / Raycast Radii (U1) */
+  --md-radius-sm: 6px;
+  --md-radius-md: 8px;
+  --md-radius-lg: 10px;
+  --md-radius-xl: 12px;
 
-  /* Architectural Radii */
-  --md-radius-sm: 3px;
-  --md-radius-md: 5px;
-  --md-radius-lg: 6px;
-  --md-radius-xl: 8px;
+  /* 1px Border Standard (U1) */
+  --md-border-width: 1px;
+
+  /* Layered Elevation Shadows (U1) */
+  --md-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --md-shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --md-shadow-lg: 0 10px 18px -3px rgba(0, 0, 0, 0.35), 0 4px 8px -4px rgba(0, 0, 0, 0.25);
+  --md-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme='light'] {
   /* Inverted Neutral Ramp (WCAG 2.1 AAA Compliant) */
   --md-neutral-0: #ffffff;
-  --md-neutral-1: #f6f6f8;
-  --md-neutral-2: #ededf2;
-  --md-neutral-3: #d8d8e0;
-  --md-neutral-4: #888892;
-  --md-neutral-5: #666670;
-  --md-neutral-6: #4c4c54;
-  --md-neutral-7: #323238;
-  --md-neutral-8: #141417;
+  --md-neutral-1: #f8f8fa;
+  --md-neutral-2: #eeeeF2;
+  --md-neutral-3: #dddee4;
+  --md-neutral-4: #c4c5ce;
+  --md-neutral-5: #8c8d98;
+  --md-neutral-6: #5e5f68;
+  --md-neutral-7: #393a40;
+  --md-neutral-8: #161619;
   --md-neutral-9: #000000;
 
-  /* Accent in Light Mode */
-  --md-accent: #000000;
+  /* Functional Accent in Light Mode */
+  --md-accent: #2563eb;
   --md-accent-contrast: #ffffff;
-  --md-accent-subtle: #e0e0e8;
-  --md-accent-ring: rgba(0, 0, 0, 0.25);
+  --md-accent-subtle: rgba(37, 99, 235, 0.1);
+  --md-accent-ring: rgba(37, 99, 235, 0.35);
 
   /* Semantic Mappings */
   --md-bg: var(--md-neutral-0);
@@ -80,34 +114,32 @@
   --md-text-muted: var(--md-neutral-7);
   --md-text: var(--md-neutral-8);
   --md-text-bold: var(--md-neutral-9);
-  --md-danger: var(--md-neutral-6);
+  --md-danger: #dc2626;
 
-  /* Architectural Neubrutalist Tokens (Light) */
-  --md-border-width: 1.5px;
-  --md-shadow-interactive: 2px 2px 0px var(--md-border-strong);
-  --md-shadow-card: 2px 2px 0px var(--md-border-strong);
-  --md-shadow-panel: 4px 4px 0px rgba(0, 0, 0, 0.22);
-  --md-shadow-modal: 6px 6px 0px rgba(0, 0, 0, 0.35);
-  --md-shadow-canvas-bar: 3px 3px 0px rgba(0, 0, 0, 0.22);
+  /* Layered Elevation Shadows (Light) */
+  --md-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --md-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --md-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
+  --md-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
     --md-neutral-0: #ffffff;
-    --md-neutral-1: #f6f6f8;
-    --md-neutral-2: #ededf2;
-    --md-neutral-3: #d8d8e0;
-    --md-neutral-4: #888892;
-    --md-neutral-5: #666670;
-    --md-neutral-6: #4c4c54;
-    --md-neutral-7: #323238;
-    --md-neutral-8: #141417;
+    --md-neutral-1: #f8f8fa;
+    --md-neutral-2: #eeeeF2;
+    --md-neutral-3: #dddee4;
+    --md-neutral-4: #c4c5ce;
+    --md-neutral-5: #8c8d98;
+    --md-neutral-6: #5e5f68;
+    --md-neutral-7: #393a40;
+    --md-neutral-8: #161619;
     --md-neutral-9: #000000;
 
-    --md-accent: #000000;
+    --md-accent: #2563eb;
     --md-accent-contrast: #ffffff;
-    --md-accent-subtle: #e0e0e8;
-    --md-accent-ring: rgba(0, 0, 0, 0.25);
+    --md-accent-subtle: rgba(37, 99, 235, 0.1);
+    --md-accent-ring: rgba(37, 99, 235, 0.35);
 
     --md-bg: var(--md-neutral-0);
     --md-surface: var(--md-neutral-1);
@@ -118,14 +150,17 @@
     --md-text-muted: var(--md-neutral-7);
     --md-text: var(--md-neutral-8);
     --md-text-bold: var(--md-neutral-9);
-    --md-danger: var(--md-neutral-6);
+    --md-danger: #dc2626;
 
-    /* Architectural Neubrutalist Tokens (Light) */
-    --md-border-width: 1.5px;
-    --md-shadow-interactive: 2px 2px 0px var(--md-border-strong);
-    --md-shadow-card: 2px 2px 0px var(--md-border-strong);
-    --md-shadow-panel: 4px 4px 0px rgba(0, 0, 0, 0.22);
-    --md-shadow-modal: 6px 6px 0px rgba(0, 0, 0, 0.35);
-    --md-shadow-canvas-bar: 3px 3px 0px rgba(0, 0, 0, 0.22);
+    --md-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --md-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+    --md-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
+    --md-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
   }
 }
+
+/* Canvas Labels Toggle */
+[data-show-labels='false'] .wireframeChip {
+  display: none !important;
+}
+

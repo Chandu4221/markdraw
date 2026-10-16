@@ -1,7 +1,9 @@
 import { TLShape, Editor } from '@tldraw/tldraw';
 import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
-import { AABB } from './types';
+import { AABB, CompilationOptions } from './types';
 import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
+import { InferredStyle, inferNodeStyle } from './style';
+import { AI_DIRECTIVE_HEADER } from './directive';
 
 export interface IRBounds {
   h: number;
@@ -12,9 +14,11 @@ export interface IRBounds {
 
 export interface IRTextProps {
   altText?: string;
+  behaviors?: string[];
   checked?: boolean;
   iconName?: string;
   label?: string;
+  note?: string;
   options?: string;
   placeholder?: string;
   showText?: boolean;
@@ -24,6 +28,7 @@ export interface IRTextProps {
 }
 
 export interface IRNode {
+  aiDirective?: string;
   bounds: IRBounds;
   children: IRNode[];
   direction: 'Column' | 'Leaf' | 'Row';
@@ -32,6 +37,7 @@ export interface IRNode {
   parent: string | null;
   path: string;
   role: string;
+  style?: InferredStyle;
   textProps: IRTextProps;
   widgetType: string;
 }
@@ -162,7 +168,8 @@ interface IntermediateItem {
 export function buildIRTree(
   shapes: TLShape[],
   editor?: Editor | null,
-  containmentThreshold: number = 0.85
+  containmentThreshold: number = 0.85,
+  options?: CompilationOptions
 ): IRTree {
   // Only process ui-widget shapes; ignore everything else
   const widgetShapes = shapes.filter((s) => s.type === 'ui-widget');
@@ -212,6 +219,12 @@ export function buildIRTree(
       if (props.variant !== undefined && props.variant !== '') textProps.variant = props.variant;
       if (typeof props.showText === 'boolean') textProps.showText = props.showText;
       if (props.iconName !== undefined && props.iconName !== '') textProps.iconName = props.iconName;
+      if (Array.isArray(props.behaviors) && props.behaviors.length > 0) {
+        textProps.behaviors = [...props.behaviors];
+      }
+      if (typeof props.note === 'string' && props.note.trim() !== '') {
+        textProps.note = props.note.trim();
+      }
 
       const role = resolveWidgetRole(widgetType);
 
@@ -296,6 +309,18 @@ export function buildIRTree(
     processSubtree(root, 'Root');
   }
 
+  // Attach computed styles (Part A) to every node
+  const attachStyles = (curr: IRNode, parent: IRNode | null, siblings: IRNode[]) => {
+    curr.style = inferNodeStyle(curr, parent, siblings, options);
+    for (const child of curr.children) {
+      attachStyles(child, curr, curr.children);
+    }
+  };
+
+  for (const root of roots) {
+    attachStyles(root, null, roots);
+  }
+
   return {
     elementCount: items.length,
     roots,
@@ -332,21 +357,51 @@ export function pruneDefaultProps(node: IRNode): IRNode {
       if (k === 'showText' && (v === false || v === defaults.showText)) continue;
       if (k === 'value' && (v === 0 || v === defaults.value)) continue;
       if (k === 'label' && isUntouchedLabel(node.widgetType, v as string)) continue;
+      if (Array.isArray(v) && v.length === 0) continue;
       if (defaults[k] !== undefined && defaults[k] === v) continue;
       cleanProps[k] = v;
     }
   }
 
-  return {
+  const result: any = {
     ...node,
     textProps: cleanProps as any,
     children: node.children.map(pruneDefaultProps)
   };
+
+  if (node.style) {
+    const cleanStyle: Record<string, any> = {};
+    if (typeof node.style.widthPct === 'number') cleanStyle.widthPct = node.style.widthPct;
+    if (node.style.align) cleanStyle.align = node.style.align;
+    if (node.style.alignY) cleanStyle.alignY = node.style.alignY;
+    if (node.style.dist) {
+      cleanStyle.dist = node.style.dist.replace(/^dist:/, '');
+    }
+    if (node.style.rel) cleanStyle.rel = node.style.rel;
+    if (Array.isArray(node.style.behaviors) && node.style.behaviors.length > 0) {
+      cleanStyle.behaviors = node.style.behaviors;
+    }
+    if (node.style.note) cleanStyle.note = node.style.note;
+
+    if (Object.keys(cleanStyle).length > 0) {
+      result.style = cleanStyle;
+    } else {
+      delete result.style;
+    }
+  }
+
+  return result as IRNode;
 }
 
 export function serializeIRToJsonAst(ir: IRTree | IRNode[]): string {
   const data = Array.isArray(ir) ? ir : ir.roots;
-  const pruned = data.map(pruneDefaultProps);
+  const pruned = data.map((rootNode) => {
+    const p = pruneDefaultProps(rootNode);
+    return {
+      aiDirective: AI_DIRECTIVE_HEADER,
+      ...p
+    };
+  });
   const sorted = sortKeysAlphabetically(pruned);
   return JSON.stringify(sorted, null, 2);
 }

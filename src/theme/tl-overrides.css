@@ -1,4 +1,4 @@
-/* MarkDraw Deep Overrides for tldraw Canvas */
+/* MarkDraw Deep Overrides for tldraw Canvas — v2.8 Clean Aesthetic */
 
 .tl-container {
   --color-accent: var(--md-accent) !important;
@@ -19,23 +19,24 @@
   font-family: var(--md-font-sans) !important;
 }
 
-/* Canvas Background & Grid */
+/* Canvas Background & Grid (4% opacity per U3) */
 .tl-background {
   background-color: var(--md-bg) !important;
 }
 
 .tl-grid {
-  opacity: 0.45 !important;
+  opacity: 0.25 !important;
 }
 
-/* Neutralize Selection Rings and Transform Handles (No Blue) */
+/* Clean Blue Selection Rings and Transform Handles (U3) */
 .tl-selection__fg,
 .tl-selection-box {
   stroke: var(--md-accent) !important;
+  stroke-width: 1px !important;
 }
 
 .tl-selection__bg {
-  fill: var(--md-accent-ring) !important;
+  fill: var(--md-accent-subtle) !important;
 }
 
 .tl-corner-handle,
@@ -43,21 +44,23 @@
 .tl-handle {
   fill: var(--md-surface) !important;
   stroke: var(--md-accent) !important;
-  stroke-width: 1.5px !important;
+  stroke-width: 1px !important;
+  border-radius: 2px !important;
 }
 
 .tl-rotate-handle {
   fill: var(--md-surface) !important;
   stroke: var(--md-accent) !important;
+  stroke-width: 1px !important;
 }
 
-/* Toolbar & Panels Chrome */
+/* Hidden tldraw UI chrome stays hidden */
 .tl-toolbar,
 .tl-menu__panel,
 .tl-popover {
   background: var(--md-surface) !important;
-  border: var(--md-border-width, 1.5px) solid var(--md-border-strong) !important;
-  box-shadow: var(--md-shadow-panel) !important;
+  border: 1px solid var(--md-border) !important;
+  box-shadow: var(--md-shadow-md) !important;
   border-radius: var(--md-radius-md) !important;
 }
 
@@ -74,13 +77,5 @@
 .tl-button[aria-checked='true'] {
   background: var(--md-accent-subtle) !important;
   color: var(--md-accent) !important;
-  border: var(--md-border-width, 1.5px) solid var(--md-border-strong) !important;
-}
-
-/* Quick Action & Helper Pill Overrides */
-.tl-quick-actions,
-.tl-helper-buttons {
-  background: var(--md-surface) !important;
-  border: var(--md-border-width, 1.5px) solid var(--md-border) !important;
-  box-shadow: var(--md-shadow-interactive) !important;
+  border: 1px solid var(--md-border) !important;
 }

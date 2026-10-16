@@ -503,6 +503,72 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
+      case 'carousel': {
+        const dotCount = 4;
+        const dotRadius = 3;
+        const dotGap = 10;
+        const totalDotsW = dotCount * (dotRadius * 2) + (dotCount - 1) * dotGap;
+        const startX = w / 2 - totalDotsW / 2;
+        return (
+          <g>
+            <rect
+              x={0.5}
+              y={0.5}
+              width={w - 1}
+              height={h - 1}
+              rx={6}
+              fill="var(--md-surface)"
+              stroke="var(--md-border)"
+              strokeWidth={1}
+            />
+            <Chip label="carousel" maxWidth={w} />
+            {/* Left Chevron Arrow < */}
+            <path
+              d={`M ${20} ${h / 2 - 9} L ${12} ${h / 2} L ${20} ${h / 2 + 9}`}
+              fill="none"
+              stroke="var(--md-text-muted)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Right Chevron Arrow > */}
+            <path
+              d={`M ${w - 20} ${h / 2 - 9} L ${w - 12} ${h / 2} L ${w - 20} ${h / 2 + 9}`}
+              fill="none"
+              stroke="var(--md-text-muted)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Title / Label */}
+            {!isEditing && (
+              <text
+                x={w / 2}
+                y={h / 2}
+                dominantBaseline="middle"
+                textAnchor="middle"
+                fill="var(--md-text-bold)"
+                fontSize={13}
+                fontWeight={600}
+                fontFamily="var(--md-font-sans, 'Inter', sans-serif)"
+              >
+                {label || 'Featured Items'}
+              </text>
+            )}
+            {/* Slide Dots */}
+            {Array.from({ length: dotCount }).map((_, i) => (
+              <circle
+                key={i}
+                cx={startX + i * (dotRadius * 2 + dotGap) + dotRadius}
+                cy={h - 16}
+                r={dotRadius}
+                fill={i === 0 ? 'var(--md-accent)' : 'var(--md-border)'}
+              />
+            ))}
+          </g>
+        );
+      }
+
       // 6. Media Placeholders (Cross ✕ Boxes - Leaf Widget, no chip)
       case 'image_frame':
       case 'video_frame': {

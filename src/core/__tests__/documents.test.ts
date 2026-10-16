@@ -120,7 +120,7 @@ describe('File Export & Import Serialization', () => {
     const file = serializeDocToFile('My Project', shapes);
 
     expect(file.formatVersion).toBe(1);
-    expect(file.markdrawVersion).toBe('2.7');
+    expect(file.markdrawVersion).toBe('2.8');
     expect(file.doc.name).toBe('My Project');
     expect(file.doc.shapes.length).toBe(1);
   });

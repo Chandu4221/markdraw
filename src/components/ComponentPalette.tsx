@@ -53,7 +53,6 @@ import {
   LayoutGrid,
   Columns
 } from 'lucide-react';
-import styles from './ComponentPalette.module.css';
 
 const ICON_MAP: Record<string, React.FC<{ size?: number; strokeWidth?: number }>> = {
   Maximize2,
@@ -112,7 +111,7 @@ const CATEGORIES: { id: UIWidgetCategory | 'all'; label: string }[] = [
   { id: 'layout', label: 'Layout' },
   { id: 'content', label: 'Content' },
   { id: 'forms', label: 'Forms' },
-  { id: 'navigation', label: 'Navigation' },
+  { id: 'navigation', label: 'Nav' },
   { id: 'feedback', label: 'Feedback' },
   { id: 'media', label: 'Media' }
 ];
@@ -194,39 +193,54 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
       .filter((g) => g.items.length > 0);
   }, [selectedCategory, filteredWidgets]);
 
+  if (!isOpen) return null;
+
   return (
-    <aside className={`${styles.paletteRail} ${!isOpen ? styles.paletteRailCollapsed : ''}`}>
-      <div className={styles.header}>
-        <div className={styles.titleArea}>
-          <Box size={16} strokeWidth={1.5} />
-          <span>UI Components</span>
+    <aside className="w-[260px] h-full flex flex-col shrink-0 border-r border-[var(--md-border)] bg-[var(--md-surface)] select-none">
+      {/* Header */}
+      <div className="h-10 px-3 border-b border-[var(--md-border)] flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-text-bold)]">
+          <Box size={14} className="text-[var(--md-accent)]" />
+          <span>Components</span>
         </div>
-        <button className={styles.collapseBtn} onClick={onToggle} title="Hide Palette">
-          <PanelLeftClose size={16} strokeWidth={1.5} />
+        <button
+          className="p-1 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors"
+          onClick={onToggle}
+          title="Hide Palette (Ctrl+B)"
+        >
+          <PanelLeftClose size={15} />
         </button>
       </div>
 
-      <div className={styles.searchContainer}>
-        <div className={styles.searchInputWrapper}>
-          <Search size={14} color="var(--md-text-subtle)" strokeWidth={1.5} />
+      {/* Search Input */}
+      <div className="p-2 border-b border-[var(--md-border)]">
+        <div className="relative flex items-center">
+          <Search size={13} className="absolute left-2.5 text-[var(--md-text-subtle)]" />
           <input
             ref={searchInputRef}
             type="text"
-            className={styles.searchInput}
+            className="h-7 w-full pl-8 pr-7 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-bg)] text-xs text-[var(--md-text)] placeholder:text-[var(--md-text-subtle)] focus:outline-none focus:border-[var(--md-accent)] focus:ring-1 focus:ring-[var(--md-accent)] transition-colors"
             placeholder="Search widgets (use ↑↓, Enter)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
           />
-          <kbd className={styles.searchKbd}>/</kbd>
+          <kbd className="absolute right-2 px-1 text-[10px] font-mono text-[var(--md-text-subtle)] border border-[var(--md-border)] rounded-[3px] bg-[var(--md-surface)]">
+            /
+          </kbd>
         </div>
       </div>
 
-      <div className={styles.categoryNav}>
+      {/* Category Pills */}
+      <div className="flex items-center gap-1 p-2 overflow-x-auto border-b border-[var(--md-border)] scrollbar-none">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
-            className={`${styles.categoryBtn} ${selectedCategory === cat.id ? styles.categoryBtnActive : ''}`}
+            className={`px-2 py-0.5 text-[11px] font-medium rounded-full transition-colors whitespace-nowrap ${
+              selectedCategory === cat.id
+                ? 'bg-[var(--md-text-bold)] text-[var(--md-bg)]'
+                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
+            }`}
             onClick={() => setSelectedCategory(cat.id)}
           >
             {cat.label}
@@ -234,14 +248,25 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
         ))}
       </div>
 
-      <div className={styles.catalogScroll}>
+      {/* Widgets Catalog List */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-4">
         {groupedWidgets.length === 0 ? (
-          <div className={styles.emptySearch}>No matching components found.</div>
+          <div className="text-center py-8 text-xs text-[var(--md-text-subtle)]">
+            No matching components found.
+          </div>
         ) : (
           groupedWidgets.map((group) => (
-            <div key={group.category} className={styles.categoryGroup}>
-              <div className={styles.categoryLabel}>{group.category}</div>
-              <div className={styles.widgetGrid}>
+            <div key={group.category} className="space-y-1.5">
+              <div className="px-1 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--md-text-subtle)]">
+                  {group.category}
+                </span>
+                <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                  {group.items.length}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-1.5">
                 {group.items.map((widget) => {
                   const IconComp = ICON_MAP[widget.icon] || Box;
                   const isHighlighted =
@@ -249,16 +274,24 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
                   return (
                     <div
                       key={widget.type}
-                      className={`${styles.widgetCard} ${isHighlighted ? styles.widgetCardHighlighted : ''}`}
+                      className={`group flex items-center gap-2.5 p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] hover:bg-[var(--md-surface-raised)] hover:border-[var(--md-border-strong)] transition-all cursor-pointer shadow-xs ${
+                        isHighlighted
+                          ? 'border-[var(--md-accent)] ring-1 ring-[var(--md-accent)] bg-[var(--md-surface-raised)]'
+                          : ''
+                      }`}
                       onClick={() => onInsertWidget(widget)}
                       title={`Click or press Enter to add ${widget.name}`}
                     >
-                      <div className={styles.widgetIconBox}>
-                        <IconComp size={16} strokeWidth={1.5} />
+                      <div className="w-7 h-7 shrink-0 rounded-[4px] border border-[var(--md-border)] bg-[var(--md-bg)] flex items-center justify-center text-[var(--md-text)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                        <IconComp size={14} />
                       </div>
-                      <div className={styles.widgetMeta}>
-                        <span className={styles.widgetName}>{widget.name}</span>
-                        <span className={styles.widgetDesc}>{widget.description}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-medium text-[var(--md-text-bold)] truncate">
+                          {widget.name}
+                        </span>
+                        <span className="text-[11px] text-[var(--md-text-subtle)] truncate">
+                          {widget.description}
+                        </span>
                       </div>
                     </div>
                   );

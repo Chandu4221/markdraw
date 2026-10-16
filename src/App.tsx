@@ -56,7 +56,7 @@ import {
   Tag,
   Keyboard
 } from 'lucide-react';
-import styles from './App.module.css';
+import { Button } from '@/components/ui/button';
 
 const customShapeUtils = [UIWidgetShapeUtil];
 
@@ -75,8 +75,11 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   containmentThreshold: 0.85,
   rowClusterThreshold: 16,
   gridBandThreshold: 32,
+  sizeBucketTolerance: 2,
+  alignTolerance: 3,
   includeTimestamp: false,
-  includeLegend: true
+  includeLegend: true,
+  pageNote: ''
 };
 
 export const App: React.FC = () => {
@@ -621,23 +624,30 @@ export const App: React.FC = () => {
 
   return (
     <ErrorBoundary getRecoverySnapshot={getRecoverySnapshot}>
-      <div className={styles.appShell}>
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--md-bg)] text-[var(--md-text)] font-sans antialiased">
         {/* Top Application Header */}
-        <header className={styles.header}>
-          <div className={styles.brand}>
-            <button
-              className={`${styles.iconBtn} ${isPaletteOpen ? styles.iconBtnActive : ''}`}
+        <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
+          <div className="flex items-center gap-2">
+            <Button
+              variant={isPaletteOpen ? 'accent' : 'ghost'}
+              size="icon"
               onClick={() => setIsPaletteOpen((prev) => !prev)}
               title={isPaletteOpen ? 'Collapse Components (Ctrl+B)' : 'Open Components (Ctrl+B)'}
             >
-              {isPaletteOpen ? <PanelLeftClose size={15} strokeWidth={1.5} /> : <PanelLeftOpen size={15} strokeWidth={1.5} />}
-            </button>
+              {isPaletteOpen ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
+            </Button>
 
-            <div className={styles.logoBadge}>MD</div>
-            <span className={styles.brandTitle}>MarkDraw</span>
-            <span className={styles.versionBadge}>v{MARKDRAW_VERSION}</span>
+            <div className="w-6 h-6 rounded-[5px] bg-[var(--md-text-bold)] text-[var(--md-bg)] text-xs font-bold flex items-center justify-center">
+              MD
+            </div>
+            <span className="text-xs font-bold tracking-tight text-[var(--md-text-bold)]">
+              MarkDraw
+            </span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border border-[var(--md-border)]">
+              v{MARKDRAW_VERSION}
+            </span>
 
-            {/* Document Menu (Task 1 & Task 2) */}
+            {/* Document Menu */}
             <DocumentMenu
               activeDoc={activeDoc}
               docs={docsRegistry.docs}
@@ -651,17 +661,26 @@ export const App: React.FC = () => {
             />
           </div>
 
-          <div className={styles.headerControls}>
-            <div className={styles.layoutPresets}>
+          <div className="flex items-center gap-2">
+            {/* Layout Presets */}
+            <div className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]">
               <button
-                className={`${styles.presetBtn} ${!isRightPanelOpen ? styles.activePreset : ''}`}
+                className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+                  !isRightPanelOpen
+                    ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                }`}
                 onClick={() => setIsRightPanelOpen(false)}
                 title="Canvas Fullscreen Focus"
               >
                 Canvas Full
               </button>
               <button
-                className={`${styles.presetBtn} ${isRightPanelOpen && Math.round(canvasPercent) === 75 ? styles.activePreset : ''}`}
+                className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+                  isRightPanelOpen && Math.round(canvasPercent) === 75
+                    ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                }`}
                 onClick={() => {
                   setIsRightPanelOpen(true);
                   setCanvasPercent(75);
@@ -671,7 +690,11 @@ export const App: React.FC = () => {
                 Canvas 75%
               </button>
               <button
-                className={`${styles.presetBtn} ${isRightPanelOpen && Math.round(canvasPercent) === 50 ? styles.activePreset : ''}`}
+                className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+                  isRightPanelOpen && Math.round(canvasPercent) === 50
+                    ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                }`}
                 onClick={() => {
                   setIsRightPanelOpen(true);
                   setCanvasPercent(50);
@@ -681,7 +704,11 @@ export const App: React.FC = () => {
                 50 / 50
               </button>
               <button
-                className={`${styles.presetBtn} ${isRightPanelOpen && Math.round(canvasPercent) === 35 ? styles.activePreset : ''}`}
+                className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+                  isRightPanelOpen && Math.round(canvasPercent) === 35
+                    ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                }`}
                 onClick={() => {
                   setIsRightPanelOpen(true);
                   setCanvasPercent(35);
@@ -692,67 +719,73 @@ export const App: React.FC = () => {
               </button>
             </div>
 
-            <div className={styles.headerStats}>
-              <span>Elements: <strong>{compilation.elementCount}</strong></span>
+            {/* Header Stats */}
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-[var(--md-text-muted)] px-2">
+              <span>Elements: <strong className="text-[var(--md-text-bold)] font-mono">{compilation.elementCount}</strong></span>
               {compileDuration !== null && (
                 <>
-                  <span className={styles.statDivider}>|</span>
-                  <span style={{ fontFamily: 'var(--md-font-mono)', fontSize: 11, opacity: 0.85 }} title="Compiler Execution Time">
-                    compiled in {compileDuration}ms
+                  <span className="text-[var(--md-border)]">|</span>
+                  <span className="font-mono text-[11px] text-[var(--md-accent)]" title="Compiler Execution Time">
+                    ⚡ {compileDuration}ms
                   </span>
                 </>
               )}
-              <span className={styles.statDivider}>|</span>
-              <span>Catalog: <strong>{WIDGET_CATALOG.length} Widgets</strong></span>
+              <span className="text-[var(--md-border)]">|</span>
+              <span>Catalog: <strong className="text-[var(--md-text-bold)] font-mono">{WIDGET_CATALOG.length}</strong></span>
             </div>
 
-            <button
-              className={styles.iconBtn}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsShortcutsOpen(true)}
-              title="Keyboard Shortcuts & Productivity (?)"
+              title="Keyboard Shortcuts (?)"
             >
-              <Keyboard size={15} strokeWidth={1.5} />
-            </button>
+              <Keyboard size={15} />
+            </Button>
 
-            <button
-              className={styles.iconBtn}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsLegendOpen(true)}
               title="View Semantic Legend"
             >
-              <BookOpen size={15} strokeWidth={1.5} />
-            </button>
+              <BookOpen size={15} />
+            </Button>
 
-            <button
-              className={styles.iconBtn}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsSettingsOpen(true)}
               title="Compiler & Geometry Settings"
             >
-              <Sliders size={15} strokeWidth={1.5} />
-            </button>
+              <Sliders size={15} />
+            </Button>
 
-            <button
-              className={`${styles.iconBtn} ${isRightPanelOpen ? styles.iconBtnActive : ''}`}
+            <Button
+              variant={isRightPanelOpen ? 'accent' : 'ghost'}
+              size="icon"
               onClick={() => setIsRightPanelOpen((prev) => !prev)}
               title={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
             >
-              {isRightPanelOpen ? <PanelRightClose size={15} strokeWidth={1.5} /> : <PanelRightOpen size={15} strokeWidth={1.5} />}
-            </button>
+              {isRightPanelOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+            </Button>
 
-            <button
-              className={styles.iconBtn}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
-              {theme === 'dark' ? <Sun size={15} strokeWidth={1.5} /> : <Moon size={15} strokeWidth={1.5} />}
-            </button>
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </Button>
           </div>
         </header>
 
         {/* Main Workspace */}
-        <div className={styles.workspace}>
-          {isDragging && <div className={styles.draggingOverlay} />}
+        <div className="flex-1 flex overflow-hidden relative">
+          {isDragging && <div className="fixed inset-0 z-50 cursor-col-resize select-none" />}
 
-          {/* Left Native Component Palette Rail */}
+          {/* Left Component Palette Rail */}
           <ComponentPalette
             isOpen={isPaletteOpen}
             onToggle={() => setIsPaletteOpen((prev) => !prev)}
@@ -760,10 +793,12 @@ export const App: React.FC = () => {
           />
 
           {/* Split Area: Canvas + Resizer + Output */}
-          <div className={styles.splitArea} ref={splitAreaRef}>
-            {/* Canvas Container with dynamic key per document (Task 1) */}
+          <div className="flex-1 flex h-full overflow-hidden relative" ref={splitAreaRef}>
+            {/* Canvas Container */}
             <div
-              className={`${styles.canvasContainer} ${isDragging ? styles.resizing : ''}`}
+              className={`h-full relative overflow-hidden bg-[var(--md-bg)] ${
+                isDragging ? 'transition-none' : 'transition-[width] duration-200 ease-out'
+              }`}
               data-show-labels={showLabels}
               style={{
                 width: isRightPanelOpen ? `calc(${canvasPercent}% - 4px)` : '100%',
@@ -781,11 +816,11 @@ export const App: React.FC = () => {
               {/* Quick Floating Open Button for Left Palette if closed */}
               {!isPaletteOpen && (
                 <button
-                  className={`${styles.floatingPanelBtn} ${styles.floatingLeftBtn}`}
+                  className="absolute top-3 left-3 z-30 flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] shadow-[var(--md-shadow-md)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] transition-colors cursor-pointer select-none"
                   onClick={() => setIsPaletteOpen(true)}
                   title="Open Components (Ctrl+B)"
                 >
-                  <PanelLeftOpen size={14} strokeWidth={1.5} />
+                  <PanelLeftOpen size={13} />
                   <span>Components</span>
                 </button>
               )}
@@ -793,82 +828,84 @@ export const App: React.FC = () => {
               {/* Quick Floating Open Button for Right Output if closed */}
               {!isRightPanelOpen && (
                 <button
-                  className={`${styles.floatingPanelBtn} ${styles.floatingRightBtn}`}
+                  className="absolute top-3 right-3 z-30 flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] shadow-[var(--md-shadow-md)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] transition-colors cursor-pointer select-none"
                   onClick={() => setIsRightPanelOpen(true)}
                   title="Open Live Output (Ctrl+J)"
                 >
-                  <PanelRightOpen size={14} strokeWidth={1.5} />
+                  <PanelRightOpen size={13} />
                   <span>Output</span>
                 </button>
               )}
 
-              {/* Properties Mini-Panel with Multi-Select support (Task 4) */}
-              <div style={{ position: 'absolute', top: !isRightPanelOpen ? 46 : 0, right: 0, zIndex: 400 }}>
-                <PropsPanel editor={editor} />
-              </div>
+              {/* Properties Panel */}
+              <PropsPanel editor={editor} />
 
-              {/* Minimal Floating Canvas Controls */}
-              <div className={styles.canvasControlBar}>
+              {/* Floating Canvas Controls Bar */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] select-none">
                 <button
-                  className={`${styles.canvasControlBtn} ${activeTool === 'select' ? styles.canvasControlBtnActive : ''}`}
+                  className={`p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer ${
+                    activeTool === 'select' ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]' : ''
+                  }`}
                   onClick={() => handleSelectTool('select')}
                   title="Select Tool (V)"
                 >
-                  <MousePointer size={14} strokeWidth={1.5} />
+                  <MousePointer size={14} />
                 </button>
                 <button
-                  className={`${styles.canvasControlBtn} ${activeTool === 'hand' ? styles.canvasControlBtnActive : ''}`}
+                  className={`p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer ${
+                    activeTool === 'hand' ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]' : ''
+                  }`}
                   onClick={() => handleSelectTool('hand')}
                   title="Hand / Pan Tool (H)"
                 >
-                  <Hand size={14} strokeWidth={1.5} />
+                  <Hand size={14} />
                 </button>
 
-                <div className={styles.canvasControlDivider} />
+                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
 
                 <button
-                  className={styles.canvasControlBtn}
+                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.undo()}
                   title="Undo (Ctrl+Z)"
                 >
-                  <Undo2 size={14} strokeWidth={1.5} />
+                  <Undo2 size={14} />
                 </button>
                 <button
-                  className={styles.canvasControlBtn}
+                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.redo()}
                   title="Redo (Ctrl+Y)"
                 >
-                  <Redo2 size={14} strokeWidth={1.5} />
+                  <Redo2 size={14} />
                 </button>
 
-                <div className={styles.canvasControlDivider} />
+                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
 
                 <button
-                  className={styles.canvasControlBtn}
+                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.zoomIn()}
                   title="Zoom In"
                 >
-                  <ZoomIn size={14} strokeWidth={1.5} />
+                  <ZoomIn size={14} />
                 </button>
                 <button
-                  className={styles.canvasControlBtn}
+                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.zoomOut()}
                   title="Zoom Out"
                 >
-                  <ZoomOut size={14} strokeWidth={1.5} />
+                  <ZoomOut size={14} />
                 </button>
                 <button
-                  className={styles.canvasControlBtn}
+                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.zoomToFit()}
                   title="Zoom to Fit"
                 >
-                  <Maximize size={14} strokeWidth={1.5} />
+                  <Maximize size={14} />
                 </button>
 
-                <div className={styles.canvasControlDivider} />
+                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
 
                 <button
-                  className={styles.canvasControlBtn}
+                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-danger)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => {
                     const current = editorRef.current;
                     if (!current) return;
@@ -879,103 +916,157 @@ export const App: React.FC = () => {
                   }}
                   title="Delete Selected"
                 >
-                  <Trash2 size={14} strokeWidth={1.5} />
+                  <Trash2 size={14} />
                 </button>
 
-                <div className={styles.canvasControlDivider} />
+                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
 
                 <button
-                  className={`${styles.canvasControlBtn} ${showLabels ? styles.canvasControlBtnActive : ''}`}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-[4px] text-xs font-semibold transition-colors cursor-pointer ${
+                    showLabels
+                      ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]'
+                      : 'text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)]'
+                  }`}
                   onClick={toggleLabels}
                   title={showLabels ? 'Hide Component Labels' : 'Show Component Labels'}
                 >
-                  <Tag size={14} strokeWidth={1.5} />
-                  <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 4 }}>Labels</span>
+                  <Tag size={13} />
+                  <span className="text-[11px]">Labels</span>
                 </button>
               </div>
 
-              {/* Warning Toast */}
+              {/* Toast Message */}
               {toastMessage && (
-                <div className={styles.toast}>
-                  <AlertCircle size={14} />
+                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] text-xs text-[var(--md-text-bold)] shadow-[var(--md-shadow-lg)] animate-in fade-in-0 duration-150">
+                  <AlertCircle size={14} className="text-[var(--md-accent)]" />
                   <span>{toastMessage}</span>
                 </div>
               )}
             </div>
 
-            {/* Resizer Divider */}
+            {/* Split Resizer Divider */}
             {isRightPanelOpen && (
               <div
-                className={`${styles.resizer} ${isDragging ? styles.resizerActive : ''}`}
+                className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-colors select-none ${
+                  isDragging ? 'bg-[var(--md-accent)]' : 'bg-transparent'
+                }`}
                 onMouseDown={startResizing}
                 onDoubleClick={() => setCanvasPercent(55)}
                 title="Drag to resize (Double-click to reset 55/45)"
               >
-                <div className={styles.resizerHandle} />
+                <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
               </div>
             )}
 
             {/* Right Pane: Live Reactive Output */}
             {isRightPanelOpen && (
               <aside
-                className={`${styles.outputContainer} ${isDragging ? styles.resizing : ''}`}
+                className={`h-full flex flex-col bg-[var(--md-surface)] overflow-hidden shrink-0 border-l border-[var(--md-border)] ${
+                  isDragging ? 'transition-none' : 'transition-[width] duration-200 ease-out'
+                }`}
                 style={{
-                  width: `calc(${100 - canvasPercent}% - 4px)`,
-                  flex: 'none'
+                  width: `calc(${100 - canvasPercent}% - 4px)`
                 }}
               >
-                <div className={styles.outputToolbar}>
-                  <div className={styles.tabs}>
+                {/* Output Toolbar */}
+                <div className="h-10 px-2 border-b border-[var(--md-border)] flex items-center justify-between shrink-0 select-none">
+                  {/* Tabs */}
+                  <div className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]">
                     <button
-                      className={`${styles.tabBtn} ${outputTab === 'spec' ? styles.activeTab : ''}`}
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'spec'
+                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
                       onClick={() => setOutputTab('spec')}
                     >
-                      <FileText size={14} strokeWidth={1.5} /> Spec Table
+                      <FileText size={13} />
+                      <span>Spec Table</span>
                     </button>
                     <button
-                      className={`${styles.tabBtn} ${outputTab === 'grid' ? styles.activeTab : ''}`}
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'grid'
+                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
                       onClick={() => setOutputTab('grid')}
                     >
-                      <LayoutGrid size={14} strokeWidth={1.5} /> Spatial Grid
+                      <LayoutGrid size={13} />
+                      <span>Spatial Grid</span>
                     </button>
                     <button
-                      className={`${styles.tabBtn} ${outputTab === 'ascii' ? styles.activeTab : ''}`}
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'ascii'
+                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
                       onClick={() => setOutputTab('ascii')}
                     >
-                      <Terminal size={14} strokeWidth={1.5} /> ASCII Layout
+                      <Terminal size={13} />
+                      <span>ASCII</span>
                     </button>
                     <button
-                      className={`${styles.tabBtn} ${outputTab === 'json' ? styles.activeTab : ''}`}
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'json'
+                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
                       onClick={() => setOutputTab('json')}
                     >
-                      <Code size={14} strokeWidth={1.5} /> AST (JSON)
+                      <Code size={13} />
+                      <span>JSON AST</span>
                     </button>
                   </div>
-                  <div className={styles.actions}>
-                    <button className={styles.actionBtn} onClick={handleCopy} title="Copy to Clipboard">
-                      {copied ? <Check size={14} /> : <Copy size={14} strokeWidth={1.5} />}
-                      <span>{copied ? 'Copied' : 'Copy'}</span>
-                    </button>
-                    <button className={styles.actionBtn} onClick={handleDownload} title="Download Source">
-                      <Download size={14} strokeWidth={1.5} />
-                    </button>
-                    <button
-                      className={styles.actionBtn}
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopy}
+                      className="h-7 gap-1.5 text-xs"
+                      title="Copy to Clipboard"
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={12} className="text-[var(--md-accent)]" />
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={12} />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={handleDownload}
+                      title="Download Source"
+                    >
+                      <Download size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setIsRightPanelOpen(false)}
                       title="Collapse Output Panel (Ctrl+J)"
                     >
-                      <PanelRightClose size={14} strokeWidth={1.5} />
-                    </button>
+                      <PanelRightClose size={14} />
+                    </Button>
                   </div>
                 </div>
 
-                <div className={styles.outputViewport}>
-                  <pre className={styles.codeBlock}>
+                {/* Output Viewport */}
+                <div className="flex-1 overflow-auto p-3 bg-[var(--md-bg)]">
+                  <pre className="text-xs font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text">
                     <code>{getActiveContent()}</code>
                   </pre>
                 </div>
 
-                <footer className={styles.outputFooter}>
+                {/* Output Footer */}
+                <footer className="h-7 px-3 border-t border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between text-[11px] text-[var(--md-text-subtle)] shrink-0 select-none">
                   <span>Semantic layout compiled in real time. Paste directly into LLM prompts.</span>
                 </footer>
               </aside>

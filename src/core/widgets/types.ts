@@ -70,6 +70,7 @@ export type UIWidgetType =
   | 'banner'
 
   // Media
+  | 'carousel'
   | 'avatar'
   | 'avatar_group'
   | 'thumbnail_strip'
@@ -90,6 +91,8 @@ export interface UIWidgetProps {
   value: number;
   showText?: boolean;
   altText?: string;
+  behaviors?: string[];
+  note?: string;
 }
 
 export type IUIWidgetShape = TLBaseShape<'ui-widget', UIWidgetProps>;

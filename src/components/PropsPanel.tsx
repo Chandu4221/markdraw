@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Editor, TLShape } from '@tldraw/tldraw';
-import { ChevronDown, ChevronUp, Sliders } from 'lucide-react';
-import styles from './PropsPanel.module.css';
+import { ChevronDown, ChevronUp, Sliders, StickyNote, Activity } from 'lucide-react';
+import { getAllowedBehaviors } from '../core/widgets/widgetCatalog';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 
 interface PropsPanelProps {
   editor: Editor | null;
@@ -77,7 +79,7 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   const getPropStatus = (key: string) => {
     const values = selectedShapes.map((s) => (s.props as any)?.[key]);
     const firstVal = values[0];
-    const isMixed = values.some((v) => v !== firstVal);
+    const isMixed = values.some((v) => JSON.stringify(v) !== JSON.stringify(firstVal));
     return { isMixed, value: isMixed ? undefined : firstVal };
   };
 
@@ -127,6 +129,8 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
         return ['1-3', '1-4', '1-5'];
       case 'pagination':
         return ['1/5', '1/10', '1/20'];
+      case 'carousel':
+        return ['contained', 'full-width'];
       default:
         return ['default', 'solid', 'outline'];
     }
@@ -136,10 +140,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   const isToggleable = isSameType && ['checkbox', 'radio', 'toggle'].includes(primaryWidgetType);
   const hasOptions = isSameType && ['select', 'radio', 'tabs', 'navbar', 'menubar', 'breadcrumbs', 'footer_nav'].includes(primaryWidgetType);
   const hasValue = isSameType && ['slider', 'progress_bar', 'stepper', 'list'].includes(primaryWidgetType);
-  const hasSubtext = isSameType && ['card', 'stat_kpi', 'hero', 'banner', 'empty_state'].includes(primaryWidgetType);
+  const hasSubtext = isSameType && ['card', 'stat_kpi', 'hero', 'banner', 'empty_state', 'header', 'footer'].includes(primaryWidgetType);
   const isParagraph = isSameType && ['paragraph', 'blockquote'].includes(primaryWidgetType);
   const isMedia = isSameType && ['image_frame', 'video_frame'].includes(primaryWidgetType);
   const canHaveIcon = isSameType && ['button', 'icon', 'chip', 'banner', 'toast', 'input'].includes(primaryWidgetType);
+
+  const allowedBehaviors = isSameType ? getAllowedBehaviors(primaryWidgetType) : [];
 
   const labelStatus = getPropStatus('label');
   const variantStatus = getPropStatus('variant');
@@ -151,13 +157,28 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   const valueStatus = getPropStatus('value');
   const optionsStatus = getPropStatus('options');
   const altTextStatus = getPropStatus('altText');
+  const behaviorsStatus = getPropStatus('behaviors');
+  const noteStatus = getPropStatus('note');
+
+  const activeBehaviors: string[] = Array.isArray(behaviorsStatus.value) ? behaviorsStatus.value : [];
+
+  const handleToggleBehavior = (flag: string) => {
+    let next: string[];
+    if (activeBehaviors.includes(flag)) {
+      next = activeBehaviors.filter((f) => f !== flag);
+    } else {
+      next = [...activeBehaviors, flag];
+    }
+    updateProp('behaviors', next);
+  };
 
   return (
-    <div className={styles.panelContainer}>
-      <div className={styles.panelHeader}>
-        <div className={styles.headerTitle}>
-          <Sliders size={13} strokeWidth={1.5} />
-          <span className={styles.widgetBadge}>
+    <div className="absolute top-3 right-3 w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none">
+      {/* Header */}
+      <div className="h-9 px-3 border-b border-[var(--md-border)] flex items-center justify-between bg-[var(--md-surface)]">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Sliders size={13} className="text-[var(--md-accent)] shrink-0" />
+          <span className="text-xs font-semibold text-[var(--md-text-bold)] truncate">
             {count === 1
               ? primaryWidgetType
               : isSameType
@@ -166,7 +187,7 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           </span>
         </div>
         <button
-          className={styles.collapseBtn}
+          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors"
           onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand Panel' : 'Collapse Panel'}
         >
@@ -175,16 +196,17 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
       </div>
 
       {!isCollapsed && (
-        <div className={styles.panelBody}>
+        <div className="p-3 space-y-3 max-h-[calc(100vh-140px)] overflow-y-auto">
           {/* Label Field */}
           {(!isSameType || (primaryWidgetType !== 'divider' && primaryWidgetType !== 'spacer')) && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Label / Title {labelStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Label / Title</span>
+                {labelStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
-              <input
+              <Input
                 type="text"
-                className={styles.input}
+                className="h-7 text-xs"
                 value={labelStatus.isMixed ? '' : (labelStatus.value as string) || ''}
                 onChange={(e) => updateProp('label', e.target.value)}
                 placeholder={labelStatus.isMixed ? '— mixed —' : 'Label...'}
@@ -192,15 +214,16 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Placeholder for Inputs (Same Type) */}
+          {/* Placeholder for Inputs */}
           {isInput && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Placeholder {placeholderStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Placeholder</span>
+                {placeholderStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
-              <input
+              <Input
                 type="text"
-                className={styles.input}
+                className="h-7 text-xs"
                 value={placeholderStatus.isMixed ? '' : (placeholderStatus.value as string) || ''}
                 onChange={(e) => updateProp('placeholder', e.target.value)}
                 placeholder={placeholderStatus.isMixed ? '— mixed —' : 'Placeholder text...'}
@@ -208,14 +231,15 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Variant Dropdown (Same Type) */}
+          {/* Variant Select */}
           {isSameType && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Variant {variantStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Variant</span>
+                {variantStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <select
-                className={styles.select}
+                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)]"
                 value={variantStatus.isMixed ? '' : (variantStatus.value as string) || getVariantOptions()[0]}
                 onChange={(e) => updateProp('variant', e.target.value)}
               >
@@ -233,30 +257,29 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Checked State (Same Type) */}
+          {/* Checked State */}
           {isToggleable && (
-            <div className={styles.formGroup}>
-              <label className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  className={styles.checkbox}
-                  checked={(checkedStatus.value as boolean) ?? false}
-                  onChange={(e) => updateProp('checked', e.target.checked)}
-                />
-                <span>Active / Checked {checkedStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}</span>
-              </label>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-[var(--md-text)]">
+                Active / Checked {checkedStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
+              </span>
+              <Switch
+                checked={(checkedStatus.value as boolean) ?? false}
+                onCheckedChange={(checked) => updateProp('checked', checked)}
+              />
             </div>
           )}
 
-          {/* Comma-separated Options (Same Type) */}
+          {/* Options */}
           {hasOptions && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Options (comma-separated) {optionsStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Options (comma-separated)</span>
+                {optionsStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
-              <input
+              <Input
                 type="text"
-                className={styles.input}
+                className="h-7 text-xs"
                 value={optionsStatus.isMixed ? '' : (optionsStatus.value as string) || ''}
                 onChange={(e) => updateProp('options', e.target.value)}
                 placeholder={optionsStatus.isMixed ? '— mixed —' : 'e.g. Option A, Option B'}
@@ -264,15 +287,16 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Numeric Value (Same Type) */}
+          {/* Value */}
           {hasValue && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Value {valueStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Value</span>
+                {valueStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
-              <input
+              <Input
                 type="number"
-                className={styles.input}
+                className="h-7 text-xs font-mono"
                 value={valueStatus.isMixed ? '' : (valueStatus.value as number) ?? 0}
                 onChange={(e) => updateProp('value', parseFloat(e.target.value) || 0)}
                 placeholder={valueStatus.isMixed ? '— mixed —' : '0'}
@@ -280,14 +304,32 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Icon Selector (Same Type) */}
+          {/* Subtext */}
+          {hasSubtext && (
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Subtext</span>
+                {subtextStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
+              </label>
+              <Input
+                type="text"
+                className="h-7 text-xs"
+                value={subtextStatus.isMixed ? '' : (subtextStatus.value as string) || ''}
+                onChange={(e) => updateProp('subtext', e.target.value)}
+                placeholder={subtextStatus.isMixed ? '— mixed —' : 'Supporting subtext...'}
+              />
+            </div>
+          )}
+
+          {/* Icon Selector */}
           {canHaveIcon && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Icon {iconStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Icon</span>
+                {iconStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <select
-                className={styles.select}
+                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)]"
                 value={iconStatus.isMixed ? '' : (iconStatus.value as string) || ''}
                 onChange={(e) => updateProp('iconName', e.target.value)}
               >
@@ -305,52 +347,85 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
             </div>
           )}
 
-          {/* Subtext (Same Type) */}
-          {hasSubtext && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Subtext {subtextStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
-              </label>
-              <input
-                type="text"
-                className={styles.input}
-                value={subtextStatus.isMixed ? '' : (subtextStatus.value as string) || ''}
-                onChange={(e) => updateProp('subtext', e.target.value)}
-                placeholder={subtextStatus.isMixed ? '— mixed —' : 'Supporting text...'}
-              />
-            </div>
-          )}
-
-          {/* Paragraph Line Glyphs vs Real Text toggle */}
-          {isParagraph && (
-            <div className={styles.formGroup}>
-              <label className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  className={styles.checkbox}
-                  checked={(showTextStatus.value as boolean) ?? false}
-                  onChange={(e) => updateProp('showText', e.target.checked)}
-                />
-                <span>Show text on canvas (disable glyphs)</span>
-              </label>
-            </div>
-          )}
-
-          {/* Alt Text for media */}
+          {/* Alt Text */}
           {isMedia && (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Alt / Filename {altTextStatus.isMixed && <span style={{ opacity: 0.6 }}>(mixed)</span>}
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Alt / Filename</span>
+                {altTextStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
-              <input
+              <Input
                 type="text"
-                className={styles.input}
+                className="h-7 text-xs"
                 value={altTextStatus.isMixed ? '' : (altTextStatus.value as string) || ''}
                 onChange={(e) => updateProp('altText', e.target.value)}
                 placeholder={altTextStatus.isMixed ? '— mixed —' : 'hero-banner'}
               />
             </div>
           )}
+
+          {/* Paragraph glyph toggle */}
+          {isParagraph && (
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-[var(--md-text)]">
+                Show canvas text (no glyphs)
+              </span>
+              <Switch
+                checked={(showTextStatus.value as boolean) ?? false}
+                onCheckedChange={(checked) => updateProp('showText', checked)}
+              />
+            </div>
+          )}
+
+          {/* Part B: Behavior Flags Multi-Checkbox Group */}
+          {allowedBehaviors.length > 0 && (
+            <div className="pt-2 border-t border-[var(--md-border)] space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Activity size={12} className="text-[var(--md-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                  Behaviors
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {allowedBehaviors.map((flag) => {
+                  const isActive = activeBehaviors.includes(flag);
+                  return (
+                    <button
+                      key={flag}
+                      type="button"
+                      className={`px-2 py-0.5 text-[11px] rounded-[4px] border font-medium transition-colors cursor-pointer select-none ${
+                        isActive
+                          ? 'border-[var(--md-accent)] bg-[var(--md-accent-subtle)] text-[var(--md-accent)]'
+                          : 'border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text)]'
+                      }`}
+                      onClick={() => handleToggleBehavior(flag)}
+                    >
+                      {flag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Part C.4: Note (Free-text style hint) */}
+          <div className="pt-2 border-t border-[var(--md-border)] space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <StickyNote size={12} className="text-[var(--md-text-muted)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                  Style Note
+                </span>
+              </div>
+              <span className="text-[10px] text-[var(--md-text-subtle)]">non-binding</span>
+            </div>
+            <textarea
+              className="w-full h-14 p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] placeholder:text-[var(--md-text-subtle)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] resize-none transition-colors"
+              placeholder={noteStatus.isMixed ? '— mixed —' : 'e.g. skeleton loading state on mount...'}
+              value={noteStatus.isMixed ? '' : (noteStatus.value as string) || ''}
+              onChange={(e) => updateProp('note', e.target.value)}
+            />
+          </div>
         </div>
       )}
     </div>

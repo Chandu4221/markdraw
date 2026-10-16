@@ -745,8 +745,60 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
       widgetType: 'icon',
       label: 'IconNode'
     }
+  },
+  {
+    type: 'carousel',
+    category: 'media',
+    name: 'Carousel Slider',
+    description: 'Horizontal sliding showcase for hero banners & product cards',
+    defaultWidth: 640,
+    defaultHeight: 280,
+    icon: 'ChevronsLeftRight',
+    defaultProps: {
+      widgetType: 'carousel',
+      label: 'Featured Stories',
+      variant: 'contained'
+    }
   }
 ];
+
+export const BEHAVIOR_FLAG_MAP: Record<string, string[]> = {
+  navbar: ['sticky', 'floating', 'overlay', 'fixed'],
+  header: ['sticky'],
+  section: ['sticky', 'floating', 'parallax'],
+  footer: ['sticky', 'fixed'],
+  card: ['floating', 'expandable', 'draggable'],
+  modal: ['floating', 'overlay', 'fullscreen', 'draggable'],
+  banner: ['overlay'],
+  button: ['fixed'],
+  hero: ['fullscreen', 'parallax'],
+  carousel: ['fullscreen', 'autoplay', 'scroll-snap'],
+  video_frame: ['autoplay'],
+  grid_gallery: ['autoplay', 'scroll-snap'],
+  image_frame: ['parallax'],
+  sidebar: ['expandable'],
+  list: ['expandable', 'scroll-snap'],
+  slider: ['draggable']
+};
+
+export const ALL_BEHAVIOR_FLAGS = [
+  'sticky',
+  'floating',
+  'overlay',
+  'fixed',
+  'fullscreen',
+  'autoplay',
+  'parallax',
+  'expandable',
+  'draggable',
+  'scroll-snap'
+] as const;
+
+export type BehaviorFlag = typeof ALL_BEHAVIOR_FLAGS[number];
+
+export function getAllowedBehaviors(widgetType: string): string[] {
+  return BEHAVIOR_FLAG_MAP[widgetType] || [];
+}
 
 const CATALOG_MAP = new Map<string, WidgetCatalogItem>();
 for (const item of WIDGET_CATALOG) {
