@@ -1,0 +1,282 @@
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --border-color: #334155;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+.appShell {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+.header {
+  height: 48px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  user-select: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoBadge {
+  background: var(--accent);
+  color: #000;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.brandTitle {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.3px;
+}
+
+.versionBadge {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.headerStats {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statDivider {
+  color: var(--border-color);
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.layoutPresets {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.presetBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.presetBtn:hover {
+  color: var(--text-main);
+  background: var(--bg-tertiary);
+}
+
+.activePreset {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+.canvasContainer {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  min-width: 250px;
+}
+
+.resizer {
+  width: 8px;
+  height: 100%;
+  background: var(--border-color);
+  cursor: col-resize;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  z-index: 100;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.resizer:hover,
+.resizerActive {
+  background: var(--accent);
+}
+
+.resizerHandle {
+  width: 2px;
+  height: 36px;
+  background: var(--text-muted);
+  border-radius: 1px;
+}
+
+.resizer:hover .resizerHandle,
+.resizerActive .resizerHandle {
+  background: #000;
+}
+
+.draggingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.outputContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  min-width: 280px;
+  overflow: hidden;
+}
+
+.outputToolbar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-main);
+}
+
+.activeTab {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionBtn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actionBtn:hover {
+  background: var(--bg-tertiary);
+}
+
+.greenIcon {
+  color: #4ade80;
+}
+
+.outputViewport {
+  flex: 1;
+  padding: 16px;
+  overflow: auto;
+  background: #090d16;
+}
+
+.codeBlock {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #e2e8f0;
+}
+
+.outputFooter {
+  height: 32px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
