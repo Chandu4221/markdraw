@@ -1,32 +1,32 @@
 /* MarkDraw Unified Monochrome Design Tokens */
 
 :root {
-  /* Default: Dark Theme (Neutral Ramp 0 to 9) */
+  /* Default: Dark Theme (Calibrated Neutral Ramp 0 to 9 - WCAG 2.1 AAA Compliant) */
   --md-neutral-0: #09090b;
-  --md-neutral-1: #121215;
-  --md-neutral-2: #18181b;
-  --md-neutral-3: #27272a;
-  --md-neutral-4: #3f3f46;
-  --md-neutral-5: #71717a;
-  --md-neutral-6: #a1a1aa;
-  --md-neutral-7: #d4d4d8;
-  --md-neutral-8: #e4e4e7;
-  --md-neutral-9: #fafafa;
+  --md-neutral-1: #121216;
+  --md-neutral-2: #1c1c22;
+  --md-neutral-3: #35353d;
+  --md-neutral-4: #62626a;
+  --md-neutral-5: #82828c;
+  --md-neutral-6: #a8a8b2;
+  --md-neutral-7: #ceced6;
+  --md-neutral-8: #f0f0f4;
+  --md-neutral-9: #ffffff;
 
   /* Single Accent Token */
-  --md-accent: #f4f4f5;
+  --md-accent: #ffffff;
   --md-accent-contrast: #09090b;
-  --md-accent-subtle: #27272a;
-  --md-accent-ring: rgba(244, 244, 245, 0.25);
+  --md-accent-subtle: #272730;
+  --md-accent-ring: rgba(255, 255, 255, 0.35);
 
   /* Semantic Mappings */
   --md-bg: var(--md-neutral-0);
   --md-surface: var(--md-neutral-1);
   --md-surface-raised: var(--md-neutral-2);
-  --md-border: var(--md-neutral-3);
-  --md-border-strong: var(--md-neutral-4);
-  --md-text-subtle: var(--md-neutral-5);
-  --md-text-muted: var(--md-neutral-6);
+  --md-border: var(--md-neutral-4);
+  --md-border-strong: var(--md-neutral-5);
+  --md-text-subtle: var(--md-neutral-6);
+  --md-text-muted: var(--md-neutral-7);
   --md-text: var(--md-neutral-8);
   --md-text-bold: var(--md-neutral-9);
   --md-danger: var(--md-neutral-6);
@@ -43,32 +43,32 @@
 }
 
 [data-theme='light'] {
-  /* Inverted Neutral Ramp */
-  --md-neutral-0: #fafafa;
-  --md-neutral-1: #f4f4f5;
-  --md-neutral-2: #e4e4e7;
-  --md-neutral-3: #d4d4d8;
-  --md-neutral-4: #a1a1aa;
-  --md-neutral-5: #71717a;
-  --md-neutral-6: #52525b;
-  --md-neutral-7: #3f3f46;
-  --md-neutral-8: #27272a;
-  --md-neutral-9: #09090b;
+  /* Inverted Neutral Ramp (WCAG 2.1 AAA Compliant) */
+  --md-neutral-0: #ffffff;
+  --md-neutral-1: #f6f6f8;
+  --md-neutral-2: #ededf2;
+  --md-neutral-3: #d8d8e0;
+  --md-neutral-4: #888892;
+  --md-neutral-5: #666670;
+  --md-neutral-6: #4c4c54;
+  --md-neutral-7: #323238;
+  --md-neutral-8: #141417;
+  --md-neutral-9: #000000;
 
   /* Accent in Light Mode */
-  --md-accent: #18181b;
-  --md-accent-contrast: #fafafa;
-  --md-accent-subtle: #e4e4e7;
-  --md-accent-ring: rgba(24, 24, 27, 0.2);
+  --md-accent: #000000;
+  --md-accent-contrast: #ffffff;
+  --md-accent-subtle: #e0e0e8;
+  --md-accent-ring: rgba(0, 0, 0, 0.25);
 
   /* Semantic Mappings */
   --md-bg: var(--md-neutral-0);
   --md-surface: var(--md-neutral-1);
   --md-surface-raised: var(--md-neutral-2);
-  --md-border: var(--md-neutral-3);
-  --md-border-strong: var(--md-neutral-4);
-  --md-text-subtle: var(--md-neutral-5);
-  --md-text-muted: var(--md-neutral-6);
+  --md-border: var(--md-neutral-4);
+  --md-border-strong: var(--md-neutral-5);
+  --md-text-subtle: var(--md-neutral-6);
+  --md-text-muted: var(--md-neutral-7);
   --md-text: var(--md-neutral-8);
   --md-text-bold: var(--md-neutral-9);
   --md-danger: var(--md-neutral-6);
@@ -76,29 +76,29 @@
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
-    --md-neutral-0: #fafafa;
-    --md-neutral-1: #f4f4f5;
-    --md-neutral-2: #e4e4e7;
-    --md-neutral-3: #d4d4d8;
-    --md-neutral-4: #a1a1aa;
-    --md-neutral-5: #71717a;
-    --md-neutral-6: #52525b;
-    --md-neutral-7: #3f3f46;
-    --md-neutral-8: #27272a;
-    --md-neutral-9: #09090b;
+    --md-neutral-0: #ffffff;
+    --md-neutral-1: #f6f6f8;
+    --md-neutral-2: #ededf2;
+    --md-neutral-3: #d8d8e0;
+    --md-neutral-4: #888892;
+    --md-neutral-5: #666670;
+    --md-neutral-6: #4c4c54;
+    --md-neutral-7: #323238;
+    --md-neutral-8: #141417;
+    --md-neutral-9: #000000;
 
-    --md-accent: #18181b;
-    --md-accent-contrast: #fafafa;
-    --md-accent-subtle: #e4e4e7;
-    --md-accent-ring: rgba(24, 24, 27, 0.2);
+    --md-accent: #000000;
+    --md-accent-contrast: #ffffff;
+    --md-accent-subtle: #e0e0e8;
+    --md-accent-ring: rgba(0, 0, 0, 0.25);
 
     --md-bg: var(--md-neutral-0);
     --md-surface: var(--md-neutral-1);
     --md-surface-raised: var(--md-neutral-2);
-    --md-border: var(--md-neutral-3);
-    --md-border-strong: var(--md-neutral-4);
-    --md-text-subtle: var(--md-neutral-5);
-    --md-text-muted: var(--md-neutral-6);
+    --md-border: var(--md-neutral-4);
+    --md-border-strong: var(--md-neutral-5);
+    --md-text-subtle: var(--md-neutral-6);
+    --md-text-muted: var(--md-neutral-7);
     --md-text: var(--md-neutral-8);
     --md-text-bold: var(--md-neutral-9);
     --md-danger: var(--md-neutral-6);

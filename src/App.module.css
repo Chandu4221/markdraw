@@ -59,7 +59,8 @@ body, html, #root {
 
 .versionBadge {
   font-size: 11px;
-  color: var(--md-text-muted);
+  color: var(--md-text);
+  font-weight: 500;
 }
 
 .headerControls {
@@ -72,7 +73,7 @@ body, html, #root {
   display: flex;
   align-items: center;
   background: var(--md-bg);
-  border: 1px solid var(--md-border);
+  border: 1px solid var(--md-border-strong);
   border-radius: var(--md-radius-md);
   padding: 2px;
   gap: 2px;
@@ -81,9 +82,9 @@ body, html, #root {
 .presetBtn {
   background: transparent;
   border: none;
-  color: var(--md-text-muted);
-  font-size: 11px;
-  font-weight: 500;
+  color: var(--md-text);
+  font-size: 12px;
+  font-weight: 600;
   padding: 4px 8px;
   border-radius: var(--md-radius-sm);
   cursor: pointer;
@@ -98,26 +99,28 @@ body, html, #root {
 .activePreset {
   background: var(--md-accent-subtle);
   color: var(--md-text-bold);
-  font-weight: 600;
+  font-weight: 700;
+  border: 1px solid var(--md-border);
 }
 
 .headerStats {
-  font-size: 11px;
-  color: var(--md-text-muted);
+  font-size: 12px;
+  color: var(--md-text);
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 500;
 }
 
 .statDivider {
-  color: var(--md-border);
+  color: var(--md-border-strong);
 }
 
 .iconBtn {
   background: transparent;
-  border: 1px solid var(--md-border);
+  border: 1px solid var(--md-border-strong);
   border-radius: var(--md-radius-md);
-  color: var(--md-text-muted);
+  color: var(--md-text-bold);
   padding: 6px;
   cursor: pointer;
   display: flex;
@@ -129,7 +132,7 @@ body, html, #root {
 .iconBtn:hover {
   background: var(--md-surface-raised);
   color: var(--md-text-bold);
-  border-color: var(--md-border-strong);
+  border-color: var(--md-accent);
 }
 
 .iconBtnActive {
@@ -166,7 +169,7 @@ body, html, #root {
 .resizer {
   width: 8px;
   height: 100%;
-  background: var(--md-border);
+  background: var(--md-border-strong);
   cursor: col-resize;
   position: relative;
   display: flex;
@@ -184,10 +187,10 @@ body, html, #root {
 }
 
 .resizerHandle {
-  width: 2px;
-  height: 36px;
-  background: var(--md-text-muted);
-  border-radius: 1px;
+  width: 3px;
+  height: 40px;
+  background: var(--md-text-bold);
+  border-radius: 1.5px;
 }
 
 .resizer:hover .resizerHandle,
@@ -234,11 +237,11 @@ body, html, #root {
 
 .tabBtn {
   background: transparent;
-  border: none;
-  color: var(--md-text-muted);
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 500;
+  border: 1px solid transparent;
+  color: var(--md-text);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
   border-radius: var(--md-radius-sm);
   cursor: pointer;
   display: flex;
@@ -250,13 +253,14 @@ body, html, #root {
 .tabBtn:hover {
   color: var(--md-text-bold);
   background: var(--md-surface);
+  border-color: var(--md-border);
 }
 
 .activeTab {
   background: var(--md-surface);
   color: var(--md-text-bold);
-  font-weight: 600;
-  border: 1px solid var(--md-border);
+  font-weight: 700;
+  border: 1px solid var(--md-border-strong);
 }
 
 .actions {
@@ -267,12 +271,12 @@ body, html, #root {
 
 .actionBtn {
   background: var(--md-surface);
-  border: 1px solid var(--md-border);
-  color: var(--md-text);
-  padding: 5px 10px;
+  border: 1px solid var(--md-border-strong);
+  color: var(--md-text-bold);
+  padding: 6px 12px;
   border-radius: var(--md-radius-sm);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -282,7 +286,7 @@ body, html, #root {
 
 .actionBtn:hover {
   background: var(--md-surface-raised);
-  border-color: var(--md-border-strong);
+  border-color: var(--md-accent);
 }
 
 .outputViewport {
@@ -294,9 +298,9 @@ body, html, #root {
 
 .codeBlock {
   font-family: var(--md-font-mono);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.6;
-  color: var(--md-text);
+  color: var(--md-text-bold);
   white-space: pre;
   word-break: normal;
   tab-size: 2;
@@ -310,8 +314,8 @@ body, html, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
-  color: var(--md-text-muted);
+  font-size: 12px;
+  color: var(--md-text);
   flex-shrink: 0;
 }
 
@@ -320,13 +324,13 @@ body, html, #root {
   position: absolute;
   top: 14px;
   background: var(--md-surface);
-  border: 1px solid var(--md-border);
+  border: 1px solid var(--md-border-strong);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--md-text);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--md-text-bold);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -355,12 +359,12 @@ body, html, #root {
   left: 50%;
   transform: translateX(-50%);
   background: var(--md-surface);
-  border: 1px solid var(--md-border);
+  border: 1px solid var(--md-border-strong);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: 4px 6px;
   z-index: 300;
 }
@@ -368,7 +372,7 @@ body, html, #root {
 .canvasControlBtn {
   background: none;
   border: 1px solid transparent;
-  color: var(--md-text-muted);
+  color: var(--md-text-bold);
   padding: 6px 8px;
   border-radius: 4px;
   cursor: pointer;
@@ -379,15 +383,15 @@ body, html, #root {
 }
 
 .canvasControlBtn:hover {
-  color: var(--md-text);
+  color: var(--md-text-bold);
   background: var(--md-surface-raised);
-  border-color: var(--md-border);
+  border-color: var(--md-accent);
 }
 
 .canvasControlBtnActive {
   color: var(--md-accent);
   background: var(--md-accent-subtle);
-  border-color: var(--md-border-strong);
+  border-color: var(--md-accent);
 }
 
 .canvasControlDivider {

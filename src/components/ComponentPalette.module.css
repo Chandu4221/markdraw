@@ -95,12 +95,12 @@
 
 .searchKbd {
   font-family: var(--md-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   background: var(--md-surface-raised);
   border: 1px solid var(--md-border);
   border-radius: 3px;
-  padding: 1px 4px;
-  color: var(--md-text-subtle);
+  padding: 1px 5px;
+  color: var(--md-text);
 }
 
 .categoryNav {
@@ -120,9 +120,9 @@
   background: transparent;
   border: none;
   color: var(--md-text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 9px;
   border-radius: var(--md-radius-sm);
   cursor: pointer;
   white-space: nowrap;
@@ -137,7 +137,8 @@
 .categoryBtnActive {
   background: var(--md-accent-subtle);
   color: var(--md-text-bold);
-  font-weight: 600;
+  font-weight: 700;
+  border: 1px solid var(--md-border);
 }
 
 .catalogScroll {
@@ -156,9 +157,9 @@
 }
 
 .categoryLabel {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--md-text-subtle);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--md-text-muted);
   letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: 0 4px;
@@ -167,24 +168,24 @@
 .widgetGrid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .widgetCard {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 9px 12px;
   background: var(--md-surface-raised);
-  border: 1px solid var(--md-border);
+  border: 1px solid var(--md-border-strong);
   border-radius: var(--md-radius-md);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .widgetCard:hover {
-  border-color: var(--md-border-strong);
-  background: var(--md-border);
+  border-color: var(--md-accent);
+  background: var(--md-surface);
   transform: translateX(2px);
 }
 
@@ -197,7 +198,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--md-text);
+  color: var(--md-text-bold);
   flex-shrink: 0;
 }
 
@@ -206,16 +207,17 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .widgetName {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--md-text-bold);
 }
 
 .widgetDesc {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--md-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -225,6 +227,6 @@
 .emptySearch {
   padding: 32px 16px;
   text-align: center;
-  font-size: 11px;
-  color: var(--md-text-subtle);
+  font-size: 12px;
+  color: var(--md-text-muted);
 }

@@ -76,8 +76,8 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
           width={barW}
           height={6}
           rx={3}
-          fill="var(--md-border-strong)"
-          opacity={0.65}
+          fill="var(--md-text-subtle)"
+          opacity={0.9}
         />
       );
     }
@@ -202,15 +202,15 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                   height={20}
                   rx={4}
                   fill="var(--md-surface)"
-                  stroke="var(--md-border)"
+                  stroke="var(--md-border-strong)"
                   strokeWidth={1}
                 />
                 <text
                   x={w / 2}
                   y={22}
                   textAnchor="middle"
-                  fill="var(--md-text-muted)"
-                  fontSize={10}
+                  fill="var(--md-text)"
+                  fontSize={12}
                   fontWeight={500}
                   fontFamily="var(--md-font-mono, monospace)"
                 >
@@ -229,15 +229,15 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                   height={18}
                   rx={3}
                   fill="var(--md-surface)"
-                  stroke="var(--md-border)"
+                  stroke="var(--md-border-strong)"
                   strokeWidth={1}
                 />
                 <text
                   x={w - 62}
                   y={22}
                   textAnchor="middle"
-                  fill="var(--md-text-muted)"
-                  fontSize={9}
+                  fill="var(--md-text-bold)"
+                  fontSize={10.5}
                   fontWeight={700}
                   letterSpacing="0.06em"
                   fontFamily="var(--md-font-mono, monospace)"
@@ -279,20 +279,22 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               strokeWidth={1.5}
               strokeDasharray={isDashed ? '5 3' : undefined}
             />
-            {/* Top-left 9px uppercase label chip */}
+            {/* Top-left accessible uppercase label chip */}
             <rect
               x={6}
               y={6}
-              width={Math.min(w - 12, type.length * 6 + 10)}
-              height={14}
-              rx={2}
+              width={Math.min(w - 12, type.replace('_', ' ').length * 7.5 + 16)}
+              height={18}
+              rx={3}
               fill="var(--md-surface-raised)"
+              stroke="var(--md-border)"
+              strokeWidth={1}
             />
             <text
               x={10}
-              y={16}
-              fill="var(--md-text-muted)"
-              fontSize={9}
+              y={19}
+              fill="var(--md-text-bold)"
+              fontSize={11}
               fontWeight={700}
               letterSpacing="0.08em"
               fontFamily="var(--md-font-mono, monospace)"
@@ -300,25 +302,25 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               {type.replace('_', ' ').toUpperCase()}
             </text>
 
-            {title && h >= 44 && (
+            {title && h >= 48 && (
               <text
-                x={8}
-                y={33}
-                fill="var(--md-text)"
-                fontSize={12}
-                fontWeight={600}
+                x={10}
+                y={39}
+                fill="var(--md-text-bold)"
+                fontSize={14}
+                fontWeight={700}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
-                {title.slice(0, Math.floor(w / 8))}
+                {title.slice(0, Math.floor(w / 9))}
               </text>
             )}
 
             {/* Modal header border & close button */}
             {type === 'modal' && h >= 40 && (
               <g>
-                <line x1={0} y1={28} x2={w} y2={28} stroke="var(--md-border)" strokeWidth={1} />
-                <line x1={w - 16} y1={10} x2={w - 8} y2={18} stroke="var(--md-text-muted)" strokeWidth={1.5} />
-                <line x1={w - 8} y1={10} x2={w - 16} y2={18} stroke="var(--md-text-muted)" strokeWidth={1.5} />
+                <line x1={0} y1={28} x2={w} y2={28} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+                <line x1={w - 16} y1={10} x2={w - 8} y2={18} stroke="var(--md-text-bold)" strokeWidth={1.8} />
+                <line x1={w - 8} y1={10} x2={w - 16} y2={18} stroke="var(--md-text-bold)" strokeWidth={1.8} />
               </g>
             )}
 
@@ -358,11 +360,11 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             {!isEditing && (
               <text
                 x={w / 2}
-                y={h / 2 + 4}
+                y={h / 2 + 4.5}
                 textAnchor="middle"
-                fill="var(--md-text)"
-                fontSize={12}
-                fontWeight={600}
+                fill="var(--md-text-bold)"
+                fontSize={13}
+                fontWeight={700}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {btnText}
@@ -397,15 +399,15 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             <path
               d="M 8 13 L 13 13 L 13 22"
               fill="none"
-              stroke="var(--md-text-muted)"
-              strokeWidth={1.5}
+              stroke="var(--md-text-bold)"
+              strokeWidth={2}
             />
             {!isEditing && (
               <text
                 x={20}
                 y={h / 2 + 4}
-                fill="var(--md-text-muted)"
-                fontSize={11}
+                fill="var(--md-text)"
+                fontSize={12}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {showTextVal || (type === 'search' ? 'Search...' : type === 'password' ? '••••••••' : 'Input...')}
@@ -415,8 +417,8 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               <path
                 d={`M ${w - 16} ${h / 2 - 2} L ${w - 11} ${h / 2 + 3} L ${w - 6} ${h / 2 - 2}`}
                 fill="none"
-                stroke="var(--md-text-muted)"
-                strokeWidth={1.5}
+                stroke="var(--md-text-bold)"
+                strokeWidth={2}
               />
             )}
           </g>
@@ -426,16 +428,17 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
       // 4. Headings & Typography
       case 'heading': {
         const hText = label || 'Heading';
-        const fontSize = variant === 'h1' ? 18 : variant === 'h2' ? 15 : 13;
+        const fontSize = variant === 'h1' ? 22 : variant === 'h2' ? 18 : 15;
+        const fontWeight = variant === 'h1' ? 800 : 700;
         return (
           <g>
             {!isEditing && (
               <text
                 x={4}
-                y={h / 2 + fontSize / 3}
-                fill="var(--md-text)"
+                y={h / 2 + fontSize / 3.2}
+                fill="var(--md-text-bold)"
                 fontSize={fontSize}
-                fontWeight={700}
+                fontWeight={fontWeight}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {hText}
@@ -453,9 +456,9 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             <g>
               <text
                 x={4}
-                y={14}
+                y={15}
                 fill="var(--md-text)"
-                fontSize={11}
+                fontSize={12}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {(label || 'Paragraph text...').slice(0, Math.floor(w / 6))}
@@ -466,7 +469,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         return (
           <g>
             {type === 'blockquote' && (
-              <line x1={2} y1={2} x2={2} y2={h - 2} stroke="var(--md-border-strong)" strokeWidth={2} />
+              <line x1={2} y1={2} x2={2} y2={h - 2} stroke="var(--md-border-strong)" strokeWidth={2.5} />
             )}
             {!isEditing && renderLineGlyphs(h, w, 4)}
           </g>
@@ -490,26 +493,26 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               strokeWidth={1.5}
             />
             {/* Corner-to-corner diagonal ✕ cross */}
-            <line x1={0} y1={0} x2={w} y2={h} stroke="var(--md-border)" strokeWidth={1.5} />
-            <line x1={w} y1={0} x2={0} y2={h} stroke="var(--md-border)" strokeWidth={1.5} />
+            <line x1={0} y1={0} x2={w} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+            <line x1={w} y1={0} x2={0} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
 
             {/* Center label chip */}
             <rect
-              x={w / 2 - 20}
-              y={h / 2 - 9}
-              width={40}
-              height={18}
+              x={w / 2 - 24}
+              y={h / 2 - 10}
+              width={48}
+              height={20}
               rx={3}
               fill="var(--md-surface-raised)"
-              stroke="var(--md-border)"
+              stroke="var(--md-border-strong)"
               strokeWidth={1}
             />
             <text
               x={w / 2}
-              y={h / 2 + 3}
+              y={h / 2 + 4}
               textAnchor="middle"
-              fill="var(--md-text-muted)"
-              fontSize={9}
+              fill="var(--md-text-bold)"
+              fontSize={11}
               fontWeight={700}
               letterSpacing="0.08em"
               fontFamily="var(--md-font-mono, monospace)"
@@ -556,11 +559,10 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             />
             <text
               x={w / 2}
-              y={h / 2 + 5}
+              y={h / 2 + 5.5}
               textAnchor="middle"
-              fill="var(--md-text)"
-              fontSize={14}
-              opacity={0.6}
+              fill="var(--md-text-bold)"
+              fontSize={16}
             >
               ⬡
             </text>
@@ -580,23 +582,24 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               height={14}
               rx={3}
               fill="var(--md-surface)"
-              stroke="var(--md-text)"
+              stroke="var(--md-text-bold)"
               strokeWidth={1.5}
             />
             {checked && (
               <path
                 d={`M 5 ${h / 2} L 8 ${h / 2 + 3} L 13 ${h / 2 - 3}`}
                 fill="none"
-                stroke="var(--md-text)"
-                strokeWidth={2}
+                stroke="var(--md-text-bold)"
+                strokeWidth={2.2}
               />
             )}
             {!isEditing && (
               <text
                 x={24}
-                y={h / 2 + 4}
-                fill="var(--md-text)"
-                fontSize={12}
+                y={h / 2 + 4.5}
+                fill="var(--md-text-bold)"
+                fontSize={12.5}
+                fontWeight={600}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {label || 'Checkbox'}
@@ -615,18 +618,19 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               cy={h / 2}
               r={7}
               fill="var(--md-surface)"
-              stroke="var(--md-text)"
+              stroke="var(--md-text-bold)"
               strokeWidth={1.5}
             />
             {checked && (
-              <circle cx={9} cy={h / 2} r={3.5} fill="var(--md-text)" />
+              <circle cx={9} cy={h / 2} r={3.5} fill="var(--md-text-bold)" />
             )}
             {!isEditing && (
               <text
                 x={24}
-                y={h / 2 + 4}
-                fill="var(--md-text)"
-                fontSize={12}
+                y={h / 2 + 4.5}
+                fill="var(--md-text-bold)"
+                fontSize={12.5}
+                fontWeight={600}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {label || 'Radio'}
@@ -648,21 +652,22 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               height={14}
               rx={7}
               fill={checked ? 'var(--md-accent-subtle)' : 'var(--md-surface)'}
-              stroke="var(--md-text)"
+              stroke="var(--md-text-bold)"
               strokeWidth={1.5}
             />
             <circle
               cx={knobX}
               cy={h / 2}
               r={5}
-              fill="var(--md-text)"
+              fill="var(--md-text-bold)"
             />
             {!isEditing && (
               <text
                 x={36}
-                y={h / 2 + 4}
-                fill="var(--md-text)"
-                fontSize={12}
+                y={h / 2 + 4.5}
+                fill="var(--md-text-bold)"
+                fontSize={12.5}
+                fontWeight={600}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {label || (checked ? 'On' : 'Off')}
@@ -714,8 +719,8 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               y1={h / 2}
               x2={w - 8}
               y2={h / 2}
-              stroke="var(--md-border)"
-              strokeWidth={3}
+              stroke="var(--md-border-strong)"
+              strokeWidth={4}
               strokeLinecap="round"
             />
             <line
@@ -723,18 +728,18 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               y1={h / 2}
               x2={8 + filledW}
               y2={h / 2}
-              stroke="var(--md-text)"
-              strokeWidth={3}
+              stroke="var(--md-text-bold)"
+              strokeWidth={4}
               strokeLinecap="round"
             />
             {type === 'slider' && (
               <circle
                 cx={8 + filledW}
                 cy={h / 2}
-                r={6}
+                r={7}
                 fill="var(--md-surface)"
-                stroke="var(--md-text)"
-                strokeWidth={2}
+                stroke="var(--md-text-bold)"
+                strokeWidth={2.5}
               />
             )}
           </g>
@@ -758,10 +763,11 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             {!isEditing && (
               <text
                 x={w / 2}
-                y={h / 2 + 4}
+                y={h / 2 + 4.5}
                 textAnchor="middle"
-                fill="var(--md-text)"
-                fontSize={11}
+                fill="var(--md-text-bold)"
+                fontSize={12}
+                fontWeight={600}
                 fontFamily="var(--md-font-sans, sans-serif)"
               >
                 {label || type}
