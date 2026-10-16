@@ -79,3 +79,10 @@
   color: var(--md-accent) !important;
   border: 1px solid var(--md-border) !important;
 }
+
+/* Ensure tldraw actions-menu and unneeded floating overlays are completely hidden */
+[data-testid="actions-menu.button"],
+.tlui-actions-menu,
+#actions-menu {
+  display: none !important;
+}

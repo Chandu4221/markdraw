@@ -68,7 +68,16 @@ const tldrawComponents: TLUiComponents = {
   StylePanel: null,
   NavigationPanel: null,
   QuickActions: null,
-  HelperButtons: null
+  HelperButtons: null,
+  ActionsMenu: null,
+  HelpMenu: null,
+  ZoomMenu: null,
+  Minimap: null,
+  DebugPanel: null,
+  DebugMenu: null,
+  MenuPanel: null,
+  TopPanel: null,
+  SharePanel: null
 };
 
 const DEFAULT_OPTIONS: Required<CompilationOptions> = {
@@ -798,7 +807,6 @@ export const App: React.FC = () => {
           {/* Left Component Palette Rail */}
           <ComponentPalette
             isOpen={isPaletteOpen}
-            onToggle={() => setIsPaletteOpen((prev) => !prev)}
             onInsertWidget={handleInsertWidget}
           />
 
@@ -822,32 +830,6 @@ export const App: React.FC = () => {
                 components={tldrawComponents}
                 onMount={handleEditorMount}
               />
-
-              {/* Quick Floating Open Button for Left Palette if closed */}
-              {!isPaletteOpen && (
-                <button
-                  className="absolute top-3 left-3 z-30 flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] shadow-[var(--md-shadow-md)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] transition-colors cursor-pointer select-none"
-                  onClick={() => setIsPaletteOpen(true)}
-                  title="Open Components (Ctrl+B)"
-                  aria-label="Open Components (Ctrl+B)"
-                >
-                  <PanelLeftOpen size={13} />
-                  <span>Components</span>
-                </button>
-              )}
-
-              {/* Quick Floating Open Button for Right Output if closed */}
-              {!isRightPanelOpen && (
-                <button
-                  className="absolute top-3 right-3 z-30 flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] shadow-[var(--md-shadow-md)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] transition-colors cursor-pointer select-none"
-                  onClick={() => setIsRightPanelOpen(true)}
-                  title="Open Live Output (Ctrl+J)"
-                  aria-label="Open Live Output (Ctrl+J)"
-                >
-                  <PanelRightOpen size={13} />
-                  <span>Output</span>
-                </button>
-              )}
 
               {/* Properties Panel */}
               <PropsPanel editor={editor} />

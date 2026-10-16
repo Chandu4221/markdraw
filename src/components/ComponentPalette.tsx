@@ -3,7 +3,6 @@ import { WIDGET_CATALOG } from '../core/widgets/widgetCatalog';
 import { WidgetCatalogItem, UIWidgetCategory } from '../core/widgets/types';
 import {
   Search,
-  PanelLeftClose,
   Box,
   MousePointerClick,
   FormInput,
@@ -168,13 +167,11 @@ const CATEGORY_STYLES: Record<string, {
 
 interface ComponentPaletteProps {
   isOpen: boolean;
-  onToggle: () => void;
   onInsertWidget: (item: WidgetCatalogItem) => void;
 }
 
 export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   isOpen,
-  onToggle,
   onInsertWidget
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<UIWidgetCategory | 'all'>('all');
@@ -257,14 +254,6 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
           <Box size={14} className="text-[var(--md-accent)]" />
           <span>Components</span>
         </div>
-        <button
-          className="p-1 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-          onClick={onToggle}
-          title="Hide Palette (Ctrl+B)"
-          aria-label="Hide Palette (Ctrl+B)"
-        >
-          <PanelLeftClose size={15} />
-        </button>
       </div>
 
       {/* Search Input */}
