@@ -41,9 +41,9 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
           width: 580,
           maxHeight: '85vh',
           background: 'var(--md-surface)',
-          border: '1px solid var(--md-border-strong)',
+          border: '1.5px solid var(--md-border-strong)',
           borderRadius: 'var(--md-radius-lg)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+          boxShadow: 'var(--md-shadow-modal)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -54,7 +54,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
           style={{
             height: 48,
             padding: '0 16px',
-            borderBottom: '1px solid var(--md-border)',
+            borderBottom: '1.5px solid var(--md-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -92,7 +92,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
               padding: '6px 10px',
               background: 'var(--md-accent-subtle)',
               borderRadius: 4,
-              border: '1px solid var(--md-border)'
+              border: '1.5px solid var(--md-border)'
             }}
           >
             Line-glyph convention: text is rendered as ─── horizontal lines on canvas; actual text is preserved in markdown.
@@ -103,11 +103,11 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
               width: '100%',
               borderCollapse: 'collapse',
               fontSize: 12,
-              border: '1px solid var(--md-border)'
+              border: '1.5px solid var(--md-border)'
             }}
           >
             <thead>
-              <tr style={{ background: 'var(--md-surface-raised)', borderBottom: '1px solid var(--md-border)' }}>
+              <tr style={{ background: 'var(--md-surface-raised)', borderBottom: '1.5px solid var(--md-border)' }}>
                 <th style={{ textAlign: 'left', padding: '6px 10px', fontWeight: 600 }}>Notation</th>
                 <th style={{ textAlign: 'left', padding: '6px 10px', fontWeight: 600 }}>Meaning</th>
               </tr>
@@ -139,7 +139,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
                 { notation: '[divider]', meaning: 'Horizontal divider line' },
                 { notation: '[toast "Text"]', meaning: 'Notification toast' }
               ].map((row, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--md-border)' }}>
+                <tr key={i} style={{ borderBottom: '1.5px solid var(--md-border)' }}>
                   <td style={{ padding: '6px 10px', fontFamily: 'var(--md-font-mono)', fontWeight: 600, color: 'var(--md-text)' }}>
                     {row.notation}
                   </td>
@@ -154,7 +154,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
           style={{
             height: 48,
             padding: '0 16px',
-            borderTop: '1px solid var(--md-border)',
+            borderTop: '1.5px solid var(--md-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
@@ -170,11 +170,13 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
               gap: 6,
               padding: '6px 12px',
               background: 'var(--md-surface)',
-              border: '1px solid var(--md-border)',
+              border: '1.5px solid var(--md-border-strong)',
               borderRadius: 'var(--md-radius-sm)',
               color: 'var(--md-text)',
               fontSize: 12,
-              cursor: 'pointer'
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: 'var(--md-shadow-interactive)'
             }}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}

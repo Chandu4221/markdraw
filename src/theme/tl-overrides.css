@@ -56,8 +56,8 @@
 .tl-menu__panel,
 .tl-popover {
   background: var(--md-surface) !important;
-  border: 1px solid var(--md-border-strong) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+  border: var(--md-border-width, 1.5px) solid var(--md-border-strong) !important;
+  box-shadow: var(--md-shadow-panel) !important;
   border-radius: var(--md-radius-md) !important;
 }
 
@@ -74,12 +74,13 @@
 .tl-button[aria-checked='true'] {
   background: var(--md-accent-subtle) !important;
   color: var(--md-accent) !important;
-  border: 1px solid var(--md-border-strong) !important;
+  border: var(--md-border-width, 1.5px) solid var(--md-border-strong) !important;
 }
 
 /* Quick Action & Helper Pill Overrides */
 .tl-quick-actions,
 .tl-helper-buttons {
   background: var(--md-surface) !important;
-  border: 1px solid var(--md-border) !important;
+  border: var(--md-border-width, 1.5px) solid var(--md-border) !important;
+  box-shadow: var(--md-shadow-interactive) !important;
 }

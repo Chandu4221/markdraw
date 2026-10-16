@@ -49,9 +49,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         style={{
           width: 440,
           background: 'var(--md-surface)',
-          border: '1px solid var(--md-border-strong)',
+          border: '1.5px solid var(--md-border-strong)',
           borderRadius: 'var(--md-radius-lg)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+          boxShadow: 'var(--md-shadow-modal)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -64,7 +64,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           style={{
             height: 48,
             padding: '0 16px',
-            borderBottom: '1px solid var(--md-border)',
+            borderBottom: '1.5px solid var(--md-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -185,7 +185,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           style={{
             height: 48,
             padding: '0 16px',
-            borderTop: '1px solid var(--md-border)',
+            borderTop: '1.5px solid var(--md-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -199,9 +199,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               alignItems: 'center',
               gap: 6,
               background: 'transparent',
-              border: 'none',
-              color: 'var(--md-text-muted)',
+              border: '1.5px solid var(--md-border)',
+              borderRadius: 'var(--md-radius-sm)',
+              padding: '4px 8px',
+              color: 'var(--md-text)',
               fontSize: 11,
+              fontWeight: 600,
               cursor: 'pointer'
             }}
           >
@@ -212,13 +215,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={onClose}
             style={{
               padding: '6px 14px',
-              borderRadius: 'var(--md-radius-md)',
+              borderRadius: 'var(--md-radius-sm)',
               background: 'var(--md-text)',
-              border: 'none',
+              border: '1.5px solid var(--md-text)',
               color: 'var(--md-bg)',
               fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer'
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: 'var(--md-shadow-interactive)'
             }}
           >
             Done

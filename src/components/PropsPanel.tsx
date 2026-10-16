@@ -134,7 +134,7 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
     <div className={styles.panelContainer}>
       <div className={styles.panelHeader}>
         <div className={styles.headerTitle}>
-          <Sliders size={13} strokeWidth={2} />
+          <Sliders size={13} strokeWidth={1.5} />
           <span className={styles.widgetBadge}>{widgetType}</span>
         </div>
         <button

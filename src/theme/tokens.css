@@ -36,11 +36,19 @@
   --md-font-sans: 'Google Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --md-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
 
-  /* Radii */
-  --md-radius-sm: 4px;
-  --md-radius-md: 6px;
-  --md-radius-lg: 8px;
-  --md-radius-xl: 12px;
+  /* Architectural Neubrutalist Tokens */
+  --md-border-width: 1.5px;
+  --md-shadow-interactive: 2px 2px 0px var(--md-border-strong);
+  --md-shadow-card: 2px 2px 0px var(--md-border-strong);
+  --md-shadow-panel: 4px 4px 0px #000000;
+  --md-shadow-modal: 6px 6px 0px #000000;
+  --md-shadow-canvas-bar: 3px 3px 0px #000000;
+
+  /* Architectural Radii */
+  --md-radius-sm: 3px;
+  --md-radius-md: 5px;
+  --md-radius-lg: 6px;
+  --md-radius-xl: 8px;
 }
 
 [data-theme='light'] {
@@ -73,6 +81,14 @@
   --md-text: var(--md-neutral-8);
   --md-text-bold: var(--md-neutral-9);
   --md-danger: var(--md-neutral-6);
+
+  /* Architectural Neubrutalist Tokens (Light) */
+  --md-border-width: 1.5px;
+  --md-shadow-interactive: 2px 2px 0px var(--md-border-strong);
+  --md-shadow-card: 2px 2px 0px var(--md-border-strong);
+  --md-shadow-panel: 4px 4px 0px rgba(0, 0, 0, 0.22);
+  --md-shadow-modal: 6px 6px 0px rgba(0, 0, 0, 0.35);
+  --md-shadow-canvas-bar: 3px 3px 0px rgba(0, 0, 0, 0.22);
 }
 
 @media (prefers-color-scheme: light) {
@@ -103,5 +119,13 @@
     --md-text: var(--md-neutral-8);
     --md-text-bold: var(--md-neutral-9);
     --md-danger: var(--md-neutral-6);
+
+    /* Architectural Neubrutalist Tokens (Light) */
+    --md-border-width: 1.5px;
+    --md-shadow-interactive: 2px 2px 0px var(--md-border-strong);
+    --md-shadow-card: 2px 2px 0px var(--md-border-strong);
+    --md-shadow-panel: 4px 4px 0px rgba(0, 0, 0, 0.22);
+    --md-shadow-modal: 6px 6px 0px rgba(0, 0, 0, 0.35);
+    --md-shadow-canvas-bar: 3px 3px 0px rgba(0, 0, 0, 0.22);
   }
 }
