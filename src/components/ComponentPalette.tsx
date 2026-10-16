@@ -116,6 +116,56 @@ const CATEGORIES: { id: UIWidgetCategory | 'all'; label: string }[] = [
   { id: 'media', label: 'Media' }
 ];
 
+const CATEGORY_STYLES: Record<string, {
+  pillActive: string;
+  pillInactive: string;
+  iconBox: string;
+  badge: string;
+}> = {
+  all: {
+    pillActive: 'bg-blue-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]',
+    iconBox: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+    badge: 'bg-blue-500/15 text-blue-500 border-blue-500/20'
+  },
+  layout: {
+    pillActive: 'bg-blue-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-blue-400 hover:bg-blue-500/10',
+    iconBox: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+    badge: 'bg-blue-500/15 text-blue-500 border-blue-500/20'
+  },
+  forms: {
+    pillActive: 'bg-emerald-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10',
+    iconBox: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+    badge: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20'
+  },
+  navigation: {
+    pillActive: 'bg-purple-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-purple-400 hover:bg-purple-500/10',
+    iconBox: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+    badge: 'bg-purple-500/15 text-purple-500 border-purple-500/20'
+  },
+  content: {
+    pillActive: 'bg-amber-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-amber-400 hover:bg-amber-500/10',
+    iconBox: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+    badge: 'bg-amber-500/15 text-amber-500 border-amber-500/20'
+  },
+  feedback: {
+    pillActive: 'bg-pink-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-pink-400 hover:bg-pink-500/10',
+    iconBox: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
+    badge: 'bg-pink-500/15 text-pink-500 border-pink-500/20'
+  },
+  media: {
+    pillActive: 'bg-cyan-600 text-white shadow-xs',
+    pillInactive: 'text-[var(--md-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/10',
+    iconBox: 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20',
+    badge: 'bg-cyan-500/15 text-cyan-500 border-cyan-500/20'
+  }
+};
+
 interface ComponentPaletteProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -196,7 +246,11 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-[260px] h-full flex flex-col shrink-0 border-r border-[var(--md-border)] bg-[var(--md-surface)] select-none">
+    <aside
+      role="region"
+      aria-label="Component Catalog"
+      className="w-[260px] h-full flex flex-col shrink-0 border-r border-[var(--md-border)] bg-[var(--md-surface)] select-none"
+    >
       {/* Header */}
       <div className="h-10 px-3 border-b border-[var(--md-border)] flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-text-bold)]">
@@ -204,9 +258,10 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
           <span>Components</span>
         </div>
         <button
-          className="p-1 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors"
+          className="p-1 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
           onClick={onToggle}
           title="Hide Palette (Ctrl+B)"
+          aria-label="Hide Palette (Ctrl+B)"
         >
           <PanelLeftClose size={15} />
         </button>
@@ -221,6 +276,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             type="text"
             className="h-7 w-full pl-8 pr-7 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-bg)] text-xs text-[var(--md-text)] placeholder:text-[var(--md-text-subtle)] focus:outline-none focus:border-[var(--md-accent)] focus:ring-1 focus:ring-[var(--md-accent)] transition-colors"
             placeholder="Search widgets (use ↑↓, Enter)..."
+            aria-label="Search components"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
@@ -232,20 +288,31 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
       </div>
 
       {/* Category Pills */}
-      <div className="flex items-center gap-1 p-2 overflow-x-auto border-b border-[var(--md-border)] scrollbar-none">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            className={`px-2 py-0.5 text-[11px] font-medium rounded-full transition-colors whitespace-nowrap ${
-              selectedCategory === cat.id
-                ? 'bg-[var(--md-text-bold)] text-[var(--md-bg)]'
-                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
-            }`}
-            onClick={() => setSelectedCategory(cat.id)}
-          >
-            {cat.label}
-          </button>
-        ))}
+      <div
+        role="tablist"
+        aria-label="Filter components by category"
+        className="flex items-center gap-1 p-2 overflow-x-auto border-b border-[var(--md-border)] scrollbar-none"
+      >
+        {CATEGORIES.map((cat) => {
+          const isCatSelected = selectedCategory === cat.id;
+          const catStyle = CATEGORY_STYLES[cat.id] || CATEGORY_STYLES.all;
+          return (
+            <button
+              key={cat.id}
+              role="tab"
+              aria-selected={isCatSelected}
+              aria-label={`Filter by ${cat.label} category`}
+              className={`px-2.5 py-0.5 text-[11px] font-medium rounded-full transition-colors whitespace-nowrap cursor-pointer ${
+                isCatSelected
+                  ? catStyle.pillActive
+                  : catStyle.pillInactive
+              }`}
+              onClick={() => setSelectedCategory(cat.id)}
+            >
+              {cat.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Widgets Catalog List */}
@@ -255,50 +322,63 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             No matching components found.
           </div>
         ) : (
-          groupedWidgets.map((group) => (
-            <div key={group.category} className="space-y-1.5">
-              <div className="px-1 flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--md-text-subtle)]">
-                  {group.category}
-                </span>
-                <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
-                  {group.items.length}
-                </span>
-              </div>
+          groupedWidgets.map((group) => {
+            const groupStyle = CATEGORY_STYLES[group.category] || CATEGORY_STYLES.all;
+            return (
+              <div key={group.category} className="space-y-1.5">
+                <div className="px-1 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--md-text-subtle)]">
+                    {group.category}
+                  </span>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full border ${groupStyle.badge}`}>
+                    {group.items.length}
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-1 gap-1.5">
-                {group.items.map((widget) => {
-                  const IconComp = ICON_MAP[widget.icon] || Box;
-                  const isHighlighted =
-                    filteredWidgets[highlightedIndex]?.type === widget.type;
-                  return (
-                    <div
-                      key={widget.type}
-                      className={`group flex items-center gap-2.5 p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] hover:bg-[var(--md-surface-raised)] hover:border-[var(--md-border-strong)] transition-all cursor-pointer shadow-xs ${
-                        isHighlighted
-                          ? 'border-[var(--md-accent)] ring-1 ring-[var(--md-accent)] bg-[var(--md-surface-raised)]'
-                          : ''
-                      }`}
-                      onClick={() => onInsertWidget(widget)}
-                      title={`Click or press Enter to add ${widget.name}`}
-                    >
-                      <div className="w-7 h-7 shrink-0 rounded-[4px] border border-[var(--md-border)] bg-[var(--md-bg)] flex items-center justify-center text-[var(--md-text)] group-hover:text-[var(--md-text-bold)] transition-colors">
-                        <IconComp size={14} />
+                <div className="grid grid-cols-1 gap-1.5" role="list">
+                  {group.items.map((widget) => {
+                    const IconComp = ICON_MAP[widget.icon] || Box;
+                    const isHighlighted =
+                      filteredWidgets[highlightedIndex]?.type === widget.type;
+                    const widgetStyle = CATEGORY_STYLES[widget.category] || CATEGORY_STYLES.all;
+                    return (
+                      <div
+                        key={widget.type}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Insert ${widget.name}: ${widget.description}`}
+                        className={`group flex items-center gap-2.5 p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] hover:bg-[var(--md-surface-raised)] hover:border-[var(--md-border-strong)] transition-all cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] ${
+                          isHighlighted
+                            ? 'border-[var(--md-accent)] ring-1 ring-[var(--md-accent)] bg-[var(--md-surface-raised)]'
+                            : ''
+                        }`}
+                        onClick={() => onInsertWidget(widget)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onInsertWidget(widget);
+                          }
+                        }}
+                        title={`Click or press Enter to add ${widget.name}`}
+                      >
+                        <div className={`w-7 h-7 shrink-0 rounded-[4px] border flex items-center justify-center transition-colors ${widgetStyle.iconBox}`}>
+                          <IconComp size={14} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-medium text-[var(--md-text-bold)] truncate">
+                            {widget.name}
+                          </span>
+                          <span className="text-[11px] text-[var(--md-text-subtle)] truncate">
+                            {widget.description}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-medium text-[var(--md-text-bold)] truncate">
-                          {widget.name}
-                        </span>
-                        <span className="text-[11px] text-[var(--md-text-subtle)] truncate">
-                          {widget.description}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </aside>

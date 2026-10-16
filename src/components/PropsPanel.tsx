@@ -187,9 +187,11 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           </span>
         </div>
         <button
-          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors"
+          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
           onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand Panel' : 'Collapse Panel'}
+          aria-label={isCollapsed ? 'Expand Properties Panel' : 'Collapse Properties Panel'}
+          aria-expanded={!isCollapsed}
         >
           {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
         </button>
@@ -200,11 +202,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Label Field */}
           {(!isSameType || (primaryWidgetType !== 'divider' && primaryWidgetType !== 'spacer')) && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-label" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Label / Title</span>
                 {labelStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <Input
+                id="props-label"
                 type="text"
                 className="h-7 text-xs"
                 value={labelStatus.isMixed ? '' : (labelStatus.value as string) || ''}
@@ -217,11 +220,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Placeholder for Inputs */}
           {isInput && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-placeholder" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Placeholder</span>
                 {placeholderStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <Input
+                id="props-placeholder"
                 type="text"
                 className="h-7 text-xs"
                 value={placeholderStatus.isMixed ? '' : (placeholderStatus.value as string) || ''}
@@ -234,12 +238,13 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Variant Select */}
           {isSameType && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-variant" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Variant</span>
                 {variantStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <select
-                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)]"
+                id="props-variant"
+                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
                 value={variantStatus.isMixed ? '' : (variantStatus.value as string) || getVariantOptions()[0]}
                 onChange={(e) => updateProp('variant', e.target.value)}
               >
@@ -260,12 +265,14 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Checked State */}
           {isToggleable && (
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-[var(--md-text)]">
+              <label htmlFor="props-checked" className="text-xs text-[var(--md-text)] cursor-pointer">
                 Active / Checked {checkedStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
-              </span>
+              </label>
               <Switch
+                id="props-checked"
                 checked={(checkedStatus.value as boolean) ?? false}
                 onCheckedChange={(checked) => updateProp('checked', checked)}
+                aria-label="Active or Checked state"
               />
             </div>
           )}
@@ -273,11 +280,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Options */}
           {hasOptions && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-options" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Options (comma-separated)</span>
                 {optionsStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <Input
+                id="props-options"
                 type="text"
                 className="h-7 text-xs"
                 value={optionsStatus.isMixed ? '' : (optionsStatus.value as string) || ''}
@@ -290,11 +298,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Value */}
           {hasValue && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-value" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Value</span>
                 {valueStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <Input
+                id="props-value"
                 type="number"
                 className="h-7 text-xs font-mono"
                 value={valueStatus.isMixed ? '' : (valueStatus.value as number) ?? 0}
@@ -307,11 +316,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Subtext */}
           {hasSubtext && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-subtext" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Subtext</span>
                 {subtextStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <Input
+                id="props-subtext"
                 type="text"
                 className="h-7 text-xs"
                 value={subtextStatus.isMixed ? '' : (subtextStatus.value as string) || ''}
@@ -324,12 +334,13 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Icon Selector */}
           {canHaveIcon && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-icon" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Icon</span>
                 {iconStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <select
-                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)]"
+                id="props-icon"
+                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
                 value={iconStatus.isMixed ? '' : (iconStatus.value as string) || ''}
                 onChange={(e) => updateProp('iconName', e.target.value)}
               >
@@ -350,11 +361,12 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Alt Text */}
           {isMedia && (
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+              <label htmlFor="props-alt-text" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
                 <span>Alt / Filename</span>
                 {altTextStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
               </label>
               <Input
+                id="props-alt-text"
                 type="text"
                 className="h-7 text-xs"
                 value={altTextStatus.isMixed ? '' : (altTextStatus.value as string) || ''}
@@ -367,12 +379,14 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Paragraph glyph toggle */}
           {isParagraph && (
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-[var(--md-text)]">
+              <label htmlFor="props-show-text" className="text-xs text-[var(--md-text)] cursor-pointer">
                 Show canvas text (no glyphs)
-              </span>
+              </label>
               <Switch
+                id="props-show-text"
                 checked={(showTextStatus.value as boolean) ?? false}
                 onCheckedChange={(checked) => updateProp('showText', checked)}
+                aria-label="Show canvas text"
               />
             </div>
           )}
@@ -381,7 +395,7 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {allowedBehaviors.length > 0 && (
             <div className="pt-2 border-t border-[var(--md-border)] space-y-2">
               <div className="flex items-center gap-1.5">
-                <Activity size={12} className="text-[var(--md-accent)]" />
+                <Activity size={12} className="text-blue-500" />
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
                   Behaviors
                 </span>
@@ -393,9 +407,11 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
                     <button
                       key={flag}
                       type="button"
+                      aria-pressed={isActive}
+                      aria-label={`Toggle behavior: ${flag}`}
                       className={`px-2 py-0.5 text-[11px] rounded-[4px] border font-medium transition-colors cursor-pointer select-none ${
                         isActive
-                          ? 'border-[var(--md-accent)] bg-[var(--md-accent-subtle)] text-[var(--md-accent)]'
+                          ? 'border-blue-500 bg-blue-500/15 text-blue-500 dark:text-blue-400 font-semibold shadow-xs'
                           : 'border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text)]'
                       }`}
                       onClick={() => handleToggleBehavior(flag)}
@@ -411,19 +427,21 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
           {/* Part C.4: Note (Free-text style hint) */}
           <div className="pt-2 border-t border-[var(--md-border)] space-y-1.5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
+              <label htmlFor="props-note" className="flex items-center gap-1.5 cursor-pointer">
                 <StickyNote size={12} className="text-[var(--md-text-muted)]" />
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
                   Style Note
                 </span>
-              </div>
+              </label>
               <span className="text-[10px] text-[var(--md-text-subtle)]">non-binding</span>
             </div>
             <textarea
+              id="props-note"
               className="w-full h-14 p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] placeholder:text-[var(--md-text-subtle)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] resize-none transition-colors"
               placeholder={noteStatus.isMixed ? '— mixed —' : 'e.g. skeleton loading state on mount...'}
               value={noteStatus.isMixed ? '' : (noteStatus.value as string) || ''}
               onChange={(e) => updateProp('note', e.target.value)}
+              aria-label="Style note"
             />
           </div>
         </div>

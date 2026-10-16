@@ -19,7 +19,9 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
     subtext: T.string,
     value: T.number,
     showText: T.optional(T.boolean),
-    altText: T.optional(T.string)
+    altText: T.optional(T.string),
+    behaviors: T.optional(T.arrayOf(T.string)),
+    note: T.optional(T.string)
   };
 
   override getDefaultProps(): IUIWidgetShape['props'] {
@@ -36,7 +38,9 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
       subtext: '',
       value: 0,
       showText: false,
-      altText: ''
+      altText: '',
+      behaviors: [],
+      note: ''
     };
   }
 

@@ -17,6 +17,12 @@ const buttonVariants = cva(
           'text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)]',
         accent:
           'bg-[var(--md-accent-subtle)] text-[var(--md-accent)] border border-[var(--md-accent)] font-semibold',
+        brand:
+          'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/25 border border-blue-400/30 font-medium',
+        primary:
+          'bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-500/20 font-medium',
+        success:
+          'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20 font-medium',
         danger:
           'text-[var(--md-danger)] hover:bg-[var(--md-surface-raised)] hover:text-red-400'
       },

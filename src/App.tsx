@@ -633,6 +633,7 @@ export const App: React.FC = () => {
               size="icon"
               onClick={() => setIsPaletteOpen((prev) => !prev)}
               title={isPaletteOpen ? 'Collapse Components (Ctrl+B)' : 'Open Components (Ctrl+B)'}
+              aria-label={isPaletteOpen ? 'Collapse Components (Ctrl+B)' : 'Open Components (Ctrl+B)'}
             >
               {isPaletteOpen ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
             </Button>
@@ -672,6 +673,7 @@ export const App: React.FC = () => {
                 }`}
                 onClick={() => setIsRightPanelOpen(false)}
                 title="Canvas Fullscreen Focus"
+                aria-label="Canvas Fullscreen Focus"
               >
                 Canvas Full
               </button>
@@ -686,6 +688,7 @@ export const App: React.FC = () => {
                   setCanvasPercent(75);
                 }}
                 title="Canvas Focus (75% / 25%)"
+                aria-label="Canvas Focus (75% / 25%)"
               >
                 Canvas 75%
               </button>
@@ -700,6 +703,7 @@ export const App: React.FC = () => {
                   setCanvasPercent(50);
                 }}
                 title="Equal Split (50% / 50%)"
+                aria-label="Equal Split (50% / 50%)"
               >
                 50 / 50
               </button>
@@ -714,6 +718,7 @@ export const App: React.FC = () => {
                   setCanvasPercent(35);
                 }}
                 title="Focus Code (35% / 65%)"
+                aria-label="Focus Code (35% / 65%)"
               >
                 Code 65%
               </button>
@@ -739,6 +744,7 @@ export const App: React.FC = () => {
               size="icon"
               onClick={() => setIsShortcutsOpen(true)}
               title="Keyboard Shortcuts (?)"
+              aria-label="Keyboard Shortcuts (?)"
             >
               <Keyboard size={15} />
             </Button>
@@ -748,6 +754,7 @@ export const App: React.FC = () => {
               size="icon"
               onClick={() => setIsLegendOpen(true)}
               title="View Semantic Legend"
+              aria-label="View Semantic Legend"
             >
               <BookOpen size={15} />
             </Button>
@@ -757,6 +764,7 @@ export const App: React.FC = () => {
               size="icon"
               onClick={() => setIsSettingsOpen(true)}
               title="Compiler & Geometry Settings"
+              aria-label="Compiler & Geometry Settings"
             >
               <Sliders size={15} />
             </Button>
@@ -766,6 +774,7 @@ export const App: React.FC = () => {
               size="icon"
               onClick={() => setIsRightPanelOpen((prev) => !prev)}
               title={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
+              aria-label={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
             >
               {isRightPanelOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
             </Button>
@@ -775,6 +784,7 @@ export const App: React.FC = () => {
               size="icon"
               onClick={toggleTheme}
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+              aria-label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </Button>
@@ -819,6 +829,7 @@ export const App: React.FC = () => {
                   className="absolute top-3 left-3 z-30 flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] shadow-[var(--md-shadow-md)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] transition-colors cursor-pointer select-none"
                   onClick={() => setIsPaletteOpen(true)}
                   title="Open Components (Ctrl+B)"
+                  aria-label="Open Components (Ctrl+B)"
                 >
                   <PanelLeftOpen size={13} />
                   <span>Components</span>
@@ -831,6 +842,7 @@ export const App: React.FC = () => {
                   className="absolute top-3 right-3 z-30 flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs text-[var(--md-text)] shadow-[var(--md-shadow-md)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] transition-colors cursor-pointer select-none"
                   onClick={() => setIsRightPanelOpen(true)}
                   title="Open Live Output (Ctrl+J)"
+                  aria-label="Open Live Output (Ctrl+J)"
                 >
                   <PanelRightOpen size={13} />
                   <span>Output</span>
@@ -841,13 +853,18 @@ export const App: React.FC = () => {
               <PropsPanel editor={editor} />
 
               {/* Floating Canvas Controls Bar */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] select-none">
+              <div
+                role="toolbar"
+                aria-label="Canvas Actions"
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] select-none"
+              >
                 <button
                   className={`p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer ${
                     activeTool === 'select' ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]' : ''
                   }`}
                   onClick={() => handleSelectTool('select')}
                   title="Select Tool (V)"
+                  aria-label="Select Tool (V)"
                 >
                   <MousePointer size={14} />
                 </button>
@@ -857,6 +874,7 @@ export const App: React.FC = () => {
                   }`}
                   onClick={() => handleSelectTool('hand')}
                   title="Hand / Pan Tool (H)"
+                  aria-label="Hand / Pan Tool (H)"
                 >
                   <Hand size={14} />
                 </button>
@@ -867,6 +885,7 @@ export const App: React.FC = () => {
                   className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.undo()}
                   title="Undo (Ctrl+Z)"
+                  aria-label="Undo (Ctrl+Z)"
                 >
                   <Undo2 size={14} />
                 </button>
@@ -874,6 +893,7 @@ export const App: React.FC = () => {
                   className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.redo()}
                   title="Redo (Ctrl+Y)"
+                  aria-label="Redo (Ctrl+Y)"
                 >
                   <Redo2 size={14} />
                 </button>
@@ -884,6 +904,7 @@ export const App: React.FC = () => {
                   className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.zoomIn()}
                   title="Zoom In"
+                  aria-label="Zoom In"
                 >
                   <ZoomIn size={14} />
                 </button>
@@ -891,6 +912,7 @@ export const App: React.FC = () => {
                   className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.zoomOut()}
                   title="Zoom Out"
+                  aria-label="Zoom Out"
                 >
                   <ZoomOut size={14} />
                 </button>
@@ -898,6 +920,7 @@ export const App: React.FC = () => {
                   className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
                   onClick={() => editorRef.current?.zoomToFit()}
                   title="Zoom to Fit"
+                  aria-label="Zoom to Fit"
                 >
                   <Maximize size={14} />
                 </button>
@@ -915,6 +938,7 @@ export const App: React.FC = () => {
                     }
                   }}
                   title="Delete Selected"
+                  aria-label="Delete Selected"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -929,6 +953,7 @@ export const App: React.FC = () => {
                   }`}
                   onClick={toggleLabels}
                   title={showLabels ? 'Hide Component Labels' : 'Show Component Labels'}
+                  aria-label={showLabels ? 'Hide Component Labels' : 'Show Component Labels'}
                 >
                   <Tag size={13} />
                   <span className="text-[11px]">Labels</span>
@@ -947,6 +972,10 @@ export const App: React.FC = () => {
             {/* Split Resizer Divider */}
             {isRightPanelOpen && (
               <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize canvas and output panels"
+                tabIndex={0}
                 className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-colors select-none ${
                   isDragging ? 'bg-[var(--md-accent)]' : 'bg-transparent'
                 }`}
@@ -961,6 +990,8 @@ export const App: React.FC = () => {
             {/* Right Pane: Live Reactive Output */}
             {isRightPanelOpen && (
               <aside
+                role="region"
+                aria-label="Live Output"
                 className={`h-full flex flex-col bg-[var(--md-surface)] overflow-hidden shrink-0 border-l border-[var(--md-border)] ${
                   isDragging ? 'transition-none' : 'transition-[width] duration-200 ease-out'
                 }`}
@@ -971,11 +1002,18 @@ export const App: React.FC = () => {
                 {/* Output Toolbar */}
                 <div className="h-10 px-2 border-b border-[var(--md-border)] flex items-center justify-between shrink-0 select-none">
                   {/* Tabs */}
-                  <div className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]">
+                  <div
+                    role="tablist"
+                    aria-label="Output View Modes"
+                    className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                  >
                     <button
+                      role="tab"
+                      aria-selected={outputTab === 'spec'}
+                      aria-label="Spec Table view"
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'spec'
-                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                       }`}
                       onClick={() => setOutputTab('spec')}
@@ -984,9 +1022,12 @@ export const App: React.FC = () => {
                       <span>Spec Table</span>
                     </button>
                     <button
+                      role="tab"
+                      aria-selected={outputTab === 'grid'}
+                      aria-label="Spatial Grid view"
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'grid'
-                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                       }`}
                       onClick={() => setOutputTab('grid')}
@@ -995,9 +1036,12 @@ export const App: React.FC = () => {
                       <span>Spatial Grid</span>
                     </button>
                     <button
+                      role="tab"
+                      aria-selected={outputTab === 'ascii'}
+                      aria-label="ASCII layout view"
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'ascii'
-                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                       }`}
                       onClick={() => setOutputTab('ascii')}
@@ -1006,9 +1050,12 @@ export const App: React.FC = () => {
                       <span>ASCII</span>
                     </button>
                     <button
+                      role="tab"
+                      aria-selected={outputTab === 'json'}
+                      aria-label="JSON AST view"
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'json'
-                          ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                       }`}
                       onClick={() => setOutputTab('json')}
@@ -1021,15 +1068,16 @@ export const App: React.FC = () => {
                   {/* Actions */}
                   <div className="flex items-center gap-1">
                     <Button
-                      variant="outline"
+                      variant={copied ? 'success' : 'brand'}
                       size="sm"
                       onClick={handleCopy}
-                      className="h-7 gap-1.5 text-xs"
+                      className="h-7 gap-1.5 text-xs font-medium"
                       title="Copy to Clipboard"
+                      aria-label="Copy to Clipboard"
                     >
                       {copied ? (
                         <>
-                          <Check size={12} className="text-[var(--md-accent)]" />
+                          <Check size={12} />
                           <span>Copied</span>
                         </>
                       ) : (
@@ -1044,6 +1092,7 @@ export const App: React.FC = () => {
                       size="icon-sm"
                       onClick={handleDownload}
                       title="Download Source"
+                      aria-label="Download Source"
                     >
                       <Download size={14} />
                     </Button>
@@ -1052,6 +1101,7 @@ export const App: React.FC = () => {
                       size="icon-sm"
                       onClick={() => setIsRightPanelOpen(false)}
                       title="Collapse Output Panel (Ctrl+J)"
+                      aria-label="Collapse Output Panel (Ctrl+J)"
                     >
                       <PanelRightClose size={14} />
                     </Button>
