@@ -550,7 +550,9 @@ export const App: React.FC = () => {
         const rect = splitAreaRef.current.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const newPercent = (mouseX / rect.width) * 100;
-        const clamped = Math.min(85, Math.max(15, newPercent));
+        const minRightPx = 380;
+        const maxCanvasPercent = Math.max(15, ((rect.width - minRightPx) / rect.width) * 100);
+        const clamped = Math.min(maxCanvasPercent, Math.max(15, newPercent));
         setCanvasPercent(clamped);
       }
     };
@@ -1036,17 +1038,18 @@ export const App: React.FC = () => {
                 activeDrag === 'right' ? 'transition-none' : 'transition-[width] duration-200 ease-out'
               } ${isRightPanelOpen ? 'border-l border-[var(--md-border)]' : 'border-l-0 pointer-events-none'}`}
               style={{
-                width: isRightPanelOpen ? `calc(${100 - canvasPercent}% - 5px)` : '0px'
+                width: isRightPanelOpen ? `calc(${100 - canvasPercent}% - 5px)` : '0px',
+                minWidth: isRightPanelOpen ? '380px' : '0px'
               }}
             >
-              <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-[360px]">
+              <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-[380px]">
                 {/* Output Toolbar */}
-                <div className="h-10 px-2 border-b border-[var(--md-border)] flex items-center justify-between shrink-0 select-none">
+                <div className="h-10 px-2.5 border-b border-[var(--md-border)] flex items-center justify-between shrink-0 select-none gap-2 min-w-0">
                   {/* Tabs */}
                   <div
                     role="tablist"
                     aria-label="Output View Modes"
-                    className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                    className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
                   >
                     <button
                       role="tab"
@@ -1060,7 +1063,7 @@ export const App: React.FC = () => {
                       onClick={() => setOutputTab('spec')}
                     >
                       <FileText size={13} />
-                      <span>Spec Table</span>
+                      <span>Spec <span className="hidden xl:inline">Table</span></span>
                     </button>
                     <button
                       role="tab"
@@ -1074,7 +1077,7 @@ export const App: React.FC = () => {
                       onClick={() => setOutputTab('grid')}
                     >
                       <LayoutGrid size={13} />
-                      <span>Spatial Grid</span>
+                      <span><span className="hidden xl:inline">Spatial </span>Grid</span>
                     </button>
                     <button
                       role="tab"
@@ -1102,17 +1105,17 @@ export const App: React.FC = () => {
                       onClick={() => setOutputTab('json')}
                     >
                       <Code size={13} />
-                      <span>JSON AST</span>
+                      <span>JSON<span className="hidden xl:inline"> AST</span></span>
                     </button>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant={copied ? 'success' : 'brand'}
                       size="sm"
                       onClick={handleCopy}
-                      className="h-7 gap-1.5 text-xs font-medium"
+                      className="h-7 gap-1.5 text-xs font-medium shrink-0"
                       title="Copy to Clipboard"
                       aria-label="Copy to Clipboard"
                     >
@@ -1132,6 +1135,7 @@ export const App: React.FC = () => {
                       variant="ghost"
                       size="icon-sm"
                       onClick={handleDownload}
+                      className="shrink-0"
                       title="Download Source"
                       aria-label="Download Source"
                     >
