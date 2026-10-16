@@ -779,16 +779,6 @@ export const App: React.FC = () => {
             </Button>
 
             <Button
-              variant={isRightPanelOpen ? 'accent' : 'ghost'}
-              size="icon"
-              onClick={() => setIsRightPanelOpen((prev) => !prev)}
-              title={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
-              aria-label={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
-            >
-              {isRightPanelOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
-            </Button>
-
-            <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
@@ -796,6 +786,16 @@ export const App: React.FC = () => {
               aria-label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </Button>
+
+            <Button
+              variant={isRightPanelOpen ? 'accent' : 'ghost'}
+              size="icon"
+              onClick={() => setIsRightPanelOpen((prev) => !prev)}
+              title={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
+              aria-label={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
+            >
+              {isRightPanelOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
             </Button>
           </div>
         </header>
