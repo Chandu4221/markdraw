@@ -146,4 +146,34 @@ describe('Custom UI Widgets System', () => {
     expect(result.markdownGrid).toContain('[Navbar: "TopNavigation"]');
     expect(result.markdownGrid).toContain('[Button: "ActionBtn"]');
   });
+
+  it('prepends semantic legend table when includeLegend is true', () => {
+    const btn = createWidgetShape('btn-1', 'button', 10, 10, 100, 40, { label: 'Click' });
+    const result = MarkDrawCompiler.compile([btn], null, { includeLegend: true });
+
+    expect(result.markdownSpec).toContain('## MarkDraw Semantic Legend');
+    expect(result.markdownSpec).toContain('| `[Section]` |');
+    expect(result.markdownSpec).toContain('| `[Card]` |');
+    expect(result.markdownGrid).toContain('## MarkDraw Semantic Legend');
+  });
+
+  it('ensures byte-for-byte deterministic output when includeTimestamp is false', () => {
+    const btn = createWidgetShape('btn-1', 'button', 10, 10, 100, 40, { label: 'Click' });
+    const result1 = MarkDrawCompiler.compile([btn], null, { includeTimestamp: false });
+    const result2 = MarkDrawCompiler.compile([btn], null, { includeTimestamp: false });
+
+    expect(result1.markdownSpec).toBe(result2.markdownSpec);
+    expect(result1.markdownSpec).not.toContain('**Generated:**');
+  });
+
+  it('correctly categorizes structural widgets as containers', () => {
+    const section = createWidgetShape('sec-1', 'section', 0, 0, 600, 200, { label: 'HeroSec' });
+    const hero = createWidgetShape('hero-1', 'hero', 0, 0, 600, 200, { label: 'Hero' });
+    const gallery = createWidgetShape('gal-1', 'grid_gallery', 0, 0, 400, 200, { label: 'Grid' });
+
+    const normalized = MarkDrawCompiler.normalize([section, hero, gallery]);
+    expect(normalized[0].role).toBe('container');
+    expect(normalized[1].role).toBe('container');
+    expect(normalized[2].role).toBe('container');
+  });
 });

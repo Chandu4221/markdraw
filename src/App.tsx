@@ -1,26 +1,85 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Tldraw, Editor } from '@tldraw/tldraw';
-import '@tldraw/tldraw/tldraw.css';
 import { MarkDrawCompiler } from './core/compiler';
-import { CompilationResult } from './core/types';
+import { CompilationResult, CompilationOptions } from './core/types';
 import { UIWidgetShapeUtil } from './core/widgets/UIWidgetShapeUtil';
 import { ComponentPalette } from './components/ComponentPalette';
 import { WidgetCatalogItem } from './core/widgets/types';
-import { Copy, Download, Check, Code, LayoutGrid, FileText, Sparkles } from 'lucide-react';
+import { WIDGET_CATALOG } from './core/widgets/widgetCatalog';
+import { LegendModal } from './components/LegendModal';
+import { SettingsModal } from './components/SettingsModal';
+import {
+  Copy,
+  Download,
+  Check,
+  Code,
+  LayoutGrid,
+  FileText,
+  Terminal,
+  BookOpen,
+  Sliders,
+  Sun,
+  Moon
+} from 'lucide-react';
 import styles from './App.module.css';
 
 const customShapeUtils = [UIWidgetShapeUtil];
 
+const DEFAULT_OPTIONS: Required<CompilationOptions> = {
+  containmentThreshold: 0.85,
+  rowClusterThreshold: 16,
+  gridBandThreshold: 32,
+  includeTimestamp: false,
+  includeLegend: true
+};
+
 export const App: React.FC = () => {
-  const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'json'>('spec');
+  const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'ascii' | 'json'>('spec');
   const [copied, setCopied] = useState<boolean>(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
+  const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [canvasPercent, setCanvasPercent] = useState<number>(55);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
+  // Theme Management (monochrome dark/light)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('markdraw_theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('markdraw_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Settings Management
+  const [options, setOptions] = useState<Required<CompilationOptions>>(() => {
+    try {
+      const saved = localStorage.getItem('markdraw_settings');
+      if (saved) {
+        return { ...DEFAULT_OPTIONS, ...JSON.parse(saved) };
+      }
+    } catch {
+      // fallback to defaults
+    }
+    return DEFAULT_OPTIONS;
+  });
+
+  const handleOptionsChange = (newOpts: Required<CompilationOptions>) => {
+    setOptions(newOpts);
+    localStorage.setItem('markdraw_settings', JSON.stringify(newOpts));
+  };
+
   const [compilation, setCompilation] = useState<CompilationResult>({
-    markdownSpec: 'Draw elements on the canvas or pick UI components from the library to generate the specification.',
+    markdownSpec: 'Draw elements on the canvas or pick UI components to compile.',
     markdownGrid: '',
+    markdownAscii: '',
     jsonAst: '{}',
     timestamp: '',
     elementCount: 0
@@ -29,38 +88,50 @@ export const App: React.FC = () => {
   const editorRef = useRef<Editor | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
 
-  const handleEditorMount = useCallback((editor: Editor) => {
-    editorRef.current = editor;
+  const triggerCompile = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
 
-    const triggerCompile = () => {
-      try {
-        const shapes = editor.getCurrentPageShapes();
-        const result = MarkDrawCompiler.compile(shapes, editor);
-        setCompilation(result);
-      } catch (err) {
-        console.error('MarkDraw compilation error:', err);
-      }
-    };
+    try {
+      const shapes = editor.getCurrentPageShapes();
+      const result = MarkDrawCompiler.compile(shapes, editor, options);
+      setCompilation(result);
+    } catch (err) {
+      console.error('MarkDraw compilation error:', err);
+    }
+  }, [options]);
 
-    // Initial compile
+  const handleEditorMount = useCallback(
+    (editor: Editor) => {
+      editorRef.current = editor;
+
+      // Initial compile
+      triggerCompile();
+
+      // Listen to all shape changes and debounce compilation
+      const dispose = editor.store.listen(() => {
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = window.setTimeout(triggerCompile, 35);
+      });
+
+      return () => {
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+        }
+        dispose();
+      };
+    },
+    [triggerCompile]
+  );
+
+  // Re-compile when settings change
+  useEffect(() => {
     triggerCompile();
+  }, [triggerCompile]);
 
-    // Listen to all shape changes and debounce compilation
-    const dispose = editor.store.listen(() => {
-      if (debounceTimerRef.current) {
-        window.clearTimeout(debounceTimerRef.current);
-      }
-      debounceTimerRef.current = window.setTimeout(triggerCompile, 35);
-    });
-
-    return () => {
-      if (debounceTimerRef.current) {
-        window.clearTimeout(debounceTimerRef.current);
-      }
-      dispose();
-    };
-  }, []);
-
+  // Panel Resizing logic
   const startResizing = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -94,8 +165,8 @@ export const App: React.FC = () => {
 
     try {
       const bounds = editor.getViewportPageBounds();
-      const centerX = (bounds as any).center?.x ?? (bounds.x + bounds.w / 2);
-      const centerY = (bounds as any).center?.y ?? (bounds.y + bounds.h / 2);
+      const centerX = (bounds as any).center?.x ?? bounds.x + bounds.w / 2;
+      const centerY = (bounds as any).center?.y ?? bounds.y + bounds.h / 2;
 
       editor.createShape({
         type: 'ui-widget',
@@ -122,9 +193,14 @@ export const App: React.FC = () => {
 
   const getActiveContent = (): string => {
     switch (outputTab) {
-      case 'spec': return compilation.markdownSpec;
-      case 'grid': return compilation.markdownGrid;
-      case 'json': return compilation.jsonAst;
+      case 'spec':
+        return compilation.markdownSpec;
+      case 'grid':
+        return compilation.markdownGrid;
+      case 'ascii':
+        return compilation.markdownAscii;
+      case 'json':
+        return compilation.jsonAst;
     }
   };
 
@@ -146,7 +222,7 @@ export const App: React.FC = () => {
   };
 
   const handleDownload = () => {
-    const ext = outputTab === 'json' ? 'json' : 'md';
+    const ext = outputTab === 'json' ? 'json' : outputTab === 'ascii' ? 'txt' : 'md';
     const blob = new Blob([getActiveContent()], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -163,7 +239,7 @@ export const App: React.FC = () => {
         <div className={styles.brand}>
           <div className={styles.logoBadge}>MD</div>
           <span className={styles.brandTitle}>MarkDraw</span>
-          <span className={styles.versionBadge}>v1.1 (Semantic UI Compiler)</span>
+          <span className={styles.versionBadge}>v2.0</span>
         </div>
 
         <div className={styles.headerControls}>
@@ -194,11 +270,32 @@ export const App: React.FC = () => {
           <div className={styles.headerStats}>
             <span>Elements: <strong>{compilation.elementCount}</strong></span>
             <span className={styles.statDivider}>|</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#38bdf8' }}>
-              <Sparkles size={13} />
-              <span>21 UI Widgets</span>
-            </span>
+            <span>Catalog: <strong>{WIDGET_CATALOG.length} Widgets</strong></span>
           </div>
+
+          <button
+            className={styles.iconBtn}
+            onClick={() => setIsLegendOpen(true)}
+            title="View Semantic Legend"
+          >
+            <BookOpen size={15} strokeWidth={1.5} />
+          </button>
+
+          <button
+            className={styles.iconBtn}
+            onClick={() => setIsSettingsOpen(true)}
+            title="Compiler & Geometry Settings"
+          >
+            <Sliders size={15} strokeWidth={1.5} />
+          </button>
+
+          <button
+            className={styles.iconBtn}
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun size={15} strokeWidth={1.5} /> : <Moon size={15} strokeWidth={1.5} />}
+          </button>
         </div>
       </header>
 
@@ -206,17 +303,23 @@ export const App: React.FC = () => {
       <div className={styles.workspace}>
         {isDragging && <div className={styles.draggingOverlay} />}
 
-        {/* Left Pane: Infinite Canvas with Component Palette Overlay */}
+        {/* Left Native Component Palette Rail */}
+        <ComponentPalette
+          isOpen={isPaletteOpen}
+          onToggle={() => setIsPaletteOpen((prev) => !prev)}
+          onInsertWidget={handleInsertWidget}
+        />
+
+        {/* Canvas Container */}
         <div
           className={styles.canvasContainer}
           style={{ width: `${canvasPercent}%`, flex: 'none' }}
         >
-          <ComponentPalette
-            isOpen={isPaletteOpen}
-            onToggle={() => setIsPaletteOpen((prev) => !prev)}
-            onInsertWidget={handleInsertWidget}
+          <Tldraw
+            persistenceKey="markdraw"
+            shapeUtils={customShapeUtils}
+            onMount={handleEditorMount}
           />
-          <Tldraw shapeUtils={customShapeUtils} onMount={handleEditorMount} />
         </div>
 
         {/* Resizer Divider */}
@@ -229,7 +332,7 @@ export const App: React.FC = () => {
           <div className={styles.resizerHandle} />
         </div>
 
-        {/* Right Pane: Live Reactive Markdown Output */}
+        {/* Right Pane: Live Reactive Output */}
         <aside
           className={styles.outputContainer}
           style={{ width: `calc(${100 - canvasPercent}% - 8px)`, flex: 'none' }}
@@ -240,28 +343,34 @@ export const App: React.FC = () => {
                 className={`${styles.tabBtn} ${outputTab === 'spec' ? styles.activeTab : ''}`}
                 onClick={() => setOutputTab('spec')}
               >
-                <FileText size={15} /> Spec Table
+                <FileText size={14} strokeWidth={1.5} /> Spec Table
               </button>
               <button
                 className={`${styles.tabBtn} ${outputTab === 'grid' ? styles.activeTab : ''}`}
                 onClick={() => setOutputTab('grid')}
               >
-                <LayoutGrid size={15} /> Spatial Grid
+                <LayoutGrid size={14} strokeWidth={1.5} /> Spatial Grid
+              </button>
+              <button
+                className={`${styles.tabBtn} ${outputTab === 'ascii' ? styles.activeTab : ''}`}
+                onClick={() => setOutputTab('ascii')}
+              >
+                <Terminal size={14} strokeWidth={1.5} /> ASCII Layout
               </button>
               <button
                 className={`${styles.tabBtn} ${outputTab === 'json' ? styles.activeTab : ''}`}
                 onClick={() => setOutputTab('json')}
               >
-                <Code size={15} /> AST (JSON)
+                <Code size={14} strokeWidth={1.5} /> AST (JSON)
               </button>
             </div>
             <div className={styles.actions}>
               <button className={styles.actionBtn} onClick={handleCopy} title="Copy to Clipboard">
-                {copied ? <Check size={16} className={styles.greenIcon} /> : <Copy size={16} />}
+                {copied ? <Check size={14} /> : <Copy size={14} strokeWidth={1.5} />}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
               </button>
               <button className={styles.actionBtn} onClick={handleDownload} title="Download Source">
-                <Download size={16} />
+                <Download size={14} strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -273,10 +382,19 @@ export const App: React.FC = () => {
           </div>
 
           <footer className={styles.outputFooter}>
-            <span>Semantic component tree compiled in real time. Paste directly into your LLM prompt.</span>
+            <span>Semantic layout compiled in real time. Paste directly into LLM prompts.</span>
           </footer>
         </aside>
       </div>
+
+      {/* In-App Modals */}
+      <LegendModal isOpen={isLegendOpen} onClose={() => setIsLegendOpen(false)} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        options={options}
+        onChange={handleOptionsChange}
+      />
     </div>
   );
 };

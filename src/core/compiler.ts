@@ -1,21 +1,58 @@
 import { TLShape, Editor } from '@tldraw/tldraw';
-import { NormalizedShape, LayoutNode, CompilationResult, SemanticRole } from './types';
+import {
+  NormalizedShape,
+  LayoutNode,
+  CompilationResult,
+  CompilationOptions,
+  SemanticRole
+} from './types';
 import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
 import { LegendEngine } from './legend';
+import { AsciiSerializer } from './ascii';
 
 function capitalize(str: string): string {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+export const SEMANTIC_LEGEND_MARKDOWN = `## MarkDraw Semantic Legend
+| Notation | Meaning |
+| :--- | :--- |
+| \`[Section]\` | Page-level structural band |
+| \`[Card]\` | Grouped content container (variants: outline/elevated/flat) |
+| \`[Button]\` | Interactive click target |
+| \`<Input>\` | Form input (kinds: text/search/password/date/file) |
+| \`(Icon)\` | Graphical node; name in parentheses |
+| \`---\` | Divider |
+| \`>\` direction | Row / Column layout of container children |`;
+
 export class MarkDrawCompiler {
-  public static compile(shapes: TLShape[], editor?: Editor | null): CompilationResult {
+  public static compile(
+    shapes: TLShape[],
+    editor?: Editor | null,
+    options?: CompilationOptions
+  ): CompilationResult {
+    const opts: Required<CompilationOptions> = {
+      containmentThreshold: options?.containmentThreshold ?? 0.85,
+      rowClusterThreshold: options?.rowClusterThreshold ?? 16,
+      gridBandThreshold: options?.gridBandThreshold ?? 32,
+      includeTimestamp: options?.includeTimestamp ?? false,
+      includeLegend: options?.includeLegend ?? true
+    };
+
     const normalized = this.normalize(shapes, editor);
-    const tree = this.buildHierarchy(normalized);
+    const tree = this.buildHierarchy(normalized, opts.containmentThreshold);
+
+    const specBody = this.serializeSpecTable(tree, opts);
+    const gridBody = this.serializeSpatialGrid(tree, opts.gridBandThreshold);
+    const asciiBody = AsciiSerializer.serialize(tree);
+
+    const legendPrefix = opts.includeLegend ? `${SEMANTIC_LEGEND_MARKDOWN}\n\n---\n\n` : '';
 
     return {
-      markdownSpec: this.serializeSpecTable(tree),
-      markdownGrid: this.serializeSpatialGrid(tree),
+      markdownSpec: `${legendPrefix}${specBody}`,
+      markdownGrid: `${legendPrefix}${gridBody}`,
+      markdownAscii: `${legendPrefix}${asciiBody}`,
       jsonAst: JSON.stringify(tree, null, 2),
       timestamp: new Date().toISOString(),
       elementCount: normalized.length
@@ -63,7 +100,7 @@ export class MarkDrawCompiler {
       const userMetaRole = (s.meta as any)?.markdrawRole;
 
       let role: SemanticRole = 'unknown';
-      let widgetType = props.widgetType as string | undefined;
+      const widgetType = props.widgetType as string | undefined;
       let widgetProps: Record<string, any> | undefined = undefined;
 
       if (s.type === 'ui-widget' && widgetType) {
@@ -78,37 +115,82 @@ export class MarkDrawCompiler {
         };
 
         switch (widgetType) {
+          // Containers
+          case 'section':
+          case 'card':
+          case 'hero':
+          case 'header':
+          case 'footer':
+          case 'grid_gallery':
+          case 'split_pane':
+          case 'modal':
+          case 'data_table':
+          case 'table':
+          case 'tabs':
+          case 'footer_nav':
+          case 'steps':
+            role = 'container';
+            break;
+
+          // Buttons
           case 'button':
             role = 'button';
             break;
+
+          // Inputs
           case 'input':
+          case 'search':
+          case 'password':
           case 'textarea':
           case 'checkbox':
           case 'radio':
           case 'toggle':
           case 'select':
           case 'slider':
+          case 'file_upload':
+          case 'date_picker':
+          case 'stepper':
+          case 'color_swatch':
             role = 'input';
             break;
-          case 'card':
-          case 'modal':
-          case 'navbar':
-          case 'sidebar':
-          case 'table':
-          case 'alert':
-          case 'tabs':
-          case 'breadcrumb':
-          case 'pagination':
-            role = 'container';
-            break;
+
+          // Icons & Media
           case 'avatar':
+          case 'avatar_group':
+          case 'thumbnail_strip':
           case 'badge':
           case 'icon':
+          case 'stat_kpi':
+          case 'image_frame':
+          case 'video_frame':
             role = 'icon_avatar';
             break;
+
+          // Dividers & Spacers
           case 'divider':
+          case 'spacer':
             role = 'divider';
             break;
+
+          // Typography & Content
+          case 'heading':
+          case 'paragraph':
+          case 'list':
+          case 'blockquote':
+          case 'code_block':
+          case 'link':
+          case 'chip':
+          case 'breadcrumbs':
+          case 'pagination':
+          case 'tooltip':
+          case 'toast':
+          case 'empty_state':
+          case 'banner':
+          case 'progress_bar':
+          case 'skeleton':
+            role = 'text';
+            break;
+
           default:
             role = 'unknown';
         }
@@ -140,12 +222,14 @@ export class MarkDrawCompiler {
     return results;
   }
 
-  public static buildHierarchy(shapes: NormalizedShape[]): LayoutNode[] {
+  public static buildHierarchy(
+    shapes: NormalizedShape[],
+    containmentThreshold: number = 0.85
+  ): LayoutNode[] {
     if (shapes.length === 0) return [];
 
-    // Sort descending by area to process larger items first
     const sortedByAreaDesc = [...shapes].sort(
-      (a, b) => (b.bounds.w * b.bounds.h) - (a.bounds.w * a.bounds.h)
+      (a, b) => b.bounds.w * b.bounds.h - a.bounds.w * a.bounds.h
     );
 
     const nodeRegistry = new Map<string, LayoutNode>();
@@ -184,8 +268,10 @@ export class MarkDrawCompiler {
         const candidateArea = candidate.bounds.w * candidate.bounds.h;
         const childArea = shape.bounds.w * shape.bounds.h;
 
-        // An enclosing parent must have greater area and satisfy enclosure threshold
-        if (candidateArea > childArea && isEnclosed(shape.aabb, candidate.aabb, 0.85)) {
+        if (
+          candidateArea > childArea &&
+          isEnclosed(shape.aabb, candidate.aabb, containmentThreshold)
+        ) {
           if (candidateArea < minParentArea) {
             minParentArea = candidateArea;
             immediateParent = nodeRegistry.get(candidate.id) || null;
@@ -282,36 +368,49 @@ export class MarkDrawCompiler {
     return pairs.length > 0 ? pairs.join(', ') : '—';
   }
 
-  public static serializeSpecTable(roots: LayoutNode[]): string {
+  public static serializeSpecTable(
+    roots: LayoutNode[],
+    options?: { includeTimestamp?: boolean }
+  ): string {
     if (roots.length === 0) {
       return '_Canvas is empty. Draw shapes or drop UI components to generate the specification._';
     }
 
     const rows: string[] = [];
     rows.push('### MarkDraw UI Specification');
-    rows.push(`**Generated:** ${new Date().toISOString()}  `);
+    if (options?.includeTimestamp) {
+      rows.push(`**Generated:** ${new Date().toISOString()}  `);
+    }
     rows.push(`**Roots Detected:** ${roots.length} view(s)\n`);
     rows.push('#### Semantic Hierarchy Table');
     rows.push('| Path | Component | Semantics | Layout Flow | Props & Attributes | Children / Content |');
     rows.push('| :--- | :--- | :--- | :--- | :--- | :--- |');
 
     const walk = (node: LayoutNode) => {
-      const childBadges = node.children.length > 0
-        ? node.children.map((c) => {
-            if (c.widgetType) {
-              return `<${capitalize(c.widgetType)}: "${c.label}">`;
-            }
-            return LegendEngine.getBadgeSymbol(c.role, c.label);
-          }).join(', ')
-        : (node.shape.text ? `"${node.shape.text}"` : '—');
+      const childBadges =
+        node.children.length > 0
+          ? node.children
+              .map((c) => {
+                if (c.widgetType) {
+                  return `<${capitalize(c.widgetType)}: "${c.label}">`;
+                }
+                return LegendEngine.getBadgeSymbol(c.role, c.label);
+              })
+              .join(', ')
+          : node.shape.text
+            ? `"${node.shape.text}"`
+            : '—';
 
       const semanticsBadge = node.widgetType
         ? `<${capitalize(node.widgetType)}>`
-        : LegendEngine.getBadgeSymbol(node.role, '').replace(/:\s*Untitled|\s*Untitled/, '').trim() || node.role;
+        : LegendEngine.getBadgeSymbol(node.role, '').replace(/:\s*Untitled|\s*Untitled/, '').trim() ||
+          node.role;
 
       const propsStr = this.formatProps(node);
 
-      rows.push(`| \`${node.path}\` | **${node.label}** | ${semanticsBadge} | ${node.direction} | ${propsStr} | ${childBadges} |`);
+      rows.push(
+        `| \`${node.path}\` | **${node.label}** | ${semanticsBadge} | ${node.direction} | ${propsStr} | ${childBadges} |`
+      );
       for (const child of node.children) {
         walk(child);
       }
@@ -324,13 +423,12 @@ export class MarkDrawCompiler {
     return rows.join('\n');
   }
 
-  public static serializeSpatialGrid(roots: LayoutNode[]): string {
+  public static serializeSpatialGrid(roots: LayoutNode[], gridBandThreshold: number = 32): string {
     if (roots.length === 0) return '_Canvas is empty._';
 
     const lines: string[] = [];
     lines.push('### Spatial Grid Layout Table\n');
 
-    // Group roots by vertical position into table rows (threshold: 32px)
     const rowClustered: LayoutNode[][] = [];
     const sortedRoots = [...roots].sort((a, b) => a.shape.bounds.y - b.shape.bounds.y);
 
@@ -338,7 +436,7 @@ export class MarkDrawCompiler {
       let placed = false;
       for (const cluster of rowClustered) {
         const clusterY = cluster[0].shape.bounds.y;
-        if (Math.abs(node.shape.bounds.y - clusterY) <= 32) {
+        if (Math.abs(node.shape.bounds.y - clusterY) <= gridBandThreshold) {
           cluster.push(node);
           placed = true;
           break;
@@ -349,7 +447,6 @@ export class MarkDrawCompiler {
       }
     }
 
-    // Determine max columns
     let maxCols = 0;
     for (const cluster of rowClustered) {
       cluster.sort((a, b) => a.shape.bounds.x - b.shape.bounds.x);
@@ -358,7 +455,6 @@ export class MarkDrawCompiler {
 
     if (maxCols === 0) return '_No spatial cells formed._';
 
-    // Build GFM Header
     const headers = Array.from({ length: maxCols }, (_, i) => `Col ${i + 1}`);
     lines.push(`| ${headers.join(' | ')} |`);
     lines.push(`| ${headers.map(() => ':---').join(' | ')} |`);

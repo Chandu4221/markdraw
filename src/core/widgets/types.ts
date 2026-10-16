@@ -1,33 +1,79 @@
 import { TLBaseShape } from '@tldraw/tldraw';
 
+export type UIWidgetCategory =
+  | 'layout'
+  | 'content'
+  | 'forms'
+  | 'navigation'
+  | 'feedback'
+  | 'media';
+
 export type UIWidgetType =
-  // Forms & Controls
+  // Layout & Structural Containers
+  | 'section'
+  | 'card'
+  | 'hero'
+  | 'header'
+  | 'footer'
+  | 'grid_gallery'
+  | 'split_pane'
+  | 'modal'
+
+  // Forms & Inputs
   | 'button'
   | 'input'
+  | 'search'
+  | 'password'
   | 'textarea'
   | 'checkbox'
   | 'radio'
   | 'toggle'
   | 'select'
   | 'slider'
+  | 'file_upload'
+  | 'date_picker'
+  | 'stepper'
+  | 'color_swatch'
+
   // Navigation
   | 'navbar'
+  | 'menubar'
   | 'sidebar'
   | 'tabs'
-  | 'breadcrumb'
+  | 'breadcrumbs'
   | 'pagination'
-  // Containers & Layout
-  | 'card'
-  | 'modal'
-  | 'alert'
-  | 'table'
-  // Display & Media
-  | 'avatar'
-  | 'badge'
-  | 'icon'
-  | 'divider';
+  | 'footer_nav'
+  | 'link'
+  | 'chip'
+  | 'steps'
 
-export type UIWidgetCategory = 'forms' | 'navigation' | 'containers' | 'display';
+  // Content
+  | 'heading'
+  | 'paragraph'
+  | 'list'
+  | 'data_table'
+  | 'blockquote'
+  | 'code_block'
+  | 'divider'
+  | 'spacer'
+  | 'image_frame'
+  | 'video_frame'
+  | 'stat_kpi'
+
+  // Feedback
+  | 'progress_bar'
+  | 'skeleton'
+  | 'tooltip'
+  | 'toast'
+  | 'empty_state'
+  | 'banner'
+
+  // Media
+  | 'avatar'
+  | 'avatar_group'
+  | 'thumbnail_strip'
+  | 'badge'
+  | 'icon';
 
 export interface UIWidgetProps {
   w: number;

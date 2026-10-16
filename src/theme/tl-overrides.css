@@ -1,0 +1,85 @@
+/* MarkDraw Deep Overrides for tldraw Canvas */
+
+.tl-container {
+  --color-accent: var(--md-accent) !important;
+  --color-primary: var(--md-text) !important;
+  --color-selected: var(--md-accent) !important;
+  --color-selected-contrast: var(--md-accent-contrast) !important;
+  --color-grid: var(--md-border) !important;
+  --color-background: var(--md-bg) !important;
+  --color-panel: var(--md-surface) !important;
+  --color-panel-contrast: var(--md-surface-raised) !important;
+  --color-muted-1: var(--md-text-muted) !important;
+  --color-muted-2: var(--md-border-strong) !important;
+  --color-focus: var(--md-accent) !important;
+  --color-divider: var(--md-border) !important;
+
+  background-color: var(--md-bg) !important;
+  color: var(--md-text) !important;
+  font-family: var(--md-font-sans) !important;
+}
+
+/* Canvas Background & Grid */
+.tl-background {
+  background-color: var(--md-bg) !important;
+}
+
+.tl-grid {
+  opacity: 0.35 !important;
+}
+
+/* Neutralize Selection Rings and Transform Handles (No Blue) */
+.tl-selection__fg,
+.tl-selection-box {
+  stroke: var(--md-accent) !important;
+}
+
+.tl-selection__bg {
+  fill: var(--md-accent-ring) !important;
+}
+
+.tl-corner-handle,
+.tl-edge-handle,
+.tl-handle {
+  fill: var(--md-surface) !important;
+  stroke: var(--md-accent) !important;
+  stroke-width: 1.5px !important;
+}
+
+.tl-rotate-handle {
+  fill: var(--md-surface) !important;
+  stroke: var(--md-accent) !important;
+}
+
+/* Toolbar & Panels Chrome */
+.tl-toolbar,
+.tl-menu__panel,
+.tl-popover {
+  background: var(--md-surface) !important;
+  border: 1px solid var(--md-border) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+  border-radius: var(--md-radius-md) !important;
+}
+
+.tl-button {
+  color: var(--md-text) !important;
+}
+
+.tl-button:hover {
+  background: var(--md-surface-raised) !important;
+  color: var(--md-text-bold) !important;
+}
+
+.tl-button[data-state='selected'],
+.tl-button[aria-checked='true'] {
+  background: var(--md-accent-subtle) !important;
+  color: var(--md-accent) !important;
+  border: 1px solid var(--md-border-strong) !important;
+}
+
+/* Quick Action & Helper Pill Overrides */
+.tl-quick-actions,
+.tl-helper-buttons {
+  background: var(--md-surface) !important;
+  border: 1px solid var(--md-border) !important;
+}
