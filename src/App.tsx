@@ -1137,15 +1137,6 @@ export const App: React.FC = () => {
                     >
                       <Download size={14} />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => setIsRightPanelOpen(false)}
-                      title="Collapse Output Panel (Ctrl+J)"
-                      aria-label="Collapse Output Panel (Ctrl+J)"
-                    >
-                      <PanelRightClose size={14} />
-                    </Button>
                   </div>
                 </div>
 
