@@ -29,7 +29,11 @@ import {
   ZoomOut,
   Maximize,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen
 } from 'lucide-react';
 import styles from './App.module.css';
 
@@ -58,26 +62,16 @@ export const App: React.FC = () => {
   const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'ascii' | 'json'>('spec');
   const [copied, setCopied] = useState<boolean>(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [canvasPercent, setCanvasPercent] = useState<number>(55);
   const [isDragging, setIsDragging] = useState<boolean>(false);
-
-  // Canvas tool state & editor state
-  const [editor, setEditor] = useState<Editor | null>(null);
   const [activeTool, setActiveTool] = useState<string>('select');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toastTimeoutRef = useRef<number | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
 
-  const showToast = useCallback((msg: string) => {
-    if (toastTimeoutRef.current) {
-      window.clearTimeout(toastTimeoutRef.current);
-    }
-    setToastMessage(msg);
-    toastTimeoutRef.current = window.setTimeout(() => {
-      setToastMessage(null);
-    }, 3200);
-  }, []);
+  const splitAreaRef = useRef<HTMLDivElement | null>(null);
 
   // Theme Management (monochrome dark/light)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -94,6 +88,21 @@ export const App: React.FC = () => {
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
+
+  // Keyboard Shortcuts for panel toggling
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsPaletteOpen((prev) => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setIsRightPanelOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Settings Management
   const [options, setOptions] = useState<Required<CompilationOptions>>(() => {
@@ -125,6 +134,13 @@ export const App: React.FC = () => {
   const editorRef = useRef<Editor | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
   const warnedRef = useRef<boolean>(false);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3200);
+  }, []);
 
   const triggerCompile = useCallback(() => {
     const currentEditor = editorRef.current;
@@ -192,7 +208,7 @@ export const App: React.FC = () => {
     triggerCompile();
   }, [triggerCompile]);
 
-  // Panel Resizing logic
+  // Accurate Panel Resizing Logic relative to splitArea
   const startResizing = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -202,7 +218,10 @@ export const App: React.FC = () => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newPercent = (e.clientX / window.innerWidth) * 100;
+      if (!splitAreaRef.current) return;
+      const rect = splitAreaRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const newPercent = (mouseX / rect.width) * 100;
       const clamped = Math.min(85, Math.max(15, newPercent));
       setCanvasPercent(clamped);
     };
@@ -255,13 +274,10 @@ export const App: React.FC = () => {
   };
 
   const handleSelectTool = (toolId: string) => {
-    if (!editorRef.current) return;
-    try {
-      editorRef.current.setCurrentTool(toolId);
-      setActiveTool(toolId);
-    } catch (e) {
-      console.error(e);
-    }
+    const current = editorRef.current;
+    if (!current) return;
+    current.setCurrentTool(toolId);
+    setActiveTool(toolId);
   };
 
   const getActiveContent = (): string => {
@@ -310,6 +326,14 @@ export const App: React.FC = () => {
       {/* Top Application Header */}
       <header className={styles.header}>
         <div className={styles.brand}>
+          <button
+            className={`${styles.iconBtn} ${isPaletteOpen ? styles.iconBtnActive : ''}`}
+            onClick={() => setIsPaletteOpen((prev) => !prev)}
+            title={isPaletteOpen ? 'Collapse Components (Ctrl+B)' : 'Open Components (Ctrl+B)'}
+          >
+            {isPaletteOpen ? <PanelLeftClose size={15} strokeWidth={1.5} /> : <PanelLeftOpen size={15} strokeWidth={1.5} />}
+          </button>
+
           <div className={styles.logoBadge}>MD</div>
           <span className={styles.brandTitle}>MarkDraw</span>
           <span className={styles.versionBadge}>v2.5</span>
@@ -318,25 +342,41 @@ export const App: React.FC = () => {
         <div className={styles.headerControls}>
           <div className={styles.layoutPresets}>
             <button
-              className={`${styles.presetBtn} ${Math.round(canvasPercent) === 75 ? styles.activePreset : ''}`}
-              onClick={() => setCanvasPercent(75)}
-              title="Focus Canvas (75% / 25%)"
+              className={`${styles.presetBtn} ${!isRightPanelOpen ? styles.activePreset : ''}`}
+              onClick={() => setIsRightPanelOpen(false)}
+              title="Canvas Fullscreen Focus"
             >
-              Canvas Focus
+              Canvas Full
             </button>
             <button
-              className={`${styles.presetBtn} ${Math.round(canvasPercent) === 50 ? styles.activePreset : ''}`}
-              onClick={() => setCanvasPercent(50)}
+              className={`${styles.presetBtn} ${isRightPanelOpen && Math.round(canvasPercent) === 75 ? styles.activePreset : ''}`}
+              onClick={() => {
+                setIsRightPanelOpen(true);
+                setCanvasPercent(75);
+              }}
+              title="Canvas Focus (75% / 25%)"
+            >
+              Canvas 75%
+            </button>
+            <button
+              className={`${styles.presetBtn} ${isRightPanelOpen && Math.round(canvasPercent) === 50 ? styles.activePreset : ''}`}
+              onClick={() => {
+                setIsRightPanelOpen(true);
+                setCanvasPercent(50);
+              }}
               title="Equal Split (50% / 50%)"
             >
               50 / 50
             </button>
             <button
-              className={`${styles.presetBtn} ${Math.round(canvasPercent) === 35 ? styles.activePreset : ''}`}
-              onClick={() => setCanvasPercent(35)}
+              className={`${styles.presetBtn} ${isRightPanelOpen && Math.round(canvasPercent) === 35 ? styles.activePreset : ''}`}
+              onClick={() => {
+                setIsRightPanelOpen(true);
+                setCanvasPercent(35);
+              }}
               title="Focus Code (35% / 65%)"
             >
-              Code Focus
+              Code 65%
             </button>
           </div>
 
@@ -363,6 +403,14 @@ export const App: React.FC = () => {
           </button>
 
           <button
+            className={`${styles.iconBtn} ${isRightPanelOpen ? styles.iconBtnActive : ''}`}
+            onClick={() => setIsRightPanelOpen((prev) => !prev)}
+            title={isRightPanelOpen ? 'Collapse Output Panel (Ctrl+J)' : 'Open Output Panel (Ctrl+J)'}
+          >
+            {isRightPanelOpen ? <PanelRightClose size={15} strokeWidth={1.5} /> : <PanelRightOpen size={15} strokeWidth={1.5} />}
+          </button>
+
+          <button
             className={styles.iconBtn}
             onClick={toggleTheme}
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
@@ -372,7 +420,7 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Split-Screen Workspace */}
+      {/* Main Workspace */}
       <div className={styles.workspace}>
         {isDragging && <div className={styles.draggingOverlay} />}
 
@@ -383,169 +431,215 @@ export const App: React.FC = () => {
           onInsertWidget={handleInsertWidget}
         />
 
-        {/* Canvas Container */}
-        <div
-          className={styles.canvasContainer}
-          style={{ width: `${canvasPercent}%`, flex: 'none' }}
-        >
-          <Tldraw
-            persistenceKey="markdraw"
-            shapeUtils={customShapeUtils}
-            components={tldrawComponents}
-            onMount={handleEditorMount}
-          />
+        {/* Split Area: Canvas + Resizer + Output */}
+        <div className={styles.splitArea} ref={splitAreaRef}>
+          {/* Canvas Container */}
+          <div
+            className={styles.canvasContainer}
+            style={{
+              width: isRightPanelOpen ? `calc(${canvasPercent}% - 4px)` : '100%',
+              flex: isRightPanelOpen ? 'none' : '1'
+            }}
+          >
+            <Tldraw
+              persistenceKey="markdraw"
+              shapeUtils={customShapeUtils}
+              components={tldrawComponents}
+              onMount={handleEditorMount}
+            />
 
-          {/* Properties Mini-Panel (Part 2.2) */}
-          <PropsPanel editor={editor} />
+            {/* Quick Floating Open Button for Left Palette if closed */}
+            {!isPaletteOpen && (
+              <button
+                className={`${styles.floatingPanelBtn} ${styles.floatingLeftBtn}`}
+                onClick={() => setIsPaletteOpen(true)}
+                title="Open Components (Ctrl+B)"
+              >
+                <PanelLeftOpen size={14} strokeWidth={1.5} />
+                <span>Components</span>
+              </button>
+            )}
 
-          {/* Minimal Floating Canvas Controls (Part 5) */}
-          <div className={styles.canvasControlBar}>
-            <button
-              className={`${styles.canvasControlBtn} ${activeTool === 'select' ? styles.canvasControlBtnActive : ''}`}
-              onClick={() => handleSelectTool('select')}
-              title="Select Tool (V)"
-            >
-              <MousePointer size={14} strokeWidth={1.5} />
-            </button>
-            <button
-              className={`${styles.canvasControlBtn} ${activeTool === 'hand' ? styles.canvasControlBtnActive : ''}`}
-              onClick={() => handleSelectTool('hand')}
-              title="Hand / Pan Tool (H)"
-            >
-              <Hand size={14} strokeWidth={1.5} />
-            </button>
+            {/* Quick Floating Open Button for Right Output if closed */}
+            {!isRightPanelOpen && (
+              <button
+                className={`${styles.floatingPanelBtn} ${styles.floatingRightBtn}`}
+                onClick={() => setIsRightPanelOpen(true)}
+                title="Open Live Output (Ctrl+J)"
+              >
+                <PanelRightOpen size={14} strokeWidth={1.5} />
+                <span>Output</span>
+              </button>
+            )}
 
-            <div className={styles.canvasControlDivider} />
+            {/* Properties Mini-Panel (Part 2.2) */}
+            <div style={{ position: 'absolute', top: !isRightPanelOpen ? 46 : 0, right: 0, zIndex: 400 }}>
+              <PropsPanel editor={editor} />
+            </div>
 
-            <button
-              className={styles.canvasControlBtn}
-              onClick={() => editorRef.current?.undo()}
-              title="Undo (Ctrl+Z)"
-            >
-              <Undo2 size={14} strokeWidth={1.5} />
-            </button>
-            <button
-              className={styles.canvasControlBtn}
-              onClick={() => editorRef.current?.redo()}
-              title="Redo (Ctrl+Y)"
-            >
-              <Redo2 size={14} strokeWidth={1.5} />
-            </button>
+            {/* Minimal Floating Canvas Controls (Part 5) */}
+            <div className={styles.canvasControlBar}>
+              <button
+                className={`${styles.canvasControlBtn} ${activeTool === 'select' ? styles.canvasControlBtnActive : ''}`}
+                onClick={() => handleSelectTool('select')}
+                title="Select Tool (V)"
+              >
+                <MousePointer size={14} strokeWidth={1.5} />
+              </button>
+              <button
+                className={`${styles.canvasControlBtn} ${activeTool === 'hand' ? styles.canvasControlBtnActive : ''}`}
+                onClick={() => handleSelectTool('hand')}
+                title="Hand / Pan Tool (H)"
+              >
+                <Hand size={14} strokeWidth={1.5} />
+              </button>
 
-            <div className={styles.canvasControlDivider} />
+              <div className={styles.canvasControlDivider} />
 
-            <button
-              className={styles.canvasControlBtn}
-              onClick={() => editorRef.current?.zoomIn()}
-              title="Zoom In"
-            >
-              <ZoomIn size={14} strokeWidth={1.5} />
-            </button>
-            <button
-              className={styles.canvasControlBtn}
-              onClick={() => editorRef.current?.zoomOut()}
-              title="Zoom Out"
-            >
-              <ZoomOut size={14} strokeWidth={1.5} />
-            </button>
-            <button
-              className={styles.canvasControlBtn}
-              onClick={() => editorRef.current?.zoomToFit()}
-              title="Zoom to Fit"
-            >
-              <Maximize size={14} strokeWidth={1.5} />
-            </button>
+              <button
+                className={styles.canvasControlBtn}
+                onClick={() => editorRef.current?.undo()}
+                title="Undo (Ctrl+Z)"
+              >
+                <Undo2 size={14} strokeWidth={1.5} />
+              </button>
+              <button
+                className={styles.canvasControlBtn}
+                onClick={() => editorRef.current?.redo()}
+                title="Redo (Ctrl+Y)"
+              >
+                <Redo2 size={14} strokeWidth={1.5} />
+              </button>
 
-            <div className={styles.canvasControlDivider} />
+              <div className={styles.canvasControlDivider} />
 
-            <button
-              className={styles.canvasControlBtn}
-              onClick={() => {
-                const current = editorRef.current;
-                if (!current) return;
-                const selected = current.getSelectedShapeIds();
-                if (selected.length > 0) {
-                  current.deleteShapes(selected);
-                }
-              }}
-              title="Delete Selected"
-            >
-              <Trash2 size={14} strokeWidth={1.5} />
-            </button>
+              <button
+                className={styles.canvasControlBtn}
+                onClick={() => editorRef.current?.zoomIn()}
+                title="Zoom In"
+              >
+                <ZoomIn size={14} strokeWidth={1.5} />
+              </button>
+              <button
+                className={styles.canvasControlBtn}
+                onClick={() => editorRef.current?.zoomOut()}
+                title="Zoom Out"
+              >
+                <ZoomOut size={14} strokeWidth={1.5} />
+              </button>
+              <button
+                className={styles.canvasControlBtn}
+                onClick={() => editorRef.current?.zoomToFit()}
+                title="Zoom to Fit"
+              >
+                <Maximize size={14} strokeWidth={1.5} />
+              </button>
+
+              <div className={styles.canvasControlDivider} />
+
+              <button
+                className={styles.canvasControlBtn}
+                onClick={() => {
+                  const current = editorRef.current;
+                  if (!current) return;
+                  const selected = current.getSelectedShapeIds();
+                  if (selected.length > 0) {
+                    current.deleteShapes(selected);
+                  }
+                }}
+                title="Delete Selected"
+              >
+                <Trash2 size={14} strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Non-widget Warning Toast (Part 5) */}
+            {toastMessage && (
+              <div className={styles.toast}>
+                <AlertCircle size={14} />
+                <span>{toastMessage}</span>
+              </div>
+            )}
           </div>
 
-          {/* Non-widget Warning Toast (Part 5) */}
-          {toastMessage && (
-            <div className={styles.toast}>
-              <AlertCircle size={14} />
-              <span>{toastMessage}</span>
+          {/* Resizer Divider */}
+          {isRightPanelOpen && (
+            <div
+              className={`${styles.resizer} ${isDragging ? styles.resizerActive : ''}`}
+              onMouseDown={startResizing}
+              onDoubleClick={() => setCanvasPercent(55)}
+              title="Drag to resize (Double-click to reset 55/45)"
+            >
+              <div className={styles.resizerHandle} />
             </div>
           )}
+
+          {/* Right Pane: Live Reactive Output */}
+          {isRightPanelOpen && (
+            <aside
+              className={styles.outputContainer}
+              style={{
+                width: `calc(${100 - canvasPercent}% - 4px)`,
+                flex: 'none'
+              }}
+            >
+              <div className={styles.outputToolbar}>
+                <div className={styles.tabs}>
+                  <button
+                    className={`${styles.tabBtn} ${outputTab === 'spec' ? styles.activeTab : ''}`}
+                    onClick={() => setOutputTab('spec')}
+                  >
+                    <FileText size={14} strokeWidth={1.5} /> Spec Table
+                  </button>
+                  <button
+                    className={`${styles.tabBtn} ${outputTab === 'grid' ? styles.activeTab : ''}`}
+                    onClick={() => setOutputTab('grid')}
+                  >
+                    <LayoutGrid size={14} strokeWidth={1.5} /> Spatial Grid
+                  </button>
+                  <button
+                    className={`${styles.tabBtn} ${outputTab === 'ascii' ? styles.activeTab : ''}`}
+                    onClick={() => setOutputTab('ascii')}
+                  >
+                    <Terminal size={14} strokeWidth={1.5} /> ASCII Layout
+                  </button>
+                  <button
+                    className={`${styles.tabBtn} ${outputTab === 'json' ? styles.activeTab : ''}`}
+                    onClick={() => setOutputTab('json')}
+                  >
+                    <Code size={14} strokeWidth={1.5} /> AST (JSON)
+                  </button>
+                </div>
+                <div className={styles.actions}>
+                  <button className={styles.actionBtn} onClick={handleCopy} title="Copy to Clipboard">
+                    {copied ? <Check size={14} /> : <Copy size={14} strokeWidth={1.5} />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                  </button>
+                  <button className={styles.actionBtn} onClick={handleDownload} title="Download Source">
+                    <Download size={14} strokeWidth={1.5} />
+                  </button>
+                  <button
+                    className={styles.actionBtn}
+                    onClick={() => setIsRightPanelOpen(false)}
+                    title="Collapse Output Panel (Ctrl+J)"
+                  >
+                    <PanelRightClose size={14} strokeWidth={1.5} />
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.outputViewport}>
+                <pre className={styles.codeBlock}>
+                  <code>{getActiveContent()}</code>
+                </pre>
+              </div>
+
+              <footer className={styles.outputFooter}>
+                <span>Semantic layout compiled in real time. Paste directly into LLM prompts.</span>
+              </footer>
+            </aside>
+          )}
         </div>
-
-        {/* Resizer Divider */}
-        <div
-          className={`${styles.resizer} ${isDragging ? styles.resizerActive : ''}`}
-          onMouseDown={startResizing}
-          onDoubleClick={() => setCanvasPercent(55)}
-          title="Drag to resize panels (Double-click to reset)"
-        >
-          <div className={styles.resizerHandle} />
-        </div>
-
-        {/* Right Pane: Live Reactive Output */}
-        <aside
-          className={styles.outputContainer}
-          style={{ width: `calc(${100 - canvasPercent}% - 8px)`, flex: 'none' }}
-        >
-          <div className={styles.outputToolbar}>
-            <div className={styles.tabs}>
-              <button
-                className={`${styles.tabBtn} ${outputTab === 'spec' ? styles.activeTab : ''}`}
-                onClick={() => setOutputTab('spec')}
-              >
-                <FileText size={14} strokeWidth={1.5} /> Spec Table
-              </button>
-              <button
-                className={`${styles.tabBtn} ${outputTab === 'grid' ? styles.activeTab : ''}`}
-                onClick={() => setOutputTab('grid')}
-              >
-                <LayoutGrid size={14} strokeWidth={1.5} /> Spatial Grid
-              </button>
-              <button
-                className={`${styles.tabBtn} ${outputTab === 'ascii' ? styles.activeTab : ''}`}
-                onClick={() => setOutputTab('ascii')}
-              >
-                <Terminal size={14} strokeWidth={1.5} /> ASCII Layout
-              </button>
-              <button
-                className={`${styles.tabBtn} ${outputTab === 'json' ? styles.activeTab : ''}`}
-                onClick={() => setOutputTab('json')}
-              >
-                <Code size={14} strokeWidth={1.5} /> AST (JSON)
-              </button>
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.actionBtn} onClick={handleCopy} title="Copy to Clipboard">
-                {copied ? <Check size={14} /> : <Copy size={14} strokeWidth={1.5} />}
-                <span>{copied ? 'Copied' : 'Copy'}</span>
-              </button>
-              <button className={styles.actionBtn} onClick={handleDownload} title="Download Source">
-                <Download size={14} strokeWidth={1.5} />
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.outputViewport}>
-            <pre className={styles.codeBlock}>
-              <code>{getActiveContent()}</code>
-            </pre>
-          </div>
-
-          <footer className={styles.outputFooter}>
-            <span>Semantic layout compiled in real time. Paste directly into LLM prompts.</span>
-          </footer>
-        </aside>
       </div>
 
       {/* In-App Modals */}

@@ -65,7 +65,7 @@ body, html, #root {
 .headerControls {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .layoutPresets {
@@ -132,6 +132,12 @@ body, html, #root {
   border-color: var(--md-border-strong);
 }
 
+.iconBtnActive {
+  background: var(--md-accent-subtle);
+  color: var(--md-accent);
+  border-color: var(--md-border-strong);
+}
+
 .workspace {
   display: flex;
   flex: 1;
@@ -141,11 +147,20 @@ body, html, #root {
   position: relative;
 }
 
+/* Split Area: Canvas + Resizer + Output */
+.splitArea {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
 .canvasContainer {
   height: 100%;
   position: relative;
   overflow: hidden;
-  min-width: 250px;
+  min-width: 200px;
 }
 
 .resizer {
@@ -196,8 +211,9 @@ body, html, #root {
   display: flex;
   flex-direction: column;
   background: var(--md-surface);
-  min-width: 280px;
+  min-width: 250px;
   overflow: hidden;
+  border-left: 1px solid var(--md-border);
 }
 
 .outputToolbar {
@@ -232,47 +248,47 @@ body, html, #root {
 }
 
 .tabBtn:hover {
-  background: var(--md-surface);
   color: var(--md-text-bold);
+  background: var(--md-surface);
 }
 
 .activeTab {
-  background: var(--md-accent-subtle);
+  background: var(--md-surface);
   color: var(--md-text-bold);
   font-weight: 600;
+  border: 1px solid var(--md-border);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .actionBtn {
   background: var(--md-surface);
   border: 1px solid var(--md-border);
   color: var(--md-text);
-  padding: 4px 10px;
+  padding: 5px 10px;
   border-radius: var(--md-radius-sm);
   font-size: 11px;
   font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .actionBtn:hover {
   background: var(--md-surface-raised);
   border-color: var(--md-border-strong);
-  color: var(--md-text-bold);
 }
 
 .outputViewport {
   flex: 1;
-  padding: 16px;
   overflow: auto;
+  padding: 16px;
   background: var(--md-bg);
 }
 
@@ -280,24 +296,59 @@ body, html, #root {
   font-family: var(--md-font-mono);
   font-size: 12px;
   line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
   color: var(--md-text);
+  white-space: pre;
+  word-break: normal;
+  tab-size: 2;
 }
 
 .outputFooter {
   height: 32px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  font-size: 11px;
-  color: var(--md-text-muted);
+  padding: 0 16px;
   border-top: 1px solid var(--md-border);
   background: var(--md-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--md-text-muted);
   flex-shrink: 0;
 }
 
-/* Canvas Floating Controls & Toast (Part 5) */
+/* Floating Open Buttons for Left / Right Panels */
+.floatingPanelBtn {
+  position: absolute;
+  top: 14px;
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--md-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  z-index: 350;
+  transition: all 0.15s ease;
+}
+
+.floatingPanelBtn:hover {
+  background: var(--md-surface-raised);
+  border-color: var(--md-accent);
+}
+
+.floatingLeftBtn {
+  left: 14px;
+}
+
+.floatingRightBtn {
+  right: 14px;
+}
+
+/* Canvas Floating Controls & Toast */
 .canvasControlBar {
   position: absolute;
   bottom: 20px;
