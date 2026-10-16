@@ -309,7 +309,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={14}
                 fontWeight={700}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {title.slice(0, Math.floor(w / 9))}
               </text>
@@ -365,7 +365,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={13}
                 fontWeight={700}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {btnText}
               </text>
@@ -408,7 +408,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 y={h / 2 + 4}
                 fill="var(--md-text)"
                 fontSize={12}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {showTextVal || (type === 'search' ? 'Search...' : type === 'password' ? '••••••••' : 'Input...')}
               </text>
@@ -439,7 +439,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={fontSize}
                 fontWeight={fontWeight}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {hText}
               </text>
@@ -459,7 +459,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 y={15}
                 fill="var(--md-text)"
                 fontSize={12}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {(label || 'Paragraph text...').slice(0, Math.floor(w / 6))}
               </text>
@@ -600,7 +600,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={12.5}
                 fontWeight={600}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {label || 'Checkbox'}
               </text>
@@ -631,7 +631,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={12.5}
                 fontWeight={600}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {label || 'Radio'}
               </text>
@@ -668,7 +668,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={12.5}
                 fontWeight={600}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {label || (checked ? 'On' : 'Off')}
               </text>
@@ -768,7 +768,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fill="var(--md-text-bold)"
                 fontSize={12}
                 fontWeight={600}
-                fontFamily="var(--md-font-sans, sans-serif)"
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
                 {label || type}
               </text>
