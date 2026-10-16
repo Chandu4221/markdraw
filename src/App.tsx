@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Tldraw, Editor, TLUiComponents } from '@tldraw/tldraw';
-import { MarkDrawCompiler } from './core/compiler';
+import { MarkDrawCompiler, MARKDRAW_VERSION } from './core/compiler';
 import { CompilationResult, CompilationOptions } from './core/types';
 import { UIWidgetShapeUtil } from './core/widgets/UIWidgetShapeUtil';
 import { ComponentPalette } from './components/ComponentPalette';
@@ -33,7 +33,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
-  PanelRightOpen
+  PanelRightOpen,
+  Tag
 } from 'lucide-react';
 import styles from './App.module.css';
 
@@ -72,6 +73,20 @@ export const App: React.FC = () => {
   const [editor, setEditor] = useState<Editor | null>(null);
 
   const splitAreaRef = useRef<HTMLDivElement | null>(null);
+
+  // Canvas Labels Toggle (Task 5: Persisted in localStorage)
+  const [showLabels, setShowLabels] = useState<boolean>(() => {
+    const saved = localStorage.getItem('markdraw_show_labels');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const toggleLabels = () => {
+    setShowLabels((prev) => {
+      const next = !prev;
+      localStorage.setItem('markdraw_show_labels', String(next));
+      return next;
+    });
+  };
 
   // Theme Management (monochrome dark/light)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -336,7 +351,7 @@ export const App: React.FC = () => {
 
           <div className={styles.logoBadge}>MD</div>
           <span className={styles.brandTitle}>MarkDraw</span>
-          <span className={styles.versionBadge}>v2.5</span>
+          <span className={styles.versionBadge}>v{MARKDRAW_VERSION}</span>
         </div>
 
         <div className={styles.headerControls}>
@@ -435,7 +450,8 @@ export const App: React.FC = () => {
         <div className={styles.splitArea} ref={splitAreaRef}>
           {/* Canvas Container */}
           <div
-            className={styles.canvasContainer}
+            className={`${styles.canvasContainer} ${isDragging ? styles.resizing : ''}`}
+            data-show-labels={showLabels}
             style={{
               width: isRightPanelOpen ? `calc(${canvasPercent}% - 4px)` : '100%',
               flex: isRightPanelOpen ? 'none' : '1'
@@ -551,6 +567,17 @@ export const App: React.FC = () => {
               >
                 <Trash2 size={14} strokeWidth={1.5} />
               </button>
+
+              <div className={styles.canvasControlDivider} />
+
+              <button
+                className={`${styles.canvasControlBtn} ${showLabels ? styles.canvasControlBtnActive : ''}`}
+                onClick={toggleLabels}
+                title={showLabels ? 'Hide Component Labels' : 'Show Component Labels'}
+              >
+                <Tag size={14} strokeWidth={1.5} />
+                <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 4 }}>Labels</span>
+              </button>
             </div>
 
             {/* Non-widget Warning Toast (Part 5) */}
@@ -577,7 +604,7 @@ export const App: React.FC = () => {
           {/* Right Pane: Live Reactive Output */}
           {isRightPanelOpen && (
             <aside
-              className={styles.outputContainer}
+              className={`${styles.outputContainer} ${isDragging ? styles.resizing : ''}`}
               style={{
                 width: `calc(${100 - canvasPercent}% - 4px)`,
                 flex: 'none'

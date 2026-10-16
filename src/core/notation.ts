@@ -1,4 +1,5 @@
 import { IRNode } from './ir';
+import { isUntouchedLabel, getCatalogDefaultProps } from './widgets/widgetCatalog';
 
 function escapeNotation(str: string): string {
   if (!str) return '';
@@ -10,19 +11,36 @@ function escapeNotation(str: string): string {
     .trim();
 }
 
+function getEffectiveLabel(type: string, label?: string): string {
+  if (isUntouchedLabel(type, label)) {
+    return '';
+  }
+  return label || '';
+}
+
+function getEffectiveProp(type: string, key: string, val?: any): any {
+  if (val === undefined || val === null || val === '') return '';
+  const defaults = getCatalogDefaultProps(type);
+  if (defaults[key] !== undefined && defaults[key] === val) {
+    return '';
+  }
+  return val;
+}
+
 /**
- * Formats an IRNode into MarkDraw v2.5 bracket-tag semantic notation.
+ * Formats an IRNode into MarkDraw v2.6 bracket-tag semantic notation.
  * e.g. [btn "Send"], [card "Profile" elevated], [para], [input "Email..."]
+ * When label/content is untouched default, emits bare tag e.g. [btn], [card], [img]
  */
 export function formatSemanticNotation(node: IRNode): string {
   const type = node.widgetType;
   const p = node.textProps || {};
-  const primaryLabel = p.label || node.label || '';
+  const primaryLabel = getEffectiveLabel(type, p.label || node.label);
 
   switch (type) {
     case 'button': {
       const txt = primaryLabel;
-      const v = p.variant;
+      const v = getEffectiveProp('button', 'variant', p.variant);
       const varSuffix = v && v !== 'solid' && v !== 'default' ? ` ${v}` : '';
       return txt ? `[btn "${escapeNotation(txt)}"${varSuffix}]` : `[btn${varSuffix}]`;
     }
@@ -30,20 +48,26 @@ export function formatSemanticNotation(node: IRNode): string {
     case 'heading': {
       const v = p.variant;
       const varSuffix = v && v !== 'default' ? ` ${v}` : '';
-      return `[header "${escapeNotation(primaryLabel || 'Heading')}"${varSuffix}]`;
+      return primaryLabel
+        ? `[header "${escapeNotation(primaryLabel)}"${varSuffix}]`
+        : varSuffix
+          ? `[header${varSuffix}]`
+          : '[header]';
     }
 
     case 'paragraph':
       return '[para]';
 
     case 'input': {
-      const placeholder = p.placeholder || primaryLabel || '';
+      const placeholder =
+        getEffectiveProp('input', 'placeholder', p.placeholder) || primaryLabel;
       return placeholder ? `[input "${escapeNotation(placeholder)}"]` : '[input]';
     }
 
     case 'search': {
-      const placeholder = p.placeholder || primaryLabel || 'Search...';
-      return `[search "${escapeNotation(placeholder)}"]`;
+      const placeholder =
+        getEffectiveProp('search', 'placeholder', p.placeholder) || primaryLabel;
+      return placeholder ? `[search "${escapeNotation(placeholder)}"]` : '[search]';
     }
 
     case 'password': {
@@ -67,8 +91,10 @@ export function formatSemanticNotation(node: IRNode): string {
     }
 
     case 'select': {
-      const opts = p.options || p.placeholder || 'A|B|C';
-      return `[select "${escapeNotation(opts)}"]`;
+      const opts =
+        getEffectiveProp('select', 'options', p.options) ||
+        getEffectiveProp('select', 'placeholder', p.placeholder);
+      return opts ? `[select "${escapeNotation(opts)}"]` : '[select]';
     }
 
     case 'slider': {
@@ -82,20 +108,20 @@ export function formatSemanticNotation(node: IRNode): string {
     }
 
     case 'color_swatch': {
-      const v = p.variant || primaryLabel || '#000000';
-      return `[color "${escapeNotation(v)}"]`;
+      const v = p.variant || primaryLabel;
+      return v ? `[color "${escapeNotation(v)}"]` : '[color]';
     }
 
     case 'checkbox': {
-      const txt = primaryLabel || 'Option';
+      const txt = primaryLabel;
       const flag = p.checked ? 'on' : 'off';
-      return `[check "${escapeNotation(txt)}" ${flag}]`;
+      return txt ? `[check "${escapeNotation(txt)}" ${flag}]` : `[check ${flag}]`;
     }
 
     case 'radio': {
-      const txt = primaryLabel || 'Option';
+      const txt = primaryLabel;
       const flag = p.checked ? 'on' : 'off';
-      return `[radio "${escapeNotation(txt)}" ${flag}]`;
+      return txt ? `[radio "${escapeNotation(txt)}" ${flag}]` : `[radio ${flag}]`;
     }
 
     case 'toggle': {
@@ -105,49 +131,53 @@ export function formatSemanticNotation(node: IRNode): string {
 
     case 'navbar':
     case 'menubar': {
-      const items = p.options || primaryLabel || 'Home, About, Contact';
-      return `[nav "${escapeNotation(items)}"]`;
+      const items =
+        getEffectiveProp(type, 'options', p.options) || primaryLabel;
+      return items ? `[nav "${escapeNotation(items)}"]` : '[navbar]';
     }
 
     case 'sidebar': {
-      const items = p.options || primaryLabel || 'Dashboard';
-      return `[sidebar "${escapeNotation(items)}"]`;
+      const items =
+        getEffectiveProp('sidebar', 'options', p.options) || primaryLabel;
+      return items ? `[sidebar "${escapeNotation(items)}"]` : '[sidebar]';
     }
 
     case 'footer_nav': {
-      const items = p.options || primaryLabel || 'Privacy, Terms';
-      return `[footer_nav "${escapeNotation(items)}"]`;
+      const items =
+        getEffectiveProp('footer_nav', 'options', p.options) || primaryLabel;
+      return items ? `[footer_nav "${escapeNotation(items)}"]` : '[footer_nav]';
     }
 
     case 'link': {
-      const txt = primaryLabel || 'Read more';
-      return `[link "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[link "${escapeNotation(txt)}"]` : '[link]';
     }
 
     case 'chip': {
-      const txt = primaryLabel || 'New';
-      return `[chip "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[chip "${escapeNotation(txt)}"]` : '[chip]';
     }
 
     case 'badge': {
-      const txt = primaryLabel || '3';
-      return `[badge "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[badge "${escapeNotation(txt)}"]` : '[badge]';
     }
 
     case 'tabs': {
-      const opts = p.options || 'Tab1|Tab2|Tab3';
-      return `[tabs "${escapeNotation(opts)}"]`;
+      const opts = getEffectiveProp('tabs', 'options', p.options);
+      return opts ? `[tabs "${escapeNotation(opts)}"]` : '[tabs]';
     }
 
     case 'breadcrumbs': {
-      const pathStr = p.options || primaryLabel || 'Home / Docs / API';
-      return `[crumb "${escapeNotation(pathStr)}"]`;
+      const pathStr =
+        getEffectiveProp('breadcrumbs', 'options', p.options) || primaryLabel;
+      return pathStr ? `[crumb "${escapeNotation(pathStr)}"]` : '[crumb]';
     }
 
     case 'steps': {
       const range = p.variant || '1-4';
-      const txt = primaryLabel || 'Shipping';
-      return `[steps ${range} "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[steps ${range} "${escapeNotation(txt)}"]` : `[steps ${range}]`;
     }
 
     case 'pagination': {
@@ -156,42 +186,42 @@ export function formatSemanticNotation(node: IRNode): string {
     }
 
     case 'page': {
-      const txt = primaryLabel && primaryLabel !== 'page' ? primaryLabel : 'Page';
+      const txt = primaryLabel;
       const v = p.variant;
       const varSuffix = v && v !== 'default' ? ` ${v}` : '';
-      return `[page "${escapeNotation(txt)}"${varSuffix}]`;
+      return txt ? `[page "${escapeNotation(txt)}"${varSuffix}]` : (varSuffix ? `[page${varSuffix}]` : '[page]');
     }
 
     case 'section': {
-      const txt = primaryLabel && primaryLabel !== 'section' ? primaryLabel : '';
+      const txt = primaryLabel;
       return txt ? `[section "${escapeNotation(txt)}"]` : '[section]';
     }
 
     case 'header': {
-      const txt = primaryLabel && primaryLabel !== 'header' ? primaryLabel : '';
+      const txt = primaryLabel;
       return txt ? `[header "${escapeNotation(txt)}"]` : '[header]';
     }
 
     case 'footer': {
-      const txt = primaryLabel && primaryLabel !== 'footer' ? primaryLabel : '';
+      const txt = primaryLabel;
       return txt ? `[footer "${escapeNotation(txt)}"]` : '[footer]';
     }
 
     case 'card': {
-      const txt = primaryLabel && primaryLabel !== 'card' ? primaryLabel : 'Card';
+      const txt = primaryLabel;
       const v = p.variant;
       const varSuffix = v && v !== 'default' && v !== 'outline' && v !== 'solid' ? ` ${v}` : '';
-      return `[card "${escapeNotation(txt)}"${varSuffix}]`;
+      return txt ? `[card "${escapeNotation(txt)}"${varSuffix}]` : (varSuffix ? `[card${varSuffix}]` : '[card]');
     }
 
     case 'hero': {
-      const txt = primaryLabel && primaryLabel !== 'hero' ? primaryLabel : '';
+      const txt = primaryLabel;
       return txt ? `[hero "${escapeNotation(txt)}"]` : '[hero]';
     }
 
     case 'modal': {
-      const txt = primaryLabel && primaryLabel !== 'modal' ? primaryLabel : 'Confirm';
-      return `[modal "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[modal "${escapeNotation(txt)}"]` : '[modal]';
     }
 
     case 'split_pane':
@@ -211,23 +241,24 @@ export function formatSemanticNotation(node: IRNode): string {
       return '[quote]';
 
     case 'code_block': {
-      const code = primaryLabel || 'npm install';
-      return `[code "${escapeNotation(code)}"]`;
+      const code = primaryLabel;
+      return code ? `[code "${escapeNotation(code)}"]` : '[code]';
     }
 
     case 'stat_kpi': {
-      const kpi = primaryLabel || '1.2k';
-      return `[kpi "${escapeNotation(kpi)}"]`;
+      const kpi = primaryLabel;
+      return kpi ? `[kpi "${escapeNotation(kpi)}"]` : '[kpi]';
     }
 
     case 'image_frame': {
-      const alt = p.altText || primaryLabel || 'hero-banner';
-      return `[img "${escapeNotation(alt)}"]`;
+      const alt =
+        getEffectiveProp('image_frame', 'altText', p.altText) || primaryLabel;
+      return alt ? `[img "${escapeNotation(alt)}"]` : '[img]';
     }
 
     case 'video_frame': {
-      const src = primaryLabel || 'intro.mp4';
-      return `[video "${escapeNotation(src)}"]`;
+      const src = primaryLabel;
+      return src ? `[video "${escapeNotation(src)}"]` : '[video]';
     }
 
     case 'avatar':
@@ -240,8 +271,9 @@ export function formatSemanticNotation(node: IRNode): string {
       return '[thumbnails]';
 
     case 'icon': {
-      const name = p.iconName || primaryLabel || 'settings';
-      return `[icon "${escapeNotation(name)}"]`;
+      const name =
+        getEffectiveProp('icon', 'iconName', p.iconName) || primaryLabel;
+      return name ? `[icon "${escapeNotation(name)}"]` : '[icon]';
     }
 
     case 'divider':
@@ -259,24 +291,24 @@ export function formatSemanticNotation(node: IRNode): string {
       return '[skeleton]';
 
     case 'tooltip': {
-      const txt = primaryLabel || 'Help text';
-      return `[tooltip "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[tooltip "${escapeNotation(txt)}"]` : '[tooltip]';
     }
 
     case 'toast': {
-      const txt = primaryLabel || 'Saved!';
-      return `[toast "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[toast "${escapeNotation(txt)}"]` : '[toast]';
     }
 
     case 'empty_state': {
-      const txt = primaryLabel || 'No items';
-      return `[empty "${escapeNotation(txt)}"]`;
+      const txt = primaryLabel;
+      return txt ? `[empty "${escapeNotation(txt)}"]` : '[empty]';
     }
 
     case 'banner': {
-      const txt = primaryLabel || 'Heads up';
+      const txt = primaryLabel;
       const v = p.variant || 'warn';
-      return `[banner "${escapeNotation(txt)}" ${v}]`;
+      return txt ? `[banner "${escapeNotation(txt)}" ${v}]` : `[banner ${v}]`;
     }
 
     case 'data_table': {
@@ -290,7 +322,11 @@ export function formatSemanticNotation(node: IRNode): string {
 }
 
 export const DYNAMIC_LEGEND_MARKDOWN = `## MarkDraw Semantic Legend
+**MarkDraw v2.6 — Semantic Layout**
 _Text shown as \`───\` lines on canvas; actual text preserved here._
+_bare tags (e.g. [btn]) mean the user left the content unspecified — generate appropriate content._
+_Placement: header/body/footer = position band within the page; nested = inside another container._
+_N × [pattern] = N visually repeated sibling groups; treat as list/grid items with per-item content variation._
 
 | Notation | Meaning | Example |
 | :--- | :--- | :--- |
@@ -321,3 +357,4 @@ _Text shown as \`───\` lines on canvas; actual text preserved here._
 | \`[toast "Text"]\` / \`[banner]\` | Feedback toast or warning banner | \`[toast "Saved!"]\` |
 | \`[code "Cmd"]\` / \`[kpi "1.2k"]\` | Monospaced code block or KPI stat | \`[code "npm install"]\` |
 | \`[unknown]\` | Fallback / unmapped widget | \`[unknown]\` |`;
+

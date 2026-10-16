@@ -138,8 +138,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     defaultProps: {
       widgetType: 'button',
       label: 'Save Changes',
-      variant: 'solid',
-      iconName: 'ArrowRight'
+      variant: 'solid'
     }
   },
   {
@@ -207,7 +206,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     defaultProps: {
       widgetType: 'checkbox',
       label: 'Agree to terms and conditions',
-      checked: true
+      checked: false
     }
   },
   {
@@ -236,7 +235,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     defaultProps: {
       widgetType: 'toggle',
       label: 'Email Notifications',
-      checked: true
+      checked: false
     }
   },
   {
@@ -748,3 +747,31 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     }
   }
 ];
+
+const CATALOG_MAP = new Map<string, WidgetCatalogItem>();
+for (const item of WIDGET_CATALOG) {
+  CATALOG_MAP.set(item.type, item);
+}
+
+export function getCatalogItem(type: string): WidgetCatalogItem | undefined {
+  return CATALOG_MAP.get(type);
+}
+
+export function getCatalogDefaultProps(type: string): Record<string, any> {
+  const item = CATALOG_MAP.get(type);
+  return item ? (item.defaultProps as Record<string, any>) : {};
+}
+
+export function isUntouchedLabel(type: string, label?: string): boolean {
+  if (!label || label.trim() === '') return true;
+  const defaults = getCatalogDefaultProps(type);
+  if (defaults.label && defaults.label.trim() === label.trim()) {
+    return true;
+  }
+  const clean = label.trim().toLowerCase();
+  const cleanType = type.toLowerCase();
+  if (clean === cleanType || clean === cleanType.replace(/_/g, ' ') || clean === cleanType.replace(/_/g, '')) {
+    return true;
+  }
+  return false;
+}

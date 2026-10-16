@@ -19,6 +19,10 @@ import {
 } from './notation';
 import { AsciiSerializer } from './ascii';
 import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
+import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
+import { detectSiblingPatterns } from './patterns';
+
+export const MARKDRAW_VERSION = '2.6';
 
 function capitalize(str: string): string {
   if (!str) return '';
@@ -26,6 +30,45 @@ function capitalize(str: string): string {
 }
 
 export const SEMANTIC_LEGEND_MARKDOWN = DYNAMIC_LEGEND_MARKDOWN;
+
+export function inferPlacement(
+  node: IRNode,
+  parent: IRNode | null
+): 'header' | 'body' | 'footer' | 'nested' | '—' {
+  if (!parent) {
+    if (node.widgetType === 'page') {
+      return '—';
+    }
+    return 'body';
+  }
+
+  // If direct child of a [page] root, infer from geometry relative to the page box
+  if (parent.widgetType === 'page') {
+    const pageBounds = parent.bounds;
+    const pageH = pageBounds.h;
+    const pageW = pageBounds.w;
+
+    const relTop = node.bounds.y - pageBounds.y;
+    const relBottom = pageBounds.y + pageH - (node.bounds.y + node.bounds.h);
+    const widthRatio = node.bounds.w / pageW;
+
+    const isTopBand = relTop <= 0.15 * pageH;
+    const isBottomBand =
+      relBottom <= 0.15 * pageH || node.bounds.y >= pageBounds.y + 0.85 * pageH;
+    const isWideEnough = widthRatio >= 0.70;
+
+    if (isTopBand && isWideEnough) {
+      return 'header';
+    }
+    if (isBottomBand && isWideEnough) {
+      return 'footer';
+    }
+    return 'body';
+  }
+
+  // All shapes inside another container get 'nested'
+  return 'nested';
+}
 
 export class MarkDrawCompiler {
   public static compile(
@@ -112,16 +155,54 @@ export class MarkDrawCompiler {
     const p = (node as any).textProps || (node as any).widgetProps;
     if (!p) return '—';
 
+    const type = (node as any).widgetType || '';
+    const defaults = getCatalogDefaultProps(type);
     const pairs: string[] = [];
-    if (p.variant) pairs.push(`variant="${p.variant}"`);
-    if (p.placeholder) pairs.push(`placeholder="${p.placeholder}"`);
-    if (typeof p.checked === 'boolean') pairs.push(`checked=${p.checked}`);
-    if (p.options) pairs.push(`options=[${p.options}]`);
-    if (typeof p.value === 'number' && p.value > 0) pairs.push(`value=${p.value}`);
-    if (p.iconName) pairs.push(`icon="${p.iconName}"`);
-    if (p.subtext) pairs.push(`subtext="${p.subtext}"`);
-    if (p.altText) pairs.push(`alt="${p.altText}"`);
-    if (typeof p.showText === 'boolean') pairs.push(`showText=${p.showText}`);
+
+    if (
+      p.variant &&
+      p.variant !== defaults.variant &&
+      p.variant !== 'default' &&
+      p.variant !== 'solid'
+    ) {
+      pairs.push(`variant="${p.variant}"`);
+    }
+    if (p.placeholder && p.placeholder !== defaults.placeholder) {
+      pairs.push(`placeholder="${p.placeholder}"`);
+    }
+    if (
+      typeof p.checked === 'boolean' &&
+      p.checked === true &&
+      p.checked !== defaults.checked
+    ) {
+      pairs.push(`checked=${p.checked}`);
+    }
+    if (p.options && p.options !== defaults.options) {
+      pairs.push(`options=[${p.options}]`);
+    }
+    if (
+      typeof p.value === 'number' &&
+      p.value > 0 &&
+      p.value !== defaults.value
+    ) {
+      pairs.push(`value=${p.value}`);
+    }
+    if (p.iconName && p.iconName !== defaults.iconName) {
+      pairs.push(`icon="${p.iconName}"`);
+    }
+    if (p.subtext && p.subtext !== defaults.subtext) {
+      pairs.push(`subtext="${p.subtext}"`);
+    }
+    if (p.altText && p.altText !== defaults.altText) {
+      pairs.push(`alt="${p.altText}"`);
+    }
+    if (
+      typeof p.showText === 'boolean' &&
+      p.showText === true &&
+      p.showText !== defaults.showText
+    ) {
+      pairs.push(`showText=${p.showText}`);
+    }
 
     return pairs.length > 0 ? pairs.join(', ') : '—';
   }
@@ -161,32 +242,50 @@ export class MarkDrawCompiler {
     }
     rows.push(`**Roots Detected:** ${irRoots.length} view(s)\n`);
     rows.push('#### Semantic Hierarchy Table');
-    rows.push('| Path | Component | Semantics | Layout Flow | Props & Attributes | Children / Content |');
-    rows.push('| :--- | :--- | :--- | :--- | :--- | :--- |');
+    rows.push(
+      '| Path | Component | Semantics | Placement | Layout Flow | Props & Attributes | Children / Content |'
+    );
+    rows.push(
+      '| :--- | :--- | :--- | :--- | :--- | :--- | :--- |'
+    );
 
-    const walk = (node: IRNode) => {
+    const walk = (node: IRNode, parent: IRNode | null) => {
       const notation = formatSemanticNotation(node);
 
-      const childBadges =
-        node.children.length > 0
-          ? node.children.map((c) => formatSemanticNotation(c)).join(', ')
-          : node.textProps?.label || node.label
-            ? `"${node.textProps?.label || node.label}"`
-            : '—';
+      let childBadges = '—';
+      if (node.children.length > 0) {
+        childBadges = detectSiblingPatterns(node.children);
+      } else {
+        const rawLabel = node.textProps?.label || node.label;
+        if (isUntouchedLabel(node.widgetType, rawLabel)) {
+          childBadges = '"content: unspecified"';
+        } else if (rawLabel) {
+          childBadges = `"${rawLabel}"`;
+        } else {
+          childBadges = '—';
+        }
+      }
 
       const semanticsBadge = `<${capitalize(node.widgetType || node.role)}>`;
+      const placement = inferPlacement(node, parent);
+      const layoutFlow =
+        node.children.length > 0
+          ? node.direction === 'Leaf'
+            ? 'Column'
+            : node.direction
+          : '—';
       const propsStr = this.formatProps(node);
 
       rows.push(
-        `| \`${node.path}\` | **${notation}** | ${semanticsBadge} | ${node.direction} | ${propsStr} | ${childBadges} |`
+        `| \`${node.path}\` | **${notation}** | ${semanticsBadge} | ${placement} | ${layoutFlow} | ${propsStr} | ${childBadges} |`
       );
       for (const child of node.children) {
-        walk(child);
+        walk(child, node);
       }
     };
 
     for (const root of irRoots) {
-      walk(root);
+      walk(root, null);
     }
 
     return rows.join('\n');

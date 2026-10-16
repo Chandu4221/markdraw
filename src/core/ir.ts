@@ -1,6 +1,7 @@
 import { TLShape, Editor } from '@tldraw/tldraw';
 import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
 import { AABB } from './types';
+import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
 
 export interface IRBounds {
   h: number;
@@ -312,8 +313,32 @@ export function sortKeysAlphabetically<T>(val: T): T {
   return val;
 }
 
+export function pruneDefaultProps(node: IRNode): IRNode {
+  const defaults = getCatalogDefaultProps(node.widgetType);
+  const cleanProps: Record<string, any> = {};
+
+  if (node.textProps) {
+    for (const [k, v] of Object.entries(node.textProps)) {
+      if (v === undefined || v === null || v === '') continue;
+      if (k === 'checked' && (v === false || v === defaults.checked)) continue;
+      if (k === 'showText' && (v === false || v === defaults.showText)) continue;
+      if (k === 'value' && (v === 0 || v === defaults.value)) continue;
+      if (k === 'label' && isUntouchedLabel(node.widgetType, v as string)) continue;
+      if (defaults[k] !== undefined && defaults[k] === v) continue;
+      cleanProps[k] = v;
+    }
+  }
+
+  return {
+    ...node,
+    textProps: cleanProps as any,
+    children: node.children.map(pruneDefaultProps)
+  };
+}
+
 export function serializeIRToJsonAst(ir: IRTree | IRNode[]): string {
   const data = Array.isArray(ir) ? ir : ir.roots;
-  const sorted = sortKeysAlphabetically(data);
+  const pruned = data.map(pruneDefaultProps);
+  const sorted = sortKeysAlphabetically(pruned);
   return JSON.stringify(sorted, null, 2);
 }

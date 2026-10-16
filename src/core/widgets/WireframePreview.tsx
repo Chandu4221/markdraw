@@ -10,6 +10,49 @@ export interface WireframePreviewProps {
   height?: number;
 }
 
+/**
+ * Uniform Semantic Chip for container wireframe shapes (Task 5).
+ * 9px uppercase, muted, top-left (x=6, y=6), height 16px.
+ */
+interface ChipProps {
+  label: string;
+  maxWidth: number;
+}
+
+const Chip: React.FC<ChipProps> = ({ label, maxWidth }) => {
+  const displayLabel = label.replace(/_/g, ' ').toUpperCase();
+  const chipWidth = Math.min(Math.max(20, maxWidth - 12), displayLabel.length * 5.6 + 10);
+
+  if (maxWidth < 24) return null;
+
+  return (
+    <g className="wireframeChip" style={{ pointerEvents: 'none' }}>
+      <rect
+        x={6}
+        y={6}
+        width={chipWidth}
+        height={16}
+        rx={3}
+        fill="var(--md-surface-raised)"
+        stroke="var(--md-border)"
+        strokeWidth={1}
+      />
+      <text
+        x={11}
+        y={14.5}
+        dominantBaseline="middle"
+        fill="var(--md-text)"
+        fontSize={9}
+        fontWeight={700}
+        letterSpacing="0.08em"
+        fontFamily="var(--md-font-mono, monospace)"
+      >
+        {displayLabel}
+      </text>
+    </g>
+  );
+};
+
 export const WireframePreview: React.FC<WireframePreviewProps> = ({
   props,
   isEditing = false,
@@ -250,7 +293,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
-      // 2. Containers
+      // 2. Containers (Task 5: Uniform 9px muted uppercase Chip)
       case 'section':
       case 'card':
       case 'hero':
@@ -264,7 +307,11 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
       case 'footer_nav':
       case 'steps':
       case 'menubar':
-      case 'sidebar': {
+      case 'sidebar':
+      case 'navbar':
+      case 'breadcrumbs':
+      case 'pagination':
+      case 'banner': {
         const title = label || '';
         return (
           <g>
@@ -279,35 +326,15 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               strokeWidth={1.5}
               strokeDasharray={isDashed ? '5 3' : undefined}
             />
-            {/* Top-left accessible uppercase label chip */}
-            <rect
-              x={6}
-              y={6}
-              width={Math.min(w - 12, type.replace('_', ' ').length * 7.5 + 16)}
-              height={18}
-              rx={3}
-              fill="var(--md-surface-raised)"
-              stroke="var(--md-border)"
-              strokeWidth={1}
-            />
-            <text
-              x={10}
-              y={19}
-              fill="var(--md-text-bold)"
-              fontSize={11}
-              fontWeight={700}
-              letterSpacing="0.08em"
-              fontFamily="var(--md-font-mono, monospace)"
-            >
-              {type.replace('_', ' ').toUpperCase()}
-            </text>
+            {/* Top-left uniform semantic chip */}
+            <Chip label={type} maxWidth={w} />
 
-            {title && h >= 48 && (
+            {title && h >= 40 && (
               <text
                 x={10}
-                y={39}
+                y={h >= 48 ? 39 : 32}
                 fill="var(--md-text-bold)"
-                fontSize={14}
+                fontSize={h >= 48 ? 14 : 12}
                 fontWeight={700}
                 fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
@@ -476,10 +503,9 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
-      // 6. Media Placeholders (Cross ✕ Boxes)
+      // 6. Media Placeholders (Cross ✕ Boxes - Leaf Widget, no chip)
       case 'image_frame':
       case 'video_frame': {
-        const mediaTag = type === 'video_frame' ? 'VIDEO' : 'IMG';
         return (
           <g>
             <rect
@@ -495,30 +521,6 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             {/* Corner-to-corner diagonal ✕ cross */}
             <line x1={0} y1={0} x2={w} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
             <line x1={w} y1={0} x2={0} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
-
-            {/* Center label chip */}
-            <rect
-              x={w / 2 - 24}
-              y={h / 2 - 10}
-              width={48}
-              height={20}
-              rx={3}
-              fill="var(--md-surface-raised)"
-              stroke="var(--md-border-strong)"
-              strokeWidth={1}
-            />
-            <text
-              x={w / 2}
-              y={h / 2 + 4}
-              textAnchor="middle"
-              fill="var(--md-text-bold)"
-              fontSize={11}
-              fontWeight={700}
-              letterSpacing="0.08em"
-              fontFamily="var(--md-font-mono, monospace)"
-            >
-              {mediaTag}
-            </text>
           </g>
         );
       }
