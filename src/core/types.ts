@@ -18,6 +18,7 @@ export type UIWidgetType =
   | 'grid_gallery'
   | 'split_pane'
   | 'modal'
+  | 'page'
 
   // Forms & Inputs
   | 'button'

@@ -150,7 +150,107 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
   // Render SVG wireframe based on widget class
   const renderSvgContent = () => {
     switch (type) {
-      // 1. Containers
+      // 1. Page Frame (Fixed Width, Scalable Height)
+      case 'page': {
+        const title = label || 'Page Frame';
+        const isFullHD = variant === 'fullhd' || (!variant && w >= 1800);
+        const resLabel = isFullHD ? 'FullHD 1920px' : variant === 'hd' ? 'HD 1280px' : `${Math.round(w)}px`;
+        return (
+          <g>
+            {/* Outer Page Frame */}
+            <rect
+              x={0.75}
+              y={0.75}
+              width={w - 1.5}
+              height={h - 1.5}
+              rx={6}
+              fill="var(--md-surface)"
+              stroke="var(--md-border-strong)"
+              strokeWidth={1.5}
+            />
+
+            {/* Browser Header Bar */}
+            <rect
+              x={0.75}
+              y={0.75}
+              width={w - 1.5}
+              height={36}
+              rx={6}
+              fill="var(--md-surface-raised)"
+            />
+            <rect
+              x={0.75}
+              y={20}
+              width={w - 1.5}
+              height={16}
+              fill="var(--md-surface-raised)"
+            />
+            <line x1={0} y1={36} x2={w} y2={36} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+
+            {/* Window control dots */}
+            <circle cx={16} cy={18} r={3.5} fill="var(--md-border-strong)" />
+            <circle cx={27} cy={18} r={3.5} fill="var(--md-border-strong)" />
+            <circle cx={38} cy={18} r={3.5} fill="var(--md-border-strong)" />
+
+            {/* Center URL bar */}
+            {w >= 300 && (
+              <g>
+                <rect
+                  x={w / 2 - Math.min(160, (w - 120) / 2)}
+                  y={8}
+                  width={Math.min(320, w - 120)}
+                  height={20}
+                  rx={4}
+                  fill="var(--md-surface)"
+                  stroke="var(--md-border)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={w / 2}
+                  y={22}
+                  textAnchor="middle"
+                  fill="var(--md-text-muted)"
+                  fontSize={10}
+                  fontWeight={500}
+                  fontFamily="var(--md-font-mono, monospace)"
+                >
+                  {title} • {resLabel} (height auto)
+                </text>
+              </g>
+            )}
+
+            {/* Right resolution badge */}
+            {w >= 500 && (
+              <g>
+                <rect
+                  x={w - 110}
+                  y={9}
+                  width={96}
+                  height={18}
+                  rx={3}
+                  fill="var(--md-surface)"
+                  stroke="var(--md-border)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={w - 62}
+                  y={22}
+                  textAnchor="middle"
+                  fill="var(--md-text-muted)"
+                  fontSize={9}
+                  fontWeight={700}
+                  letterSpacing="0.06em"
+                  fontFamily="var(--md-font-mono, monospace)"
+                >
+                  {variant.toUpperCase()}
+                </text>
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      // 2. Containers
       case 'section':
       case 'card':
       case 'hero':

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BaseBoxShapeUtil, HTMLContainer, T } from '@tldraw/tldraw';
+import { BaseBoxShapeUtil, HTMLContainer, T, resizeBox } from '@tldraw/tldraw';
 import { IUIWidgetShape } from './types';
 import { WireframePreview } from './WireframePreview';
 
@@ -46,6 +46,26 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
 
   override canEditInReadonly(_shape: IUIWidgetShape): boolean {
     return false;
+  }
+
+  override onResize(shape: any, info: any) {
+    if (shape.props.widgetType === 'page') {
+      const fixedWidth = shape.props.w;
+      const res = resizeBox(shape, info, {
+        minWidth: fixedWidth,
+        maxWidth: fixedWidth,
+        minHeight: 150
+      });
+      return {
+        ...res,
+        x: info.initialShape.x,
+        props: {
+          ...res.props,
+          w: fixedWidth
+        }
+      };
+    }
+    return super.onResize(shape, info);
   }
 
   override indicator(shape: IUIWidgetShape) {

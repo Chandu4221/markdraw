@@ -65,19 +65,39 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   const props = (selectedShape.props || {}) as Record<string, any>;
   const widgetType = props.widgetType || 'widget';
 
+  const PAGE_RESOLUTIONS: Record<string, number> = {
+    fullhd: 1920,
+    hd: 1280,
+    desktop: 1440,
+    laptop: 1366,
+    tablet: 768,
+    mobile: 375
+  };
+
   const updateProp = (key: string, val: any) => {
+    const updatedProps: Record<string, any> = {
+      ...selectedShape.props,
+      [key]: val
+    };
+
+    if (key === 'variant' && widgetType === 'page') {
+      const fixedWidth = PAGE_RESOLUTIONS[val];
+      if (fixedWidth) {
+        updatedProps.w = fixedWidth;
+      }
+    }
+
     editor.updateShape({
       id: selectedShape.id,
       type: 'ui-widget',
-      props: {
-        ...selectedShape.props,
-        [key]: val
-      }
+      props: updatedProps
     });
   };
 
   const getVariantOptions = () => {
     switch (widgetType) {
+      case 'page':
+        return ['fullhd', 'hd', 'desktop', 'laptop', 'tablet', 'mobile'];
       case 'button':
         return ['solid', 'ghost', 'dashed'];
       case 'heading':

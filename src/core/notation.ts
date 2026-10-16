@@ -155,6 +155,13 @@ export function formatSemanticNotation(node: IRNode): string {
       return `[pag ${val}]`;
     }
 
+    case 'page': {
+      const txt = primaryLabel && primaryLabel !== 'page' ? primaryLabel : 'Page';
+      const v = p.variant;
+      const varSuffix = v && v !== 'default' ? ` ${v}` : '';
+      return `[page "${escapeNotation(txt)}"${varSuffix}]`;
+    }
+
     case 'section': {
       const txt = primaryLabel && primaryLabel !== 'section' ? primaryLabel : '';
       return txt ? `[section "${escapeNotation(txt)}"]` : '[section]';

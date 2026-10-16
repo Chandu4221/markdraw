@@ -1,7 +1,20 @@
 import { WidgetCatalogItem } from './types';
 
 export const WIDGET_CATALOG: WidgetCatalogItem[] = [
-  // ==================== LAYOUT (8) ====================
+  {
+    type: 'page',
+    category: 'layout',
+    name: 'Page Frame',
+    description: 'Fixed-width page container (FullHD 1920px / HD 1280px)',
+    defaultWidth: 1920,
+    defaultHeight: 1080,
+    icon: 'AppWindow',
+    defaultProps: {
+      widgetType: 'page',
+      label: 'Home Page',
+      variant: 'fullhd'
+    }
+  },
   {
     type: 'section',
     category: 'layout',

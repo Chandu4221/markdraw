@@ -43,6 +43,7 @@ export interface IRTree {
 export function resolveWidgetRole(widgetType: string): string {
   switch (widgetType) {
     // Containers
+    case 'page':
     case 'section':
     case 'card':
     case 'hero':

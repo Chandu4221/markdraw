@@ -170,10 +170,40 @@ describe('Custom UI Widgets System', () => {
     const section = createWidgetShape('sec-1', 'section', 0, 0, 600, 200, { label: 'HeroSec' });
     const hero = createWidgetShape('hero-1', 'hero', 0, 0, 600, 200, { label: 'Hero' });
     const gallery = createWidgetShape('gal-1', 'grid_gallery', 0, 0, 400, 200, { label: 'Grid' });
+    const page = createWidgetShape('page-1', 'page', 0, 0, 1920, 1080, { label: 'App Shell', variant: 'fullhd' });
 
-    const normalized = MarkDrawCompiler.normalize([section, hero, gallery]);
+    const normalized = MarkDrawCompiler.normalize([section, hero, gallery, page]);
     expect(normalized[0].role).toBe('container');
     expect(normalized[1].role).toBe('container');
     expect(normalized[2].role).toBe('container');
+    expect(normalized[3].role).toBe('container');
+    expect(normalized[3].widgetType).toBe('page');
+  });
+
+  it('correctly builds containment hierarchy for Page frame with nested content', () => {
+    const page = createWidgetShape('page-1', 'page', 0, 0, 1920, 1080, {
+      label: 'Dashboard Page',
+      variant: 'fullhd'
+    });
+    const header = createWidgetShape('head-1', 'heading', 60, 60, 400, 50, {
+      label: 'Main Dashboard',
+      variant: 'h1'
+    });
+    const actionBtn = createWidgetShape('btn-1', 'button', 60, 140, 140, 40, {
+      label: 'Create Project'
+    });
+
+    const result = MarkDrawCompiler.compile([page, header, actionBtn]);
+    const ast = JSON.parse(result.jsonAst);
+
+    expect(ast.length).toBe(1);
+    expect(ast[0].id).toBe('page-1');
+    expect(ast[0].widgetType).toBe('page');
+    expect(ast[0].role).toBe('container');
+    expect(ast[0].children.length).toBe(2);
+    expect(ast[0].children[0].id).toBe('head-1');
+    expect(ast[0].children[1].id).toBe('btn-1');
+
+    expect(result.markdownGrid).toContain('[page "Dashboard Page" fullhd]');
   });
 });

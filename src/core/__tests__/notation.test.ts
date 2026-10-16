@@ -56,6 +56,7 @@ describe('Semantic Markdown Notation (Part 4.1 Specification)', () => {
     expect(formatSemanticNotation(mockNode('split_pane', ''))).toBe('[split]');
     expect(formatSemanticNotation(mockNode('grid_gallery', '', { variant: '3x2' }))).toBe('[grid 3x2]');
     expect(formatSemanticNotation(mockNode('data_table', '', { variant: '4x3' }))).toBe('[table 4x3]');
+    expect(formatSemanticNotation(mockNode('page', 'Landing', { variant: 'fullhd' }))).toBe('[page "Landing" fullhd]');
   });
 
   it('formats media and placeholders with cross crossbar', () => {
