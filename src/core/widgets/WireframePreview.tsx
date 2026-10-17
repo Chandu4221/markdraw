@@ -1148,3 +1148,5 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
     </svg>
   );
 };
+
+export default WireframePreview;
