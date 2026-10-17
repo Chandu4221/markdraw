@@ -55,9 +55,11 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Tag,
-  Keyboard
+  Keyboard,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MarkdownPreview } from './components/MarkdownPreview';
 
 const customShapeUtils = [UIWidgetShapeUtil];
 
@@ -94,6 +96,25 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
 
 export const App: React.FC = () => {
   const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'ascii' | 'json'>('spec');
+  const [outputDisplayMode, setOutputDisplayMode] = useState<'preview' | 'raw'>(() => {
+    try {
+      const saved = localStorage.getItem('markdraw_output_display_mode');
+      if (saved === 'raw' || saved === 'preview') return saved;
+    } catch {
+      // fallback
+    }
+    return 'preview';
+  });
+
+  const handleOutputDisplayModeChange = (mode: 'preview' | 'raw') => {
+    setOutputDisplayMode(mode);
+    try {
+      localStorage.setItem('markdraw_output_display_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
+
   const [copied, setCopied] = useState<boolean>(false);
   const [copiedFull, setCopiedFull] = useState<boolean>(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
@@ -1184,6 +1205,46 @@ export const App: React.FC = () => {
                     </button>
                   </div>
 
+                  {/* View Mode Toggle (Preview vs Raw) for markdown tabs */}
+                  {(outputTab === 'spec' || outputTab === 'grid') && (
+                    <div
+                      role="group"
+                      aria-label="Display View Mode"
+                      className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
+                    >
+                      <button
+                        type="button"
+                        aria-pressed={outputDisplayMode === 'preview'}
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputDisplayMode === 'preview'
+                            ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                        }`}
+                        onClick={() => handleOutputDisplayModeChange('preview')}
+                        title="Formatted Markdown Preview"
+                        aria-label="Formatted preview mode"
+                      >
+                        <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
+                        <span>Preview</span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={outputDisplayMode === 'raw'}
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputDisplayMode === 'raw'
+                            ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                        }`}
+                        onClick={() => handleOutputDisplayModeChange('raw')}
+                        title="Raw Markdown Syntax"
+                        aria-label="Raw Markdown mode"
+                      >
+                        <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
+                        <span>Raw</span>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
                     <Button
@@ -1253,14 +1314,22 @@ export const App: React.FC = () => {
 
                 {/* Output Viewport */}
                 <div className="flex-1 overflow-auto p-3 bg-[var(--md-bg)]">
-                  <pre className="text-xs font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text">
-                    <code>{getActiveContent()}</code>
-                  </pre>
+                  {(outputTab === 'spec' || outputTab === 'grid') && outputDisplayMode === 'preview' ? (
+                    <MarkdownPreview content={getActiveContent()} />
+                  ) : (
+                    <pre className="text-xs font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text">
+                      <code>{getActiveContent()}</code>
+                    </pre>
+                  )}
                 </div>
 
                 {/* Output Footer */}
                 <footer className="h-7 px-3 border-t border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between text-[11px] text-[var(--md-text-subtle)] shrink-0 select-none">
-                  <span>Semantic layout compiled in real time. Paste directly into LLM prompts.</span>
+                  <span>
+                    {(outputTab === 'spec' || outputTab === 'grid') && outputDisplayMode === 'preview'
+                      ? 'Formatted Markdown preview. "Copy" always copies pristine raw markdown for LLMs.'
+                      : 'Semantic layout compiled in real time. Paste directly into LLM prompts.'}
+                  </span>
                 </footer>
               </div>
             </aside>

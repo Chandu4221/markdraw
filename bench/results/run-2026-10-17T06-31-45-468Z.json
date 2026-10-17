@@ -1,0 +1,4962 @@
+{
+  "timestamp": "2026-10-17T06:31:45.468Z",
+  "version": "3.0.0",
+  "fixtureCount": 20,
+  "modalities": {
+    "spec": {
+      "modality": "spec",
+      "avgScore": 100,
+      "avgPromptTokens": 1157,
+      "avgCompletionTokens": 390,
+      "avgTotalTokens": 1547,
+      "perfectFixtures": 20,
+      "categoryAverages": {
+        "conventional": 100,
+        "unconventional": 100,
+        "dashboard": 100,
+        "mobile": 100
+      }
+    },
+    "baseline": {
+      "modality": "baseline",
+      "avgScore": 20.5,
+      "avgPromptTokens": 1321,
+      "avgCompletionTokens": 81,
+      "avgTotalTokens": 1401,
+      "perfectFixtures": 0,
+      "categoryAverages": {
+        "conventional": 9.7,
+        "unconventional": 19.2,
+        "dashboard": 17.2,
+        "mobile": 36.1
+      }
+    },
+    "ast": {
+      "modality": "ast",
+      "avgScore": 28.1,
+      "avgPromptTokens": 1534,
+      "avgCompletionTokens": 77,
+      "avgTotalTokens": 1610,
+      "perfectFixtures": 0,
+      "categoryAverages": {
+        "conventional": 39.9,
+        "unconventional": 19.2,
+        "dashboard": 17.2,
+        "mobile": 36.1
+      }
+    }
+  },
+  "winDelta": 79.5,
+  "decisionPassed": true,
+  "fixtures": {
+    "01-landing-saas": {
+      "spec": {
+        "fixtureId": "01-landing-saas",
+        "modality": "spec",
+        "totalAssertions": 11,
+        "passedAssertions": 11,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 5,
+            "total": 5
+          },
+          "nesting": {
+            "passed": 3,
+            "total": 3
+          },
+          "flags": {
+            "passed": 1,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 4",
+            "actual": "5"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "4"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"nav\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 4"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky header positioning",
+            "passed": true,
+            "expected": "sticky|fixed|top-0",
+            "actual": "matched: \"sticky top-0 z-50 w-full bg-white/80 bac...\""
+          },
+          {
+            "category": "widths",
+            "description": "Full width header",
+            "passed": true,
+            "expected": "w-full | w-screen | max-w-",
+            "actual": "found: \"sticky top-0 z-50 w-full bg-white/80 bac...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": true,
+            "expected": "header -> section -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1652,
+          "completionTokens": 914,
+          "totalTokens": 2566
+        }
+      },
+      "baseline": {
+        "fixtureId": "01-landing-saas",
+        "modality": "baseline",
+        "totalAssertions": 11,
+        "passedAssertions": 1,
+        "scorePercentage": 9.1,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 5
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 3
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"nav\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky header positioning",
+            "passed": false,
+            "expected": "sticky|fixed|top-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Full width header",
+            "passed": false,
+            "expected": "w-full | w-screen | max-w-",
+            "actual": "selector not found"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": false,
+            "expected": "header -> section -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1838,
+          "completionTokens": 212,
+          "totalTokens": 2050
+        }
+      },
+      "ast": {
+        "fixtureId": "01-landing-saas",
+        "modality": "ast",
+        "totalAssertions": 11,
+        "passedAssertions": 8,
+        "scorePercentage": 72.7,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 5
+          },
+          "nesting": {
+            "passed": 3,
+            "total": 3
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"nav\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky header positioning",
+            "passed": false,
+            "expected": "sticky|fixed|top-0",
+            "actual": "css/class did not match"
+          },
+          {
+            "category": "widths",
+            "description": "Full width header",
+            "passed": true,
+            "expected": "w-full | w-screen | max-w-",
+            "actual": "found: \"w-full flex justify-between p-4...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": true,
+            "expected": "header -> section -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 2775,
+          "completionTokens": 142,
+          "totalTokens": 2917
+        }
+      }
+    },
+    "02-blog-article": {
+      "spec": {
+        "fixtureId": "02-blog-article",
+        "modality": "spec",
+        "totalAssertions": 8,
+        "passedAssertions": 8,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 1,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"aside, .sidebar, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky header",
+            "passed": true,
+            "expected": "sticky|fixed|top-0",
+            "actual": "matched: \"sticky top-0 z-40 w-full bg-white border...\""
+          },
+          {
+            "category": "widths",
+            "description": "Sidebar width column",
+            "passed": true,
+            "expected": "w-1/3 | w-1/4 | col-span-1 | w-full | max-w-xs | max-w-sm",
+            "actual": "found: \"sidebar w-1/3 max-w-sm...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> footer",
+            "passed": true,
+            "expected": "header -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1195,
+          "completionTokens": 326,
+          "totalTokens": 1521
+        }
+      },
+      "baseline": {
+        "fixtureId": "02-blog-article",
+        "modality": "baseline",
+        "totalAssertions": 8,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"aside, .sidebar, div\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 0"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky header",
+            "passed": false,
+            "expected": "sticky|fixed|top-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Sidebar width column",
+            "passed": false,
+            "expected": "w-1/3 | w-1/4 | col-span-1 | w-full | max-w-xs | max-w-sm",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> footer",
+            "passed": false,
+            "expected": "header -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1609,
+          "completionTokens": 105,
+          "totalTokens": 1714
+        }
+      },
+      "ast": {
+        "fixtureId": "02-blog-article",
+        "modality": "ast",
+        "totalAssertions": 8,
+        "passedAssertions": 7,
+        "scorePercentage": 87.5,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"aside, .sidebar, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky header",
+            "passed": false,
+            "expected": "sticky|fixed|top-0",
+            "actual": "css/class did not match"
+          },
+          {
+            "category": "widths",
+            "description": "Sidebar width column",
+            "passed": true,
+            "expected": "w-1/3 | w-1/4 | col-span-1 | w-full | max-w-xs | max-w-sm",
+            "actual": "found: \"sidebar w-1/4...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> footer",
+            "passed": true,
+            "expected": "header -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1541,
+          "completionTokens": 103,
+          "totalTokens": 1644
+        }
+      }
+    },
+    "03-ecommerce-store": {
+      "spec": {
+        "fixtureId": "03-ecommerce-store",
+        "modality": "spec",
+        "totalAssertions": 8,
+        "passedAssertions": 8,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 4",
+            "actual": "4"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "Header width",
+            "passed": true,
+            "expected": "w-full | max-w-",
+            "actual": "found: \"w-full border-b bg-white py-4 px-8 flex ...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer",
+            "passed": true,
+            "expected": "header -> section, main -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1200,
+          "completionTokens": 342,
+          "totalTokens": 1542
+        }
+      },
+      "baseline": {
+        "fixtureId": "03-ecommerce-store",
+        "modality": "baseline",
+        "totalAssertions": 8,
+        "passedAssertions": 2,
+        "scorePercentage": 25,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "widths",
+            "description": "Header width",
+            "passed": false,
+            "expected": "w-full | max-w-",
+            "actual": "selector not found"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer",
+            "passed": false,
+            "expected": "header -> section, main -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1280,
+          "completionTokens": 109,
+          "totalTokens": 1389
+        }
+      },
+      "ast": {
+        "fixtureId": "03-ecommerce-store",
+        "modality": "ast",
+        "totalAssertions": 8,
+        "passedAssertions": 2,
+        "scorePercentage": 25,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "widths",
+            "description": "Header width",
+            "passed": false,
+            "expected": "w-full | max-w-",
+            "actual": "selector not found"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer",
+            "passed": false,
+            "expected": "header -> section, main -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1685,
+          "completionTokens": 109,
+          "totalTokens": 1794
+        }
+      }
+    },
+    "04-docs-portal": {
+      "spec": {
+        "fixtureId": "04-docs-portal",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 1,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"nav, aside, .sidebar\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, article\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed/sticky sidebar navigation",
+            "passed": true,
+            "expected": "fixed|sticky",
+            "actual": "matched: \"sidebar fixed top-0 left-0 w-64 h-full b...\""
+          },
+          {
+            "category": "widths",
+            "description": "Sidebar width column",
+            "passed": true,
+            "expected": "w-64 | w-72 | w-1/4 | w-1/5 | max-w-",
+            "actual": "found: \"sidebar fixed top-0 left-0 w-64 h-full b...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1098,
+          "completionTokens": 315,
+          "totalTokens": 1413
+        }
+      },
+      "baseline": {
+        "fixtureId": "04-docs-portal",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"nav, aside, .sidebar\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, article\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 2 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed/sticky sidebar navigation",
+            "passed": false,
+            "expected": "fixed|sticky",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Sidebar width column",
+            "passed": false,
+            "expected": "w-64 | w-72 | w-1/4 | w-1/5 | max-w-",
+            "actual": "selector not found"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 918,
+          "completionTokens": 97,
+          "totalTokens": 1015
+        }
+      },
+      "ast": {
+        "fixtureId": "04-docs-portal",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"nav, aside, .sidebar\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, article\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 2 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed/sticky sidebar navigation",
+            "passed": false,
+            "expected": "fixed|sticky",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Sidebar width column",
+            "passed": false,
+            "expected": "w-64 | w-72 | w-1/4 | w-1/5 | max-w-",
+            "actual": "selector not found"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1233,
+          "completionTokens": 97,
+          "totalTokens": 1330
+        }
+      }
+    },
+    "05-pricing-comparison": {
+      "spec": {
+        "fixtureId": "05-pricing-comparison",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 3"
+          },
+          {
+            "category": "widths",
+            "description": "Responsive container",
+            "passed": true,
+            "expected": "max-w- | w-full | container | mx-auto",
+            "actual": "found: \"max-w-6xl mx-auto px-6 py-12...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": true,
+            "expected": "header -> section -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1101,
+          "completionTokens": 342,
+          "totalTokens": 1443
+        }
+      },
+      "baseline": {
+        "fixtureId": "05-pricing-comparison",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 3 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "widths",
+            "description": "Responsive container",
+            "passed": false,
+            "expected": "max-w- | w-full | container | mx-auto",
+            "actual": "selector not found"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": false,
+            "expected": "header -> section -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1237,
+          "completionTokens": 80,
+          "totalTokens": 1317
+        }
+      },
+      "ast": {
+        "fixtureId": "05-pricing-comparison",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 3 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "widths",
+            "description": "Responsive container",
+            "passed": false,
+            "expected": "max-w- | w-full | container | mx-auto",
+            "actual": "selector not found"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": false,
+            "expected": "header -> section -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1520,
+          "completionTokens": 80,
+          "totalTokens": 1600
+        }
+      }
+    },
+    "06-floating-pill-nav": {
+      "spec": {
+        "fixtureId": "06-floating-pill-nav",
+        "modality": "spec",
+        "totalAssertions": 6,
+        "passedAssertions": 6,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 1,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "2"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky/fixed floating nav",
+            "passed": true,
+            "expected": "sticky|fixed|top-4|top-2",
+            "actual": "matched: \"sticky top-4 z-50 mx-auto max-w-fit roun...\""
+          },
+          {
+            "category": "widths",
+            "description": "Pill nav layout",
+            "passed": true,
+            "expected": "rounded-full | max-w- | w-fit | mx-auto | w-full",
+            "actual": "found: \"sticky top-4 z-50 mx-auto max-w-fit roun...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: nav -> section",
+            "passed": true,
+            "expected": "nav -> section",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 993,
+          "completionTokens": 311,
+          "totalTokens": 1304
+        }
+      },
+      "baseline": {
+        "fixtureId": "06-floating-pill-nav",
+        "modality": "baseline",
+        "totalAssertions": 6,
+        "passedAssertions": 2,
+        "scorePercentage": 33.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky/fixed floating nav",
+            "passed": false,
+            "expected": "sticky|fixed|top-4|top-2",
+            "actual": "css/class did not match"
+          },
+          {
+            "category": "widths",
+            "description": "Pill nav layout",
+            "passed": false,
+            "expected": "rounded-full | max-w- | w-fit | mx-auto | w-full",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: nav -> section",
+            "passed": false,
+            "expected": "nav -> section",
+            "actual": "indices: [2]"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1166,
+          "completionTokens": 80,
+          "totalTokens": 1246
+        }
+      },
+      "ast": {
+        "fixtureId": "06-floating-pill-nav",
+        "modality": "ast",
+        "totalAssertions": 6,
+        "passedAssertions": 2,
+        "scorePercentage": 33.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky/fixed floating nav",
+            "passed": false,
+            "expected": "sticky|fixed|top-4|top-2",
+            "actual": "css/class did not match"
+          },
+          {
+            "category": "widths",
+            "description": "Pill nav layout",
+            "passed": false,
+            "expected": "rounded-full | max-w- | w-fit | mx-auto | w-full",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: nav -> section",
+            "passed": false,
+            "expected": "nav -> section",
+            "actual": "indices: [2]"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1062,
+          "completionTokens": 80,
+          "totalTokens": 1142
+        }
+      }
+    },
+    "07-asymmetric-hero-split": {
+      "spec": {
+        "fixtureId": "07-asymmetric-hero-split",
+        "modality": "spec",
+        "totalAssertions": 6,
+        "passedAssertions": 6,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "4"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "widths",
+            "description": "Split column widths",
+            "passed": true,
+            "expected": "w-3/5 | w-2/5 | w-1/2 | grid-cols-2 | flex | max-w-",
+            "actual": "found: \"max-w-7xl mx-auto px-6 py-16 flex gap-8...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": true,
+            "expected": "header -> section -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1110,
+          "completionTokens": 399,
+          "totalTokens": 1509
+        }
+      },
+      "baseline": {
+        "fixtureId": "07-asymmetric-hero-split",
+        "modality": "baseline",
+        "totalAssertions": 6,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "widths",
+            "description": "Split column widths",
+            "passed": false,
+            "expected": "w-3/5 | w-2/5 | w-1/2 | grid-cols-2 | flex | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": false,
+            "expected": "header -> section -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1541,
+          "completionTokens": 87,
+          "totalTokens": 1628
+        }
+      },
+      "ast": {
+        "fixtureId": "07-asymmetric-hero-split",
+        "modality": "ast",
+        "totalAssertions": 6,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "widths",
+            "description": "Split column widths",
+            "passed": false,
+            "expected": "w-3/5 | w-2/5 | w-1/2 | grid-cols-2 | flex | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section -> footer",
+            "passed": false,
+            "expected": "header -> section -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1522,
+          "completionTokens": 87,
+          "totalTokens": 1609
+        }
+      }
+    },
+    "08-horizontal-timeline": {
+      "spec": {
+        "fixtureId": "08-horizontal-timeline",
+        "modality": "spec",
+        "totalAssertions": 5,
+        "passedAssertions": 5,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "4"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 4"
+          },
+          {
+            "category": "widths",
+            "description": "Timeline column widths",
+            "passed": true,
+            "expected": "w-1/2 | max-w- | w-full | container",
+            "actual": "found: \"w-1/2 p-6 border rounded-xl bg-white sha...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1013,
+          "completionTokens": 418,
+          "totalTokens": 1431
+        }
+      },
+      "baseline": {
+        "fixtureId": "08-horizontal-timeline",
+        "modality": "baseline",
+        "totalAssertions": 5,
+        "passedAssertions": 1,
+        "scorePercentage": 20,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Timeline column widths",
+            "passed": false,
+            "expected": "w-1/2 | max-w- | w-full | container",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1371,
+          "completionTokens": 72,
+          "totalTokens": 1443
+        }
+      },
+      "ast": {
+        "fixtureId": "08-horizontal-timeline",
+        "modality": "ast",
+        "totalAssertions": 5,
+        "passedAssertions": 1,
+        "scorePercentage": 20,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"section\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Timeline column widths",
+            "passed": false,
+            "expected": "w-1/2 | max-w- | w-full | container",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1354,
+          "completionTokens": 72,
+          "totalTokens": 1426
+        }
+      }
+    },
+    "09-magazine-masonry": {
+      "spec": {
+        "fixtureId": "09-magazine-masonry",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, form, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "3-column masonry grid",
+            "passed": true,
+            "expected": "grid-cols-3 | grid | columns-3 | w-full | max-w-",
+            "actual": "found: \"max-w-7xl mx-auto px-6 py-10...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer",
+            "passed": true,
+            "expected": "header -> section, main -> footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1106,
+          "completionTokens": 373,
+          "totalTokens": 1479
+        }
+      },
+      "baseline": {
+        "fixtureId": "09-magazine-masonry",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 3,
+        "scorePercentage": 42.9,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, form, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "3-column masonry grid",
+            "passed": false,
+            "expected": "grid-cols-3 | grid | columns-3 | w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer",
+            "passed": false,
+            "expected": "header -> section, main -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1133,
+          "completionTokens": 92,
+          "totalTokens": 1225
+        }
+      },
+      "ast": {
+        "fixtureId": "09-magazine-masonry",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 3,
+        "scorePercentage": 42.9,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, form, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "3-column masonry grid",
+            "passed": false,
+            "expected": "grid-cols-3 | grid | columns-3 | w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer",
+            "passed": false,
+            "expected": "header -> section, main -> footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1346,
+          "completionTokens": 92,
+          "totalTokens": 1438
+        }
+      }
+    },
+    "10-multi-overlay-modal": {
+      "spec": {
+        "fixtureId": "10-multi-overlay-modal",
+        "modality": "spec",
+        "totalAssertions": 5,
+        "passedAssertions": 5,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 1,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 0
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"dialog, .modal, [data-modal], form, div.fixed\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed backdrop or modal container",
+            "passed": true,
+            "expected": "fixed|absolute|inset-0|z-50",
+            "actual": "matched: \"fixed inset-0 z-50 bg-black/50 flex item...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1262,
+          "completionTokens": 341,
+          "totalTokens": 1603
+        }
+      },
+      "baseline": {
+        "fixtureId": "10-multi-overlay-modal",
+        "modality": "baseline",
+        "totalAssertions": 5,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 0
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"dialog, .modal, [data-modal], form, div.fixed\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 2 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed backdrop or modal container",
+            "passed": false,
+            "expected": "fixed|absolute|inset-0|z-50",
+            "actual": "selector not found"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1585,
+          "completionTokens": 63,
+          "totalTokens": 1648
+        }
+      },
+      "ast": {
+        "fixtureId": "10-multi-overlay-modal",
+        "modality": "ast",
+        "totalAssertions": 5,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 0
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"dialog, .modal, [data-modal], form, div.fixed\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 2 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed backdrop or modal container",
+            "passed": false,
+            "expected": "fixed|absolute|inset-0|z-50",
+            "actual": "selector not found"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1608,
+          "completionTokens": 63,
+          "totalTokens": 1671
+        }
+      }
+    },
+    "11-analytics-kpi-dashboard": {
+      "spec": {
+        "fixtureId": "11-analytics-kpi-dashboard",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 4,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"table\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"table\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "KPI grid or responsive width",
+            "passed": true,
+            "expected": "grid-cols-4 | grid-cols-2 | grid | w-full | max-w-",
+            "actual": "found: \"grid grid-cols-4 gap-6 mb-8...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": true,
+            "expected": "header -> section, main",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1402,
+          "completionTokens": 604,
+          "totalTokens": 2006
+        }
+      },
+      "baseline": {
+        "fixtureId": "11-analytics-kpi-dashboard",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"table\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"table\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 0"
+          },
+          {
+            "category": "widths",
+            "description": "KPI grid or responsive width",
+            "passed": false,
+            "expected": "grid-cols-4 | grid-cols-2 | grid | w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": false,
+            "expected": "header -> section, main",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1369,
+          "completionTokens": 81,
+          "totalTokens": 1450
+        }
+      },
+      "ast": {
+        "fixtureId": "11-analytics-kpi-dashboard",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 4
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"table\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"table\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 0"
+          },
+          {
+            "category": "widths",
+            "description": "KPI grid or responsive width",
+            "passed": false,
+            "expected": "grid-cols-4 | grid-cols-2 | grid | w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": false,
+            "expected": "header -> section, main",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 2241,
+          "completionTokens": 81,
+          "totalTokens": 2322
+        }
+      }
+    },
+    "12-multi-step-checkout": {
+      "spec": {
+        "fixtureId": "12-multi-step-checkout",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 4",
+            "actual": "4"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 4 child",
+            "actual": "max children found: 4"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "Multi-column checkout layout",
+            "passed": true,
+            "expected": "grid-cols-3 | w-2/3 | w-1/3 | grid-cols-2 | flex | w-full | max-w-",
+            "actual": "found: \"max-w-6xl mx-auto px-6 py-10 flex gap-8...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": true,
+            "expected": "header -> section, main",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1290,
+          "completionTokens": 367,
+          "totalTokens": 1657
+        }
+      },
+      "baseline": {
+        "fixtureId": "12-multi-step-checkout",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 4 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "Multi-column checkout layout",
+            "passed": false,
+            "expected": "grid-cols-3 | w-2/3 | w-1/3 | grid-cols-2 | flex | w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": false,
+            "expected": "header -> section, main",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 993,
+          "completionTokens": 66,
+          "totalTokens": 1059
+        }
+      },
+      "ast": {
+        "fixtureId": "12-multi-step-checkout",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 4 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "Multi-column checkout layout",
+            "passed": false,
+            "expected": "grid-cols-3 | w-2/3 | w-1/3 | grid-cols-2 | flex | w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": false,
+            "expected": "header -> section, main",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1838,
+          "completionTokens": 66,
+          "totalTokens": 1904
+        }
+      }
+    },
+    "13-crm-pipeline-kanban": {
+      "spec": {
+        "fixtureId": "13-crm-pipeline-kanban",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "3"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "4-column kanban grid",
+            "passed": true,
+            "expected": "grid-cols-4 | w-1/4 | grid | flex | w-full | max-w-",
+            "actual": "found: \"grid grid-cols-4 gap-6...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": true,
+            "expected": "header -> section, main",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1091,
+          "completionTokens": 454,
+          "totalTokens": 1545
+        }
+      },
+      "baseline": {
+        "fixtureId": "13-crm-pipeline-kanban",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "widths",
+            "description": "4-column kanban grid",
+            "passed": true,
+            "expected": "grid-cols-4 | w-1/4 | grid | flex | w-full | max-w-",
+            "actual": "found: \"columns flex...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": false,
+            "expected": "header -> section, main",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1123,
+          "completionTokens": 61,
+          "totalTokens": 1184
+        }
+      },
+      "ast": {
+        "fixtureId": "13-crm-pipeline-kanban",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 1,
+        "scorePercentage": 14.3,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "0"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"header\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 1 child",
+            "actual": "parent element not found"
+          },
+          {
+            "category": "widths",
+            "description": "4-column kanban grid",
+            "passed": true,
+            "expected": "grid-cols-4 | w-1/4 | grid | flex | w-full | max-w-",
+            "actual": "found: \"columns flex...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main",
+            "passed": false,
+            "expected": "header -> section, main",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1360,
+          "completionTokens": 61,
+          "totalTokens": 1421
+        }
+      }
+    },
+    "14-settings-preferences": {
+      "spec": {
+        "fixtureId": "14-settings-preferences",
+        "modality": "spec",
+        "totalAssertions": 5,
+        "passedAssertions": 5,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 2
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "5"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 3"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 5"
+          },
+          {
+            "category": "widths",
+            "description": "Form container width",
+            "passed": true,
+            "expected": "max-w-xl | max-w-2xl | max-w-3xl | w-full | max-w-",
+            "actual": "found: \"max-w-4xl mx-auto px-6 py-10...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1193,
+          "completionTokens": 364,
+          "totalTokens": 1557
+        }
+      },
+      "baseline": {
+        "fixtureId": "14-settings-preferences",
+        "modality": "baseline",
+        "totalAssertions": 5,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 2
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "Form container width",
+            "passed": false,
+            "expected": "max-w-xl | max-w-2xl | max-w-3xl | w-full | max-w-",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1525,
+          "completionTokens": 49,
+          "totalTokens": 1574
+        }
+      },
+      "ast": {
+        "fixtureId": "14-settings-preferences",
+        "modality": "ast",
+        "totalAssertions": 5,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 2
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 2",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"input\"",
+            "passed": false,
+            "expected": "parent has >= 3 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, form, div\" contains \"button\"",
+            "passed": false,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "widths",
+            "description": "Form container width",
+            "passed": false,
+            "expected": "max-w-xl | max-w-2xl | max-w-3xl | w-full | max-w-",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1541,
+          "completionTokens": 49,
+          "totalTokens": 1590
+        }
+      }
+    },
+    "15-data-grid-management": {
+      "spec": {
+        "fixtureId": "15-data-grid-management",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"table\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "3"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, header, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"footer, nav, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Full width table",
+            "passed": true,
+            "expected": "w-full | min-w-full | max-w-",
+            "actual": "found: \"w-full border-collapse border bg-white...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: section, header, .toolbar -> table, [role=\"table\"] -> footer, nav, .pagination",
+            "passed": true,
+            "expected": "section, header, .toolbar -> table, [role=\"table\"] -> footer, nav, .pagination",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1156,
+          "completionTokens": 369,
+          "totalTokens": 1525
+        }
+      },
+      "baseline": {
+        "fixtureId": "15-data-grid-management",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 3,
+        "scorePercentage": 42.9,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"table\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, header, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"footer, nav, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Full width table",
+            "passed": false,
+            "expected": "w-full | min-w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: section, header, .toolbar -> table, [role=\"table\"] -> footer, nav, .pagination",
+            "passed": false,
+            "expected": "section, header, .toolbar -> table, [role=\"table\"] -> footer, nav, .pagination",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1294,
+          "completionTokens": 72,
+          "totalTokens": 1366
+        }
+      },
+      "ast": {
+        "fixtureId": "15-data-grid-management",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 3,
+        "scorePercentage": 42.9,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 2,
+            "total": 2
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"table\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 3",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, header, div\" contains \"input\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"footer, nav, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 1 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Full width table",
+            "passed": false,
+            "expected": "w-full | min-w-full | max-w-",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: section, header, .toolbar -> table, [role=\"table\"] -> footer, nav, .pagination",
+            "passed": false,
+            "expected": "section, header, .toolbar -> table, [role=\"table\"] -> footer, nav, .pagination",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1556,
+          "completionTokens": 72,
+          "totalTokens": 1628
+        }
+      }
+    },
+    "16-mobile-onboarding": {
+      "spec": {
+        "fixtureId": "16-mobile-onboarding",
+        "modality": "spec",
+        "totalAssertions": 3,
+        "passedAssertions": 3,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 1
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"body, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile viewport width constraints",
+            "passed": true,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "found: \"w-full max-w-sm w-[375px] min-h-[812px] ...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 864,
+          "completionTokens": 255,
+          "totalTokens": 1119
+        }
+      },
+      "baseline": {
+        "fixtureId": "16-mobile-onboarding",
+        "modality": "baseline",
+        "totalAssertions": 3,
+        "passedAssertions": 2,
+        "scorePercentage": 66.7,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 1
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"body, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile viewport width constraints",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 968,
+          "completionTokens": 37,
+          "totalTokens": 1005
+        }
+      },
+      "ast": {
+        "fixtureId": "16-mobile-onboarding",
+        "modality": "ast",
+        "totalAssertions": 3,
+        "passedAssertions": 2,
+        "scorePercentage": 66.7,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 1
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"body, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile viewport width constraints",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 881,
+          "completionTokens": 37,
+          "totalTokens": 918
+        }
+      }
+    },
+    "17-mobile-social-feed": {
+      "spec": {
+        "fixtureId": "17-mobile-social-feed",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 2,
+            "total": 2
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 4",
+            "actual": "4"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky top bar",
+            "passed": true,
+            "expected": "fixed|sticky|top-0",
+            "actual": "matched: \"appbar sticky top-0 z-40 bg-white border...\""
+          },
+          {
+            "category": "flags",
+            "description": "Sticky/fixed bottom bar",
+            "passed": true,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "matched: \"bottom-nav fixed bottom-0 max-w-sm w-ful...\""
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container width",
+            "passed": true,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "found: \"w-full max-w-sm w-[375px] min-h-screen b...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> nav, footer",
+            "passed": true,
+            "expected": "header -> section, main -> nav, footer",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1147,
+          "completionTokens": 353,
+          "totalTokens": 1500
+        }
+      },
+      "baseline": {
+        "fixtureId": "17-mobile-social-feed",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 2
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky top bar",
+            "passed": false,
+            "expected": "fixed|sticky|top-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky/fixed bottom bar",
+            "passed": false,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container width",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> nav, footer",
+            "passed": false,
+            "expected": "header -> section, main -> nav, footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1457,
+          "completionTokens": 64,
+          "totalTokens": 1521
+        }
+      },
+      "ast": {
+        "fixtureId": "17-mobile-social-feed",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 0,
+        "scorePercentage": 0,
+        "categoryScores": {
+          "elements": {
+            "passed": 0,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 2
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"nav\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": false,
+            "expected": ">= 4",
+            "actual": "2"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky top bar",
+            "passed": false,
+            "expected": "fixed|sticky|top-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky/fixed bottom bar",
+            "passed": false,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container width",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> nav, footer",
+            "passed": false,
+            "expected": "header -> section, main -> nav, footer",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1530,
+          "completionTokens": 64,
+          "totalTokens": 1594
+        }
+      }
+    },
+    "18-mobile-ecommerce-product": {
+      "spec": {
+        "fixtureId": "18-mobile-ecommerce-product",
+        "modality": "spec",
+        "totalAssertions": 4,
+        "passedAssertions": 4,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 2
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 1,
+            "total": 1
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "4"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed/sticky bottom cart bar",
+            "passed": true,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "matched: \"bottom-bar fixed bottom-0 max-w-sm w-ful...\""
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container",
+            "passed": true,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "found: \"w-full max-w-sm w-[375px] min-h-screen b...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1115,
+          "completionTokens": 327,
+          "totalTokens": 1442
+        }
+      },
+      "baseline": {
+        "fixtureId": "18-mobile-ecommerce-product",
+        "modality": "baseline",
+        "totalAssertions": 4,
+        "passedAssertions": 1,
+        "scorePercentage": 25,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 2
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed/sticky bottom cart bar",
+            "passed": false,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "css/class did not match"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1412,
+          "completionTokens": 56,
+          "totalTokens": 1468
+        }
+      },
+      "ast": {
+        "fixtureId": "18-mobile-ecommerce-product",
+        "modality": "ast",
+        "totalAssertions": 4,
+        "passedAssertions": 1,
+        "scorePercentage": 25,
+        "categoryScores": {
+          "elements": {
+            "passed": 1,
+            "total": 2
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 1
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 3",
+            "actual": "3"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"footer\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed/sticky bottom cart bar",
+            "passed": false,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "css/class did not match"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1514,
+          "completionTokens": 56,
+          "totalTokens": 1570
+        }
+      }
+    },
+    "19-mobile-profile-settings": {
+      "spec": {
+        "fixtureId": "19-mobile-profile-settings",
+        "modality": "spec",
+        "totalAssertions": 5,
+        "passedAssertions": 5,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container constraints",
+            "passed": true,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "found: \"w-full max-w-sm w-[375px] min-h-screen b...\""
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1046,
+          "completionTokens": 257,
+          "totalTokens": 1303
+        }
+      },
+      "baseline": {
+        "fixtureId": "19-mobile-profile-settings",
+        "modality": "baseline",
+        "totalAssertions": 5,
+        "passedAssertions": 3,
+        "scorePercentage": 60,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container constraints",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1282,
+          "completionTokens": 49,
+          "totalTokens": 1331
+        }
+      },
+      "ast": {
+        "fixtureId": "19-mobile-profile-settings",
+        "modality": "ast",
+        "totalAssertions": 5,
+        "passedAssertions": 3,
+        "scorePercentage": 60,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 1,
+            "total": 1
+          },
+          "flags": {
+            "passed": 0,
+            "total": 0
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "nesting",
+            "description": "Hierarchy: \"section, main, div\" contains \"button\"",
+            "passed": true,
+            "expected": "parent has >= 2 child",
+            "actual": "max children found: 2"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile container constraints",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1190,
+          "completionTokens": 49,
+          "totalTokens": 1239
+        }
+      }
+    },
+    "20-mobile-chat-thread": {
+      "spec": {
+        "fixtureId": "20-mobile-chat-thread",
+        "modality": "spec",
+        "totalAssertions": 7,
+        "passedAssertions": 7,
+        "scorePercentage": 100,
+        "categoryScores": {
+          "elements": {
+            "passed": 3,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 2,
+            "total": 2
+          },
+          "widths": {
+            "passed": 1,
+            "total": 1
+          },
+          "order": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky chat conversation header",
+            "passed": true,
+            "expected": "fixed|sticky|top-0",
+            "actual": "matched: \"sticky top-0 z-30 bg-white border-b px-4...\""
+          },
+          {
+            "category": "flags",
+            "description": "Fixed bottom message input bar",
+            "passed": true,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "matched: \"input-bar fixed bottom-0 max-w-sm w-full...\""
+          },
+          {
+            "category": "widths",
+            "description": "Mobile width constraints",
+            "passed": true,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "found: \"w-full max-w-sm w-[375px] min-h-screen b...\""
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer, form",
+            "passed": true,
+            "expected": "header -> section, main -> footer, form",
+            "actual": "correct relative order"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1113,
+          "completionTokens": 366,
+          "totalTokens": 1479
+        }
+      },
+      "baseline": {
+        "fixtureId": "20-mobile-chat-thread",
+        "modality": "baseline",
+        "totalAssertions": 7,
+        "passedAssertions": 2,
+        "scorePercentage": 28.6,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 2
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky chat conversation header",
+            "passed": false,
+            "expected": "fixed|sticky|top-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed bottom message input bar",
+            "passed": false,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile width constraints",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer, form",
+            "passed": false,
+            "expected": "header -> section, main -> footer, form",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1311,
+          "completionTokens": 79,
+          "totalTokens": 1390
+        }
+      },
+      "ast": {
+        "fixtureId": "20-mobile-chat-thread",
+        "modality": "ast",
+        "totalAssertions": 7,
+        "passedAssertions": 2,
+        "scorePercentage": 28.6,
+        "categoryScores": {
+          "elements": {
+            "passed": 2,
+            "total": 3
+          },
+          "nesting": {
+            "passed": 0,
+            "total": 0
+          },
+          "flags": {
+            "passed": 0,
+            "total": 2
+          },
+          "widths": {
+            "passed": 0,
+            "total": 1
+          },
+          "order": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "details": [
+          {
+            "category": "elements",
+            "description": "Element count for \"header\"",
+            "passed": false,
+            "expected": ">= 1",
+            "actual": "0"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"input\"",
+            "passed": true,
+            "expected": ">= 1",
+            "actual": "1"
+          },
+          {
+            "category": "elements",
+            "description": "Element count for \"button\"",
+            "passed": true,
+            "expected": ">= 2",
+            "actual": "2"
+          },
+          {
+            "category": "flags",
+            "description": "Sticky chat conversation header",
+            "passed": false,
+            "expected": "fixed|sticky|top-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "flags",
+            "description": "Fixed bottom message input bar",
+            "passed": false,
+            "expected": "fixed|sticky|bottom-0",
+            "actual": "selector not found"
+          },
+          {
+            "category": "widths",
+            "description": "Mobile width constraints",
+            "passed": false,
+            "expected": "max-w-sm | max-w-md | w-full | w-[375px]",
+            "actual": "no matching width class"
+          },
+          {
+            "category": "order",
+            "description": "DOM section order: header -> section, main -> footer, form",
+            "passed": false,
+            "expected": "header -> section, main -> footer, form",
+            "actual": "indices: []"
+          }
+        ],
+        "tokenCost": {
+          "promptTokens": 1373,
+          "completionTokens": 79,
+          "totalTokens": 1452
+        }
+      }
+    }
+  }
+}
