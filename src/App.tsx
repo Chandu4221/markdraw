@@ -1138,115 +1138,118 @@ export const App: React.FC = () => {
                 minWidth: isRightPanelOpen ? '380px' : '0px'
               }}
             >
-              <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-[380px]">
-                {/* Output Toolbar */}
-                <div className="h-10 px-2.5 border-b border-[var(--md-border)] flex items-center justify-between shrink-0 select-none gap-2 min-w-0">
-                  {/* Tabs */}
-                  <div
-                    role="tablist"
-                    aria-label="Output View Modes"
-                    className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
-                  >
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'spec'}
-                      aria-label="Spec Table view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'spec'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                      }`}
-                      onClick={() => setOutputTab('spec')}
-                    >
-                      <FileText size={13} />
-                      <span>Spec <span className="hidden xl:inline">Table</span></span>
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'grid'}
-                      aria-label="Spatial Grid view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'grid'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                      }`}
-                      onClick={() => setOutputTab('grid')}
-                    >
-                      <LayoutGrid size={13} />
-                      <span><span className="hidden xl:inline">Spatial </span>Grid</span>
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'ascii'}
-                      aria-label="ASCII layout view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'ascii'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                      }`}
-                      onClick={() => setOutputTab('ascii')}
-                    >
-                      <Terminal size={13} />
-                      <span>ASCII</span>
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'json'}
-                      aria-label="JSON AST view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'json'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                      }`}
-                      onClick={() => setOutputTab('json')}
-                    >
-                      <Code size={13} />
-                      <span>JSON<span className="hidden xl:inline"> AST</span></span>
-                    </button>
-                  </div>
-
-                  {/* View Mode Toggle (Preview vs Raw) for markdown tabs */}
-                  {(outputTab === 'spec' || outputTab === 'grid') && (
+              <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-0">
+                {/* Output Toolbar (Responsive with flex-wrap) */}
+                <div className="min-h-10 px-2.5 py-1.5 border-b border-[var(--md-border)] flex items-center justify-between flex-wrap shrink-0 select-none gap-2 bg-[var(--md-surface)]">
+                  {/* Left Controls: Tabs + View Mode Toggle */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* Tabs */}
                     <div
-                      role="group"
-                      aria-label="Display View Mode"
+                      role="tablist"
+                      aria-label="Output View Modes"
                       className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
                     >
                       <button
-                        type="button"
-                        aria-pressed={outputDisplayMode === 'preview'}
+                        role="tab"
+                        aria-selected={outputTab === 'spec'}
+                        aria-label="Spec Table view"
                         className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                          outputDisplayMode === 'preview'
-                            ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                          outputTab === 'spec'
+                            ? 'bg-blue-600 text-white shadow-xs'
                             : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                         }`}
-                        onClick={() => handleOutputDisplayModeChange('preview')}
-                        title="Formatted Markdown Preview"
-                        aria-label="Formatted preview mode"
+                        onClick={() => setOutputTab('spec')}
                       >
-                        <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
-                        <span>Preview</span>
+                        <FileText size={13} />
+                        <span>Spec <span className="hidden xl:inline">Table</span></span>
                       </button>
                       <button
-                        type="button"
-                        aria-pressed={outputDisplayMode === 'raw'}
+                        role="tab"
+                        aria-selected={outputTab === 'grid'}
+                        aria-label="Spatial Grid view"
                         className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                          outputDisplayMode === 'raw'
-                            ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                          outputTab === 'grid'
+                            ? 'bg-blue-600 text-white shadow-xs'
                             : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                         }`}
-                        onClick={() => handleOutputDisplayModeChange('raw')}
-                        title="Raw Markdown Syntax"
-                        aria-label="Raw Markdown mode"
+                        onClick={() => setOutputTab('grid')}
                       >
-                        <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
-                        <span>Raw</span>
+                        <LayoutGrid size={13} />
+                        <span><span className="hidden xl:inline">Spatial </span>Grid</span>
+                      </button>
+                      <button
+                        role="tab"
+                        aria-selected={outputTab === 'ascii'}
+                        aria-label="ASCII layout view"
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputTab === 'ascii'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                        }`}
+                        onClick={() => setOutputTab('ascii')}
+                      >
+                        <Terminal size={13} />
+                        <span>ASCII</span>
+                      </button>
+                      <button
+                        role="tab"
+                        aria-selected={outputTab === 'json'}
+                        aria-label="JSON AST view"
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputTab === 'json'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                        }`}
+                        onClick={() => setOutputTab('json')}
+                      >
+                        <Code size={13} />
+                        <span>JSON<span className="hidden xl:inline"> AST</span></span>
                       </button>
                     </div>
-                  )}
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
+                    {/* View Mode Toggle (Preview vs Raw) for markdown tabs */}
+                    {(outputTab === 'spec' || outputTab === 'grid') && (
+                      <div
+                        role="group"
+                        aria-label="Display View Mode"
+                        className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
+                      >
+                        <button
+                          type="button"
+                          aria-pressed={outputDisplayMode === 'preview'}
+                          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                            outputDisplayMode === 'preview'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          }`}
+                          onClick={() => handleOutputDisplayModeChange('preview')}
+                          title="Formatted Markdown Preview"
+                          aria-label="Formatted preview mode"
+                        >
+                          <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
+                          <span>Preview</span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={outputDisplayMode === 'raw'}
+                          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                            outputDisplayMode === 'raw'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          }`}
+                          onClick={() => handleOutputDisplayModeChange('raw')}
+                          title="Raw Markdown Syntax"
+                          aria-label="Raw Markdown mode"
+                        >
+                          <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
+                          <span>Raw</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions (always visible, flows gracefully to next line when narrow) */}
+                  <div className="flex items-center gap-1 shrink-0 ml-auto">
                     <Button
                       variant={copied ? 'success' : 'brand'}
                       size="sm"
