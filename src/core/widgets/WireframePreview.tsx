@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UIWidgetProps } from './types';
+import { RenderMode, useRenderMode } from '../renderMode';
+import { getGhostPreview, getLoremLines } from '../lorem';
+import { SvgMediaPattern } from '../svgPatterns';
+import { isUntouchedLabel } from './widgetCatalog';
 
 export interface WireframePreviewProps {
   props: UIWidgetProps;
@@ -8,6 +12,8 @@ export interface WireframePreviewProps {
   onCancelEdit?: () => void;
   width?: number;
   height?: number;
+  renderMode?: RenderMode;
+  shapeId?: string;
 }
 
 /**
@@ -59,8 +65,14 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
   onCommitEdit,
   onCancelEdit,
   width,
-  height
+  height,
+  renderMode,
+  shapeId
 }) => {
+  const globalRenderMode = useRenderMode();
+  const effectiveMode: RenderMode = renderMode ?? globalRenderMode;
+  const seed = shapeId ?? 'default';
+
   const w = Math.max(10, width ?? props.w ?? 100);
   const h = Math.max(10, height ?? props.h ?? 40);
   const type = props.widgetType || 'button';
@@ -75,6 +87,32 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
 
   const [editText, setEditText] = useState(primaryText);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
+  const renderNoteHint = () => {
+    if (effectiveMode !== 'realistic' || (!props.note && (!props.behaviors || props.behaviors.length === 0))) {
+      return null;
+    }
+    const isMotion =
+      props.behaviors?.includes('parallax') ||
+      props.note?.toLowerCase().includes('parallax') ||
+      props.note?.toLowerCase().includes('motion');
+
+    if (isMotion) {
+      return (
+        <g opacity={0.7} style={{ pointerEvents: 'none' }}>
+          <line x1={w - 18} y1={5} x2={w - 12} y2={11} stroke="var(--md-accent)" strokeWidth={1.5} strokeLinecap="round" />
+          <line x1={w - 13} y1={5} x2={w - 7} y2={11} stroke="var(--md-accent)" strokeWidth={1.5} strokeLinecap="round" />
+          <line x1={w - 8} y1={5} x2={w - 2} y2={11} stroke="var(--md-accent)" strokeWidth={1.5} strokeLinecap="round" />
+        </g>
+      );
+    }
+
+    return (
+      <g opacity={0.8} style={{ pointerEvents: 'none' }}>
+        <polygon points={`${w - 10},0 ${w},10 ${w},0`} fill="var(--md-accent)" />
+      </g>
+    );
+  };
 
   useEffect(() => {
     setEditText(primaryText);
@@ -293,16 +331,140 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
-      // 2. Containers (Task 5: Uniform 9px muted uppercase Chip)
+      // 2. Card Container
+      case 'card': {
+        const isUntouched = isUntouchedLabel('card', label);
+        const ghost = getGhostPreview('card', seed, props);
+        const cardTitle = !isUntouched && label ? label : (effectiveMode === 'skeleton' ? '' : ghost.primary);
+
+        return (
+          <g>
+            <rect
+              x={0.75}
+              y={0.75}
+              width={w - 1.5}
+              height={h - 1.5}
+              rx={6}
+              fill="var(--md-surface)"
+              stroke="var(--md-border-strong)"
+              strokeWidth={1.5}
+              strokeDasharray={isDashed ? '5 3' : undefined}
+            />
+            {/* Top-left uniform semantic chip */}
+            <Chip label="card" maxWidth={w} />
+
+            {/* Card title */}
+            {cardTitle && h >= 40 && (
+              <text
+                x={10}
+                y={h >= 48 ? 39 : 32}
+                fill="var(--md-text-bold)"
+                fontSize={h >= 48 ? 14 : 12}
+                fontWeight={700}
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+              >
+                {cardTitle.slice(0, Math.floor((w - 20) / 8))}
+              </text>
+            )}
+
+            {/* Realistic mode: card header divider */}
+            {effectiveMode === 'realistic' && h >= 64 && (
+              <line x1={0} y1={46} x2={w} y2={46} stroke="var(--md-border)" strokeWidth={1} />
+            )}
+
+            {/* Annotated / Realistic mode: ghost body lines */}
+            {effectiveMode !== 'skeleton' && h >= 80 && ghost.lines && (
+              <g opacity={0.65}>
+                <text
+                  x={10}
+                  y={effectiveMode === 'realistic' && h >= 64 ? 64 : 58}
+                  fill="var(--md-text-muted)"
+                  fontSize={11}
+                  fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                >
+                  {ghost.lines[0]?.slice(0, Math.floor((w - 20) / 6.5))}
+                </text>
+                {h >= 105 && (
+                  <text
+                    x={10}
+                    y={effectiveMode === 'realistic' && h >= 64 ? 80 : 74}
+                    fill="var(--md-text-muted)"
+                    fontSize={11}
+                    fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                  >
+                    {ghost.lines[1]?.slice(0, Math.floor((w - 20) / 6.5))}
+                  </text>
+                )}
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      // 3. Data Table Container
+      case 'data_table': {
+        const title = label || '';
+        return (
+          <g>
+            <rect
+              x={0.75}
+              y={0.75}
+              width={w - 1.5}
+              height={h - 1.5}
+              rx={4}
+              fill="var(--md-surface)"
+              stroke="var(--md-border-strong)"
+              strokeWidth={1.5}
+            />
+            <Chip label="data_table" maxWidth={w} />
+            {title && h >= 40 && (
+              <text
+                x={10}
+                y={h >= 48 ? 39 : 32}
+                fill="var(--md-text-bold)"
+                fontSize={h >= 48 ? 14 : 12}
+                fontWeight={700}
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+              >
+                {title.slice(0, Math.floor(w / 9))}
+              </text>
+            )}
+            {h >= 40 && (
+              <g>
+                <line x1={0} y1={26} x2={w} y2={26} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+                {effectiveMode === 'realistic' && (
+                  <>
+                    {Array.from({ length: Math.floor((h - 26) / 20) }).map((_, i) =>
+                      i % 2 === 1 ? (
+                        <rect
+                          key={i}
+                          x={1}
+                          y={26 + i * 20}
+                          width={w - 2}
+                          height={Math.min(20, h - (26 + i * 20) - 1)}
+                          fill="var(--md-surface-raised)"
+                          opacity={0.6}
+                        />
+                      ) : null
+                    )}
+                  </>
+                )}
+                <line x1={w * 0.33} y1={0} x2={w * 0.33} y2={h} stroke="var(--md-border)" strokeWidth={1} />
+                <line x1={w * 0.66} y1={0} x2={w * 0.66} y2={h} stroke="var(--md-border)" strokeWidth={1} />
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      // 4. Other Structural Containers (Task 5: Uniform 9px muted uppercase Chip)
       case 'section':
-      case 'card':
       case 'hero':
       case 'header':
       case 'footer':
       case 'grid_gallery':
       case 'split_pane':
       case 'modal':
-      case 'data_table':
       case 'tabs':
       case 'footer_nav':
       case 'steps':
@@ -320,7 +482,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               y={0.75}
               width={w - 1.5}
               height={h - 1.5}
-              rx={type === 'card' ? 6 : type === 'modal' ? 8 : 2}
+              rx={type === 'modal' ? 8 : 2}
               fill="var(--md-surface)"
               stroke="var(--md-border-strong)"
               strokeWidth={1.5}
@@ -354,15 +516,6 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             {/* Split pane divider */}
             {type === 'split_pane' && (
               <line x1={w / 2} y1={0} x2={w / 2} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} strokeDasharray="3 3" />
-            )}
-
-            {/* Data table wireframe grid */}
-            {type === 'data_table' && h >= 40 && (
-              <g>
-                <line x1={0} y1={24} x2={w} y2={24} stroke="var(--md-border-strong)" strokeWidth={1.5} />
-                <line x1={w * 0.33} y1={0} x2={w * 0.33} y2={h} stroke="var(--md-border)" strokeWidth={1} />
-                <line x1={w * 0.66} y1={0} x2={w * 0.66} y2={h} stroke="var(--md-border)" strokeWidth={1} />
-              </g>
             )}
           </g>
         );
@@ -401,7 +554,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
-      // 3. Inputs / Text Fields
+      // 5. Inputs / Text Fields
       case 'input':
       case 'search':
       case 'password':
@@ -409,7 +562,11 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
       case 'date_picker':
       case 'file_upload':
       case 'select': {
+        const ghost = getGhostPreview(type, seed, props);
         const showTextVal = placeholder || label || (type === 'select' ? props.options || 'Select' : '');
+        const displayText = showTextVal || (effectiveMode !== 'skeleton' && ghost.placeholder ? ghost.placeholder : (type === 'search' ? 'Search...' : type === 'password' ? '••••••••' : 'Input...'));
+        const isGhost = !showTextVal && effectiveMode !== 'skeleton' && Boolean(ghost.placeholder);
+
         return (
           <g>
             <rect
@@ -433,12 +590,21 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               <text
                 x={20}
                 y={h / 2 + 4}
-                fill="var(--md-text)"
+                fill={isGhost ? 'var(--md-text-muted)' : 'var(--md-text)'}
                 fontSize={12}
                 fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
-                {showTextVal || (type === 'search' ? 'Search...' : type === 'password' ? '••••••••' : 'Input...')}
+                {displayText.slice(0, Math.floor((w - (effectiveMode === 'realistic' && type === 'search' ? 56 : 26)) / 7))}
               </text>
+            )}
+            {/* Realistic mode: Command/Ctrl+K badge for search */}
+            {effectiveMode === 'realistic' && type === 'search' && w >= 110 && (
+              <g transform={`translate(${w - 38}, ${h / 2 - 8})`}>
+                <rect width={30} height={16} rx={3} fill="var(--md-surface-raised)" stroke="var(--md-border)" strokeWidth={1} />
+                <text x={15} y={11.5} textAnchor="middle" fill="var(--md-text-muted)" fontSize={9} fontWeight={600} fontFamily="var(--md-font-mono, monospace)">
+                  ⌘K
+                </text>
+              </g>
             )}
             {type === 'select' && (
               <path
@@ -452,9 +618,11 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
-      // 4. Headings & Typography
+      // 6. Headings & Typography
       case 'heading': {
-        const hText = label || 'Heading';
+        const isUntouched = isUntouchedLabel('heading', label);
+        const ghost = getGhostPreview('heading', seed, props);
+        const hText = !isUntouched && label ? label : (effectiveMode === 'skeleton' ? (label || 'Heading') : ghost.primary);
         const fontSize = variant === 'h1' ? 22 : variant === 'h2' ? 18 : 15;
         const fontWeight = variant === 'h1' ? 800 : 700;
         return (
@@ -475,10 +643,11 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
         );
       }
 
-      // 5. Paragraphs & Body (Line Glyphs)
+      // 7. Paragraphs & Body
       case 'paragraph':
       case 'blockquote': {
-        if (props.showText && !isEditing) {
+        const isUntouched = isUntouchedLabel(type, label);
+        if (props.showText && !isEditing && label) {
           return (
             <g>
               <text
@@ -488,46 +657,116 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fontSize={12}
                 fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
-                {(label || 'Paragraph text...').slice(0, Math.floor(w / 6))}
+                {label.slice(0, Math.floor(w / 6))}
               </text>
             </g>
           );
         }
+
+        if (!isUntouched && label && !isEditing) {
+          return (
+            <g>
+              {type === 'blockquote' && (
+                <line x1={2} y1={2} x2={2} y2={h - 2} stroke={effectiveMode === 'realistic' ? 'var(--md-accent)' : 'var(--md-border-strong)'} strokeWidth={3} />
+              )}
+              <text
+                x={type === 'blockquote' ? 12 : 4}
+                y={15}
+                fill="var(--md-text)"
+                fontSize={12}
+                fontStyle={type === 'blockquote' && effectiveMode === 'realistic' ? 'italic' : 'normal'}
+                fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+              >
+                {label.slice(0, Math.floor((w - 16) / 6.5))}
+              </text>
+            </g>
+          );
+        }
+
+        // Skeleton mode: line glyphs
+        if (effectiveMode === 'skeleton') {
+          return (
+            <g>
+              {type === 'blockquote' && (
+                <line x1={2} y1={2} x2={2} y2={h - 2} stroke="var(--md-border-strong)" strokeWidth={2.5} />
+              )}
+              {!isEditing && renderLineGlyphs(h, w, 4)}
+            </g>
+          );
+        }
+
+        // Annotated & Realistic mode: deterministic lorem lines
+        const lineCount = Math.max(1, Math.min(6, Math.floor((h - 4) / 16)));
+        const loremLines = getLoremLines(seed, lineCount);
+        const leftPad = type === 'blockquote' ? 12 : 4;
+
         return (
           <g>
             {type === 'blockquote' && (
-              <line x1={2} y1={2} x2={2} y2={h - 2} stroke="var(--md-border-strong)" strokeWidth={2.5} />
+              <line
+                x1={2}
+                y1={2}
+                x2={2}
+                y2={h - 2}
+                stroke={effectiveMode === 'realistic' ? 'var(--md-accent)' : 'var(--md-border-strong)'}
+                strokeWidth={3}
+              />
             )}
-            {!isEditing && renderLineGlyphs(h, w, 4)}
+            {!isEditing &&
+              loremLines.map((line, idx) => (
+                <text
+                  key={idx}
+                  x={leftPad}
+                  y={14 + idx * 16}
+                  fill="var(--md-text-muted)"
+                  fontSize={11.5}
+                  fontStyle={type === 'blockquote' && effectiveMode === 'realistic' ? 'italic' : 'normal'}
+                  fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                >
+                  {line.slice(0, Math.floor((w - leftPad - 8) / 6.5))}
+                </text>
+              ))}
           </g>
         );
       }
 
+      // 8. Carousel
       case 'carousel': {
         const dotCount = 4;
         const dotRadius = 3;
         const dotGap = 10;
         const totalDotsW = dotCount * (dotRadius * 2) + (dotCount - 1) * dotGap;
         const startX = w / 2 - totalDotsW / 2;
+
         return (
           <g>
-            <rect
-              x={0.5}
-              y={0.5}
-              width={w - 1}
-              height={h - 1}
-              rx={6}
-              fill="var(--md-surface)"
-              stroke="var(--md-border)"
-              strokeWidth={1}
-            />
+            {effectiveMode === 'skeleton' ? (
+              <rect
+                x={0.5}
+                y={0.5}
+                width={w - 1}
+                height={h - 1}
+                rx={6}
+                fill="var(--md-surface)"
+                stroke="var(--md-border)"
+                strokeWidth={1}
+              />
+            ) : (
+              <SvgMediaPattern
+                shapeId={seed}
+                w={w}
+                h={h}
+                isVideo={false}
+                altText={!isUntouchedLabel('carousel', label) ? label : 'CAROUSEL'}
+              />
+            )}
             <Chip label="carousel" maxWidth={w} />
             {/* Left Chevron Arrow < */}
             <path
               d={`M ${20} ${h / 2 - 9} L ${12} ${h / 2} L ${20} ${h / 2 + 9}`}
               fill="none"
               stroke="var(--md-text-muted)"
-              strokeWidth={1.5}
+              strokeWidth={1.8}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -536,42 +775,65 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               d={`M ${w - 20} ${h / 2 - 9} L ${w - 12} ${h / 2} L ${w - 20} ${h / 2 + 9}`}
               fill="none"
               stroke="var(--md-text-muted)"
-              strokeWidth={1.5}
+              strokeWidth={1.8}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Title / Label */}
-            {!isEditing && (
-              <text
-                x={w / 2}
-                y={h / 2}
-                dominantBaseline="middle"
-                textAnchor="middle"
-                fill="var(--md-text-bold)"
-                fontSize={13}
-                fontWeight={600}
-                fontFamily="var(--md-font-sans, 'Inter', sans-serif)"
-              >
-                {label || 'Featured Items'}
-              </text>
-            )}
             {/* Slide Dots */}
             {Array.from({ length: dotCount }).map((_, i) => (
               <circle
                 key={i}
                 cx={startX + i * (dotRadius * 2 + dotGap) + dotRadius}
-                cy={h - 16}
+                cy={h - 14}
                 r={dotRadius}
-                fill={i === 0 ? 'var(--md-accent)' : 'var(--md-border)'}
+                fill={i === 0 ? 'var(--md-accent)' : 'var(--md-border-strong)'}
               />
             ))}
           </g>
         );
       }
 
-      // 6. Media Placeholders (Cross ✕ Boxes - Leaf Widget, no chip)
+      // 9. Media Placeholders
       case 'image_frame':
       case 'video_frame': {
+        if (effectiveMode === 'skeleton') {
+          return (
+            <g>
+              <rect
+                x={0.75}
+                y={0.75}
+                width={w - 1.5}
+                height={h - 1.5}
+                rx={3}
+                fill="var(--md-surface)"
+                stroke="var(--md-border-strong)"
+                strokeWidth={1.5}
+              />
+              {/* Corner-to-corner diagonal ✕ cross */}
+              <line x1={0} y1={0} x2={w} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+              <line x1={w} y1={0} x2={0} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+            </g>
+          );
+        }
+
+        return (
+          <SvgMediaPattern
+            shapeId={seed}
+            w={w}
+            h={h}
+            isVideo={type === 'video_frame'}
+            altText={props.altText || (!isUntouchedLabel(type, label) ? label : undefined)}
+          />
+        );
+      }
+
+      // 10. Stat / KPI
+      case 'stat_kpi': {
+        const isUntouched = isUntouchedLabel('stat_kpi', label);
+        const ghost = getGhostPreview('stat_kpi', seed, props);
+        const displayVal = !isUntouched && label ? label : (effectiveMode === 'skeleton' ? (label || 'KPI') : ghost.primary);
+        const displaySub = props.subtext || (effectiveMode === 'skeleton' ? '' : ghost.subtext);
+
         return (
           <g>
             <rect
@@ -579,14 +841,40 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               y={0.75}
               width={w - 1.5}
               height={h - 1.5}
-              rx={3}
+              rx={6}
               fill="var(--md-surface)"
               stroke="var(--md-border-strong)"
               strokeWidth={1.5}
             />
-            {/* Corner-to-corner diagonal ✕ cross */}
-            <line x1={0} y1={0} x2={w} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
-            <line x1={w} y1={0} x2={0} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} />
+            <Chip label="KPI" maxWidth={w} />
+            {effectiveMode === 'skeleton' ? (
+              renderLineGlyphs(h - 24, w, 28)
+            ) : (
+              <>
+                <text
+                  x={12}
+                  y={h >= 64 ? 38 : h / 2 + 2}
+                  fill="var(--md-text-bold)"
+                  fontSize={h >= 64 ? 22 : 16}
+                  fontWeight={800}
+                  fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                >
+                  {displayVal}
+                </text>
+                {displaySub && h >= 48 && (
+                  <text
+                    x={12}
+                    y={h >= 64 ? 54 : h - 10}
+                    fill={displaySub.startsWith('+') ? 'var(--md-accent)' : 'var(--md-text-muted)'}
+                    fontSize={11}
+                    fontWeight={500}
+                    fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                  >
+                    {displaySub.slice(0, Math.floor((w - 20) / 6.5))}
+                  </text>
+                )}
+              </>
+            )}
           </g>
         );
       }
@@ -855,6 +1143,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
       style={{ display: 'block', overflow: 'visible', userSelect: 'none' }}
     >
       {renderSvgContent()}
+      {renderNoteHint()}
       {renderInlineEditor()}
     </svg>
   );

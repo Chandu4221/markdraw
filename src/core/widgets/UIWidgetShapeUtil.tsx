@@ -2,6 +2,7 @@ import React from 'react';
 import { BaseBoxShapeUtil, HTMLContainer, T, resizeBox } from '@tldraw/tldraw';
 import { IUIWidgetShape } from './types';
 import { WireframePreview } from './WireframePreview';
+import { getCatalogItem } from './widgetCatalog';
 
 export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
   static override type = 'ui-widget' as const;
@@ -112,6 +113,12 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
       }
     };
 
+    const item = getCatalogItem(shape.props.widgetType);
+    const name = item?.name || shape.props.widgetType;
+    const tag = item?.category || 'widget';
+    const variant = shape.props.variant || 'solid';
+    const tooltipText = `${name} — [${tag}] — variant: ${variant}`;
+
     return (
       <HTMLContainer
         style={{
@@ -121,6 +128,7 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
           cursor: isEditing ? 'text' : 'default'
         }}
         onClick={handleWidgetClick}
+        title={isEditing ? undefined : tooltipText}
       >
         <WireframePreview
           props={shape.props}
@@ -129,6 +137,7 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
           onCancelEdit={handleCancelEdit}
           width={shape.props.w}
           height={shape.props.h}
+          shapeId={shape.id}
         />
       </HTMLContainer>
     );

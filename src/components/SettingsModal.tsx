@@ -1,6 +1,7 @@
 import React from 'react';
 import { RotateCcw, Sliders } from 'lucide-react';
 import { CompilationOptions } from '../core/types';
+import { useRenderMode, setRenderMode, RenderMode } from '../core/renderMode';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   options,
   onChange
 }) => {
+  const renderMode = useRenderMode();
+
   const handleReset = () => {
     onChange({
       containmentThreshold: 0.85,
@@ -174,6 +177,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onChange({ ...options, includeTimestamp: checked })
                 }
               />
+            </div>
+
+            {/* Canvas Render Mode */}
+            <div className="pt-2 border-t border-[var(--md-border)] space-y-1.5">
+              <div className="flex justify-between items-center text-xs">
+                <label className="font-medium text-[var(--md-text)]">
+                  Canvas Render Mode
+                </label>
+                <select
+                  value={renderMode}
+                  onChange={(e) => setRenderMode(e.target.value as RenderMode)}
+                  aria-label="Canvas Render Mode"
+                  className="h-7 px-2 text-xs rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-bg)] text-[var(--md-text)] font-sans focus:outline-none focus:border-[var(--md-accent)] cursor-pointer"
+                >
+                  <option value="skeleton">Skeleton (glyphs & empty boxes)</option>
+                  <option value="annotated">Annotated (ghost text & patterns)</option>
+                  <option value="realistic">Realistic (annotated + hints & chrome)</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-[var(--md-text-subtle)] leading-normal">
+                Controls visual fidelity on canvas. Markdown export remains 100% byte-identical across all modes.
+              </p>
             </div>
           </div>
         </div>

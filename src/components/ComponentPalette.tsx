@@ -1,109 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { WIDGET_CATALOG } from '../core/widgets/widgetCatalog';
 import { WidgetCatalogItem, UIWidgetCategory } from '../core/widgets/types';
-import {
-  Search,
-  Box,
-  MousePointerClick,
-  FormInput,
-  Lock,
-  AlignLeft,
-  CheckSquare,
-  CircleDot,
-  ToggleRight,
-  ChevronDownSquare,
-  SlidersHorizontal,
-  Upload,
-  Calendar,
-  Plus,
-  Palette,
-  PanelTop,
-  Menu,
-  PanelLeft,
-  Folders,
-  GitCommit,
-  ChevronsLeftRight,
-  ExternalLink,
-  Tag,
-  ListOrdered,
-  Type,
-  List,
-  Table,
-  Quote,
-  Code,
-  Minus,
-  MoveVertical,
-  Image,
-  Video,
-  TrendingUp,
-  Activity,
-  Loader,
-  HelpCircle,
-  Bell,
-  Inbox,
-  AlertCircle,
-  User,
-  Users,
-  Film,
-  Sparkles,
-  Maximize2,
-  CreditCard,
-  AppWindow,
-  LayoutGrid,
-  Columns
-} from 'lucide-react';
-
-const ICON_MAP: Record<string, React.FC<{ size?: number; strokeWidth?: number }>> = {
-  Maximize2,
-  CreditCard,
-  Sparkles,
-  PanelTop,
-  PanelBottom: PanelTop,
-  LayoutGrid,
-  Columns,
-  AppWindow,
-  MousePointerClick,
-  FormInput,
-  Search,
-  Lock,
-  AlignLeft,
-  CheckSquare,
-  CircleDot,
-  ToggleRight,
-  ChevronDownSquare,
-  SlidersHorizontal,
-  Upload,
-  Calendar,
-  Plus,
-  Palette,
-  Menu,
-  PanelLeft,
-  Folders,
-  GitCommit,
-  ChevronsLeftRight,
-  ExternalLink,
-  Tag,
-  ListOrdered,
-  Type,
-  List,
-  Table,
-  Quote,
-  Code,
-  Minus,
-  MoveVertical,
-  Image,
-  Video,
-  TrendingUp,
-  Activity,
-  Loader,
-  HelpCircle,
-  Bell,
-  Inbox,
-  AlertCircle,
-  User,
-  Users,
-  Film
-};
+import { WireframePreview } from '../core/widgets/WireframePreview';
+import { Search, Box } from 'lucide-react';
 
 const CATEGORIES: { id: UIWidgetCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -340,10 +239,8 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
 
                 <div className="grid grid-cols-1 gap-1.5" role="list">
                   {group.items.map((widget) => {
-                    const IconComp = ICON_MAP[widget.icon] || Box;
                     const isHighlighted =
                       filteredWidgets[highlightedIndex]?.type === widget.type;
-                    const widgetStyle = CATEGORY_STYLES[widget.category] || CATEGORY_STYLES.all;
                     return (
                       <div
                         key={widget.type}
@@ -364,8 +261,14 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
                         }}
                         title={`Click or press Enter to add ${widget.name}`}
                       >
-                        <div className={`w-7 h-7 shrink-0 rounded-[4px] border flex items-center justify-center transition-colors ${widgetStyle.iconBox}`}>
-                          <IconComp size={14} />
+                        <div className="w-11 h-7 shrink-0 rounded-[4px] border border-[var(--md-border)] overflow-hidden bg-[var(--md-surface)] flex items-center justify-center pointer-events-none select-none">
+                          <WireframePreview
+                            props={{ ...(widget.defaultProps as any), w: 44, h: 28 }}
+                            width={44}
+                            height={28}
+                            renderMode="annotated"
+                            shapeId={`palette-${widget.type}`}
+                          />
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="text-xs font-medium text-[var(--md-text-bold)] truncate">

@@ -14,6 +14,7 @@ import { DocumentMenu } from './components/DocumentMenu';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import CompileWorker from './core/compile.worker?worker';
 import { CompileWorkerResponse } from './core/compile.worker';
+import { useRenderMode, setRenderMode } from './core/renderMode';
 import {
   getDocRegistry,
   createDocument,
@@ -132,6 +133,9 @@ export const App: React.FC = () => {
       docsRegistry.docs[0]
     );
   }, [docsRegistry]);
+
+  // Canvas Render Mode (Task v2.10: Preview Fidelity)
+  const renderMode = useRenderMode();
 
   // Canvas Labels Toggle (Task 5: Persisted in localStorage)
   const [showLabels, setShowLabels] = useState<boolean>(() => {
@@ -1021,6 +1025,52 @@ export const App: React.FC = () => {
                   <Tag size={13} />
                   <span className="text-[11px]">Labels</span>
                 </button>
+
+                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
+
+                {/* Render Mode Segmented Control (v2.10) */}
+                <div
+                  role="group"
+                  aria-label="Canvas Render Mode"
+                  className="flex items-center gap-0.5 p-0.5 rounded-[4px] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0 select-none"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setRenderMode('skeleton')}
+                    title="Skeleton Mode: Clean glyphs & wireframe boxes"
+                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                      renderMode === 'skeleton'
+                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
+                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    }`}
+                  >
+                    Skeleton
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRenderMode('annotated')}
+                    title="Annotated Mode: Ghost text & SVG patterns (Default)"
+                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                      renderMode === 'annotated'
+                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
+                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    }`}
+                  >
+                    Annotated
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRenderMode('realistic')}
+                    title="Realistic Mode: Annotated + chrome, zebra stripes & motion hints"
+                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                      renderMode === 'realistic'
+                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
+                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    }`}
+                  >
+                    Realistic
+                  </button>
+                </div>
               </div>
 
               {/* Toast Message */}
