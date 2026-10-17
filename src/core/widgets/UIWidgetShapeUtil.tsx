@@ -23,7 +23,14 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
     altText: T.optional(T.string),
     behaviors: T.optional(T.arrayOf(T.string)),
     note: T.optional(T.string),
-    parentId: T.optional(T.string)
+    parentId: T.optional(T.string),
+    columns: T.optional(T.number),
+    columnSplit: T.optional(T.string),
+    isResponsive: T.optional(T.boolean),
+    mobileStack: T.optional(T.string as any),
+    tabletLayout: T.optional(T.string as any),
+    mobileOrder: T.optional(T.number),
+    hideOnMobile: T.optional(T.boolean)
   };
 
   override getDefaultProps(): IUIWidgetShape['props'] {
@@ -43,7 +50,14 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
       altText: '',
       behaviors: [],
       note: '',
-      parentId: undefined
+      parentId: undefined,
+      columns: undefined,
+      columnSplit: undefined,
+      isResponsive: undefined,
+      mobileStack: undefined,
+      tabletLayout: undefined,
+      mobileOrder: undefined,
+      hideOnMobile: undefined
     };
   }
 

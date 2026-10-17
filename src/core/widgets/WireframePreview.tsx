@@ -16,6 +16,23 @@ export interface WireframePreviewProps {
   shapeId?: string;
 }
 
+const getColumnDividers = (w: number, cols?: number, split?: string): number[] => {
+  if (!cols || cols <= 1) return [];
+  if (cols === 2) {
+    if (split === '70/30') return [Math.round(w * 0.7)];
+    if (split === '30/70') return [Math.round(w * 0.3)];
+    return [Math.round(w * 0.5)];
+  }
+  if (cols === 3) {
+    if (split === '25/50/25') return [Math.round(w * 0.25), Math.round(w * 0.75)];
+    return [Math.round(w * (1 / 3)), Math.round(w * (2 / 3))];
+  }
+  if (cols === 4) {
+    return [Math.round(w * 0.25), Math.round(w * 0.5), Math.round(w * 0.75)];
+  }
+  return [];
+};
+
 /**
  * Uniform Semantic Chip for container wireframe shapes (Task 5).
  * 9px uppercase, muted, top-left (x=6, y=6), height 16px.
@@ -513,10 +530,25 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               </g>
             )}
 
-            {/* Split pane divider */}
-            {type === 'split_pane' && (
-              <line x1={w / 2} y1={0} x2={w / 2} y2={h} stroke="var(--md-border-strong)" strokeWidth={1.5} strokeDasharray="3 3" />
-            )}
+            {/* Column Dividers & Split pane divider */}
+            {(() => {
+              const cols = props.columns || (type === 'split_pane' ? 2 : 1);
+              const split = props.columnSplit || (type === 'split_pane' ? 'equal' : undefined);
+              const dividers = getColumnDividers(w, cols, split);
+              return dividers.map((divX, idx) => (
+                <line
+                  key={idx}
+                  x1={divX}
+                  y1={0}
+                  x2={divX}
+                  y2={h}
+                  stroke="var(--md-border-strong)"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                  opacity={0.7}
+                />
+              ));
+            })()}
           </g>
         );
       }
@@ -1135,6 +1167,97 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
     }
   };
 
+  const renderResponsiveBadges = () => {
+    if (w < 40 || h < 20) return null;
+    return (
+      <g className="wireframeResponsiveBadges" style={{ pointerEvents: 'none' }}>
+        {/* Responsive Container Pill */}
+        {props.isResponsive && w >= 110 && h >= 28 && (
+          <g>
+            <rect
+              x={w - 74}
+              y={5}
+              width={68}
+              height={15}
+              rx={3}
+              fill="rgba(147, 51, 234, 0.12)"
+              stroke="rgba(147, 51, 234, 0.4)"
+              strokeWidth={1}
+            />
+            <text
+              x={w - 40}
+              y={13.5}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#9333ea"
+              fontSize={8}
+              fontWeight={700}
+              fontFamily="var(--md-font-mono, monospace)"
+            >
+              {props.mobileStack === 'reverse' ? '📱 REVERSE' : '📱 STACK'}
+            </text>
+          </g>
+        )}
+
+        {/* Hide on Mobile Badge */}
+        {props.hideOnMobile && w >= 65 && h >= 26 && (
+          <g>
+            <rect
+              x={w - 56}
+              y={h - 17}
+              width={50}
+              height={13}
+              rx={2}
+              fill="rgba(245, 158, 11, 0.15)"
+              stroke="rgba(245, 158, 11, 0.5)"
+              strokeWidth={1}
+            />
+            <text
+              x={w - 31}
+              y={h - 10}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#d97706"
+              fontSize={7.5}
+              fontWeight={700}
+              fontFamily="var(--md-font-mono, monospace)"
+            >
+              DESKTOP
+            </text>
+          </g>
+        )}
+
+        {/* Mobile Order Badge */}
+        {typeof props.mobileOrder === 'number' && w >= 50 && h >= 26 && (
+          <g>
+            <rect
+              x={6}
+              y={h - 17}
+              width={42}
+              height={13}
+              rx={2}
+              fill="rgba(59, 130, 246, 0.15)"
+              stroke="rgba(59, 130, 246, 0.4)"
+              strokeWidth={1}
+            />
+            <text
+              x={27}
+              y={h - 10}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#2563eb"
+              fontSize={7.5}
+              fontWeight={700}
+              fontFamily="var(--md-font-mono, monospace)"
+            >
+              ORD #{props.mobileOrder}
+            </text>
+          </g>
+        )}
+      </g>
+    );
+  };
+
   return (
     <svg
       width={w}
@@ -1143,6 +1266,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
       style={{ display: 'block', overflow: 'visible', userSelect: 'none' }}
     >
       {renderSvgContent()}
+      {renderResponsiveBadges()}
       {renderNoteHint()}
       {renderInlineEditor()}
     </svg>

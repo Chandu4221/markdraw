@@ -27,6 +27,13 @@ export interface IRTextProps {
   subtext?: string;
   value?: number;
   variant?: string;
+  columns?: number;
+  columnSplit?: string;
+  isResponsive?: boolean;
+  mobileStack?: 'stack' | 'reverse' | 'scroll';
+  tabletLayout?: 'stack' | '2-col' | 'maintain';
+  mobileOrder?: number;
+  hideOnMobile?: boolean;
 }
 
 export interface IRNode {
@@ -234,6 +241,13 @@ export function buildIRTree(
       if (typeof props.note === 'string' && props.note.trim() !== '') {
         textProps.note = props.note.trim();
       }
+      if (typeof props.columns === 'number') textProps.columns = props.columns;
+      if (typeof props.columnSplit === 'string' && props.columnSplit !== '') textProps.columnSplit = props.columnSplit;
+      if (typeof props.isResponsive === 'boolean') textProps.isResponsive = props.isResponsive;
+      if (props.mobileStack) textProps.mobileStack = props.mobileStack as any;
+      if (props.tabletLayout) textProps.tabletLayout = props.tabletLayout as any;
+      if (typeof props.mobileOrder === 'number') textProps.mobileOrder = props.mobileOrder;
+      if (typeof props.hideOnMobile === 'boolean') textProps.hideOnMobile = props.hideOnMobile;
 
       const role = resolveWidgetRole(widgetType);
       const shortId = generateShortId(s.id, usedShortIds);

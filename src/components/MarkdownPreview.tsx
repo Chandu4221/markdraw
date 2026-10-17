@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Sparkles,
   ArrowRight,
   ArrowDown,
   Layers,
-  Tag
+  Tag,
+  Monitor,
+  Smartphone
 } from 'lucide-react';
 
 interface MarkdownPreviewProps {
@@ -26,6 +28,7 @@ type ParsedBlock =
   | { type: 'hr' };
 
 export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
+  const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop');
   const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
   if (!content || content.trim() === '' || content.startsWith('_Canvas is empty')) {
@@ -42,6 +45,45 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
 
   return (
     <div className="space-y-4 font-sans text-xs text-[var(--md-text)] pb-6 select-text">
+      {/* Viewport Simulation Bar */}
+      <div className="flex items-center justify-between px-3 py-1.5 rounded-lg border border-[var(--md-border)] bg-[var(--md-surface-raised)] select-none">
+        <div className="flex items-center gap-1.5 text-xs text-[var(--md-text-muted)] font-medium">
+          <span>Viewport Simulation:</span>
+          {viewportMode === 'mobile' && (
+            <span className="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-semibold">
+              (mobile stack active)
+            </span>
+          )}
+        </div>
+        <div role="group" aria-label="Viewport Mode" className="flex items-center gap-0.5 p-0.5 bg-[var(--md-surface)] border border-[var(--md-border)] rounded-[var(--md-radius-sm)]">
+          <button
+            type="button"
+            aria-pressed={viewportMode === 'desktop'}
+            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+              viewportMode === 'desktop'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+            }`}
+            onClick={() => setViewportMode('desktop')}
+          >
+            <Monitor size={12} />
+            <span>Desktop</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={viewportMode === 'mobile'}
+            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+              viewportMode === 'mobile'
+                ? 'bg-purple-600 text-white shadow-xs'
+                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+            }`}
+            onClick={() => setViewportMode('mobile')}
+          >
+            <Smartphone size={12} />
+            <span>Mobile</span>
+          </button>
+        </div>
+      </div>
       {blocks.map((block, idx) => {
         switch (block.type) {
           case 'quote':
@@ -100,7 +142,12 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
               </div>
             );
 
-          case 'table':
+          case 'table': {
+            const processedRows = processTableRowsForViewport(
+              block.table.rows,
+              block.table.headers,
+              viewportMode
+            );
             return (
               <div
                 key={idx}
@@ -120,10 +167,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--md-border)] font-mono text-[11px]">
-                    {block.table.rows.map((row, rIdx) => (
+                    {processedRows.map(({ row, isHiddenOnMobile }, rIdx) => (
                       <tr
                         key={rIdx}
-                        className="hover:bg-[var(--md-surface-raised)]/50 transition-colors"
+                        className={`hover:bg-[var(--md-surface-raised)]/50 transition-colors ${
+                          viewportMode === 'mobile' && isHiddenOnMobile
+                            ? 'opacity-40 bg-amber-500/5'
+                            : ''
+                        }`}
                       >
                         {row.map((cell, cIdx) => (
                           <td
@@ -131,6 +182,11 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
                             className="px-3 py-2 whitespace-nowrap align-middle"
                           >
                             {renderFormattedCell(cell, block.table.headers[cIdx])}
+                            {viewportMode === 'mobile' && isHiddenOnMobile && cIdx === 0 && (
+                              <span className="ml-1.5 px-1 py-0.5 rounded text-[9px] font-sans font-medium bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                                hidden on mobile
+                              </span>
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -139,6 +195,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
                 </table>
               </div>
             );
+          }
 
           case 'hr':
             return <hr key={idx} className="border-[var(--md-border)] my-3" />;
@@ -258,13 +315,25 @@ function renderFormattedCell(cell: string, header: string = ''): React.ReactNode
         {tokens.map((tok, tIdx) => {
           const isBehavior =
             tok === 'sticky' || tok === 'fixed' || tok === 'overlay' || tok === 'fullscreen';
+          const isResponsive = tok.startsWith('responsive:') || tok.startsWith('tablet:');
+          const isMobileOrder = tok.startsWith('sm:order-');
+          const isHidden = tok === 'sm:hidden';
+          const isCols = tok.startsWith('cols:');
           const isWidth =
-            tok.includes('w-') || tok.includes('full-width') || tok.includes('width:');
+            tok.includes('w-') || tok.includes('full-width') || tok.includes('width:') || tok.includes('(sm:full)');
           const isAlign = tok.includes('align') || tok.includes('dist:');
 
           let badgeColor = 'bg-[var(--md-surface-raised)] border-[var(--md-border)] text-[var(--md-text-muted)]';
           if (isBehavior) {
             badgeColor = 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold';
+          } else if (isResponsive) {
+            badgeColor = 'bg-purple-500/15 border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold';
+          } else if (isMobileOrder) {
+            badgeColor = 'bg-blue-500/15 border-blue-500/30 text-blue-700 dark:text-blue-300 font-semibold';
+          } else if (isHidden) {
+            badgeColor = 'bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold';
+          } else if (isCols) {
+            badgeColor = 'bg-sky-500/15 border-sky-500/30 text-sky-700 dark:text-sky-400 font-semibold';
           } else if (isWidth) {
             badgeColor = 'bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400';
           } else if (isAlign) {
@@ -286,6 +355,98 @@ function renderFormattedCell(cell: string, header: string = ''): React.ReactNode
 
   // Default fallback formatting
   return <span>{renderInlineFormatting(trimmed)}</span>;
+}
+
+interface ViewportRowItem {
+  row: string[];
+  isHiddenOnMobile: boolean;
+}
+
+/**
+ * Reorders rows based on mobile order and flags elements hidden on mobile.
+ */
+function processTableRowsForViewport(
+  rows: string[][],
+  headers: string[],
+  mode: 'desktop' | 'mobile'
+): ViewportRowItem[] {
+  const propsIdx = headers.findIndex(
+    (h) => h.toLowerCase().includes('props') || h.toLowerCase().includes('attributes')
+  );
+
+  const mapped: ViewportRowItem[] = rows.map((r) => {
+    const propsCell = propsIdx >= 0 ? r[propsIdx] || '' : '';
+    const isHiddenOnMobile = propsCell.includes('sm:hidden');
+    return { row: r, isHiddenOnMobile };
+  });
+
+  if (mode === 'desktop') {
+    return mapped;
+  }
+
+  const pathIdx = headers.findIndex((h) => h.toLowerCase().includes('path'));
+  if (pathIdx < 0) return mapped;
+
+  // Extract parent container responsive flags
+  const containerResponsiveMap = new Map<string, string>();
+  for (const item of mapped) {
+    const rawPath = item.row[pathIdx].replace(/^`|`$/g, '').trim();
+    const propsCell = propsIdx >= 0 ? item.row[propsIdx] || '' : '';
+    if (propsCell.includes('responsive:')) {
+      const match = propsCell.match(/responsive:(\w+)/);
+      if (match) {
+        containerResponsiveMap.set(rawPath, match[1]);
+      }
+    }
+  }
+
+  // Attach metadata for sorting
+  const itemsWithMeta = mapped.map((item, originalIndex) => {
+    const rawPath = item.row[pathIdx].replace(/^`|`$/g, '').trim();
+    const segs = rawPath.split(/\s*>\s*/);
+    const parentPath = segs.slice(0, -1).join(' > ');
+    const propsCell = propsIdx >= 0 ? item.row[propsIdx] || '' : '';
+
+    let order = 50;
+    const orderMatch = propsCell.match(/sm:order-(\d+)/);
+    if (orderMatch) {
+      order = parseInt(orderMatch[1], 10);
+    } else {
+      const parentBehavior = containerResponsiveMap.get(parentPath);
+      if (parentBehavior === 'reverse') {
+        order = 100 - originalIndex;
+      } else {
+        order = originalIndex;
+      }
+    }
+
+    return {
+      ...item,
+      parentPath,
+      order,
+      originalIndex
+    };
+  });
+
+  // Reorder siblings under same parent
+  const result: ViewportRowItem[] = [];
+  const processedParents = new Set<string>();
+
+  for (let i = 0; i < itemsWithMeta.length; i++) {
+    const current = itemsWithMeta[i];
+    if (processedParents.has(current.parentPath)) continue;
+
+    const siblings = itemsWithMeta.filter((it) => it.parentPath === current.parentPath);
+    processedParents.add(current.parentPath);
+
+    siblings.sort((a, b) => a.order - b.order || a.originalIndex - b.originalIndex);
+
+    for (const sib of siblings) {
+      result.push({ row: sib.row, isHiddenOnMobile: sib.isHiddenOnMobile });
+    }
+  }
+
+  return result.length === mapped.length ? result : mapped;
 }
 
 /**

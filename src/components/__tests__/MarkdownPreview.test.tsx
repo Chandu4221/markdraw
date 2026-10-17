@@ -61,4 +61,29 @@ describe('MarkdownPreview Component', () => {
     expect(html).toContain('sticky');
     expect(html).toContain('full-width');
   });
+
+  it('renders viewport simulation switcher and styles responsive tokens', () => {
+    const markdown = `
+### MarkDraw UI Specification
+| Path | Component | Semantics | Placement | Layout Flow | Props & Attributes | Children / Content |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| \`Root > #c1\` | **[section]** | <Section> | body | Row | cols:2 (70/30), responsive:reverse | — |
+| \`Root > #c1 > #f1\` | **[card]** | <Card> | nested | — | 2/3 (sm:full) sm:order-2 | — |
+| \`Root > #c1 > #s1\` | **[card]** | <Card> | nested | — | 1/3 (sm:full) sm:order-1 sm:hidden | — |
+`;
+
+    const html = renderToStaticMarkup(<MarkdownPreview content={markdown} />);
+
+    // Viewport Simulation Bar
+    expect(html).toContain('Viewport Simulation:');
+    expect(html).toContain('Desktop');
+    expect(html).toContain('Mobile');
+
+    // Responsive token badges
+    expect(html).toContain('cols:2');
+    expect(html).toContain('responsive:reverse');
+    expect(html).toContain('sm:order-2');
+    expect(html).toContain('sm:order-1');
+    expect(html).toContain('sm:hidden');
+  });
 });

@@ -1,6 +1,6 @@
 # MarkDraw v3.0.0 Benchmark Report: Lean Contract Fidelity vs. Baselines
 
-**Date:** 2026-10-17T06:31:45.468Z  
+**Date:** 2026-10-17T08:07:05.207Z  
 **Corpus Size:** 20 wireframes across 4 layout categories  
 **Decision Gate Status:** **PASSED (QUALIFIED FOR STAGE 4)**  
 **Net Win Delta:** **+79.5%** structural adherence over baseline (Gate requirement: $\ge +15.0\%$)

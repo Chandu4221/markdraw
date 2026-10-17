@@ -94,6 +94,14 @@ export interface UIWidgetProps {
   behaviors?: string[];
   note?: string;
   parentId?: string;
+  // Column Splitting & Responsive Layouts
+  columns?: number;
+  columnSplit?: string;
+  isResponsive?: boolean;
+  mobileStack?: 'stack' | 'reverse' | 'scroll';
+  tabletLayout?: 'stack' | '2-col' | 'maintain';
+  mobileOrder?: number;
+  hideOnMobile?: boolean;
 }
 
 export type IUIWidgetShape = TLBaseShape<'ui-widget', UIWidgetProps>;

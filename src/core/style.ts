@@ -11,6 +11,13 @@ export interface InferredStyle {
   rel?: 'overflow' | 'overlap' | 'inset';
   behaviors?: string[];
   note?: string;
+  columns?: number;
+  columnSplit?: string;
+  isResponsive?: boolean;
+  mobileStack?: 'stack' | 'reverse' | 'scroll';
+  tabletLayout?: 'stack' | '2-col' | 'maintain';
+  mobileOrder?: number;
+  hideOnMobile?: boolean;
 }
 
 /**
@@ -152,6 +159,27 @@ export function inferNodeStyle(
   const rawNote = node.textProps?.note;
   if (typeof rawNote === 'string' && rawNote.trim() !== '') {
     style.note = rawNote.trim();
+  }
+
+  // Responsive and column layout properties from props
+  if (typeof node.textProps?.columns === 'number' && node.textProps.columns > 1) {
+    style.columns = node.textProps.columns;
+    if (node.textProps.columnSplit) {
+      style.columnSplit = node.textProps.columnSplit;
+    }
+  }
+  if (node.textProps?.isResponsive) {
+    style.isResponsive = true;
+    style.mobileStack = node.textProps.mobileStack || 'stack';
+    if (node.textProps.tabletLayout) {
+      style.tabletLayout = node.textProps.tabletLayout;
+    }
+  }
+  if (typeof node.textProps?.mobileOrder === 'number') {
+    style.mobileOrder = node.textProps.mobileOrder;
+  }
+  if (node.textProps?.hideOnMobile) {
+    style.hideOnMobile = true;
   }
 
   // If node is a container with >= 2 children, compute dist on the node itself

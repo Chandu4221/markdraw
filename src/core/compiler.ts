@@ -181,7 +181,10 @@ export class MarkDrawCompiler {
     return results;
   }
 
-  public static formatProps(node: IRNode | LayoutNode): string {
+  public static formatProps(
+    node: IRNode | LayoutNode,
+    parent?: IRNode | LayoutNode | null
+  ): string {
     const p = (node as IRNode).textProps || (node as LayoutNode).widgetProps;
     const style = node.style;
     if (!p && !style) return '—';
@@ -297,11 +300,40 @@ export class MarkDrawCompiler {
       }
     }
 
+    // Columns & Responsive Layout (Containers)
+    const columns = p?.columns ?? style?.columns;
+    if (typeof columns === 'number' && columns > 1) {
+      const split = p?.columnSplit ?? style?.columnSplit;
+      propsPairs.push(`cols:${columns}${split && split !== 'equal' ? ` (${split})` : ''}`);
+    }
+
+    const isResponsive = p?.isResponsive ?? style?.isResponsive;
+    if (isResponsive) {
+      const mobileStack = p?.mobileStack ?? style?.mobileStack ?? 'stack';
+      propsPairs.push(`responsive:${mobileStack}`);
+      const tabletLayout = p?.tabletLayout ?? style?.tabletLayout;
+      if (tabletLayout && tabletLayout !== 'maintain') {
+        propsPairs.push(`tablet:${tabletLayout}`);
+      }
+    }
+
     const styleTokens: string[] = [];
 
     if (style) {
       if (style.widthToken) {
-        styleTokens.push(style.widthToken);
+        const parentProps = parent
+          ? (parent as IRNode).textProps || (parent as LayoutNode).widgetProps
+          : null;
+        const parentResponsive = parentProps?.isResponsive ?? parent?.style?.isResponsive;
+        if (
+          parentResponsive &&
+          style.widthToken !== 'full-width' &&
+          !style.widthToken.includes('sm:')
+        ) {
+          styleTokens.push(`${style.widthToken} (sm:full)`);
+        } else {
+          styleTokens.push(style.widthToken);
+        }
       }
       if (style.heightToken) {
         styleTokens.push(`height:${style.heightToken}`);
@@ -331,6 +363,17 @@ export class MarkDrawCompiler {
       if (typeof p.note === 'string' && p.note.trim() !== '') {
         styleTokens.push(`note:"${p.note.trim()}"`);
       }
+    }
+
+    // Child responsive overrides
+    const mobileOrder = typeof p?.mobileOrder === 'number' ? p.mobileOrder : style?.mobileOrder;
+    if (typeof mobileOrder === 'number') {
+      styleTokens.push(`sm:order-${mobileOrder}`);
+    }
+
+    const hideOnMobile = p?.hideOnMobile ?? style?.hideOnMobile;
+    if (hideOnMobile) {
+      styleTokens.push('sm:hidden');
     }
 
     const propsStr = propsPairs.join(', ');
@@ -425,7 +468,7 @@ export class MarkDrawCompiler {
             ? 'Column'
             : node.direction
           : '—';
-      const propsStr = this.formatProps(node);
+      const propsStr = this.formatProps(node, parent);
 
       rows.push(
         `| \`${node.path}\` | **${notation}** | ${semanticsBadge} | ${placement} | ${layoutFlow} | ${propsStr} | ${childBadges} |`

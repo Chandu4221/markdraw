@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Editor, TLShape } from '@tldraw/tldraw';
-import { ChevronDown, ChevronUp, Sliders, StickyNote, Activity } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sliders, StickyNote, Activity, Columns, Smartphone } from 'lucide-react';
 import { getAllowedBehaviors } from '../core/widgets/widgetCatalog';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -160,6 +160,15 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   const behaviorsStatus = getPropStatus('behaviors');
   const noteStatus = getPropStatus('note');
   const parentIdStatus = getPropStatus('parentId');
+
+  const isContainer = isSameType && ['section', 'split_pane', 'card', 'hero', 'page', 'grid_gallery'].includes(primaryWidgetType);
+  const columnsStatus = getPropStatus('columns');
+  const columnSplitStatus = getPropStatus('columnSplit');
+  const isResponsiveStatus = getPropStatus('isResponsive');
+  const mobileStackStatus = getPropStatus('mobileStack');
+  const tabletLayoutStatus = getPropStatus('tabletLayout');
+  const mobileOrderStatus = getPropStatus('mobileOrder');
+  const hideOnMobileStatus = getPropStatus('hideOnMobile');
 
   const candidateContainers = editor
     ? editor.getCurrentPageShapes().filter((s) => {
@@ -447,6 +456,186 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
               />
             </div>
           )}
+
+          {/* Part: Column Splitting & Responsive Layout (Containers) */}
+          {isContainer && (
+            <div className="pt-2 border-t border-[var(--md-border)] space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Columns size={12} className="text-blue-500" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                    Columns
+                  </span>
+                </div>
+                {columnsStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
+              </div>
+
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4].map((num) => {
+                  const currentVal = typeof columnsStatus.value === 'number' ? columnsStatus.value : 1;
+                  const isSelected = currentVal === num;
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      aria-pressed={isSelected}
+                      aria-label={`${num} ${num === 1 ? 'Column' : 'Columns'}`}
+                      className={`flex-1 py-1 text-xs font-medium rounded-[4px] border transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold shadow-xs'
+                          : 'border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text)]'
+                      }`}
+                      onClick={() => {
+                        updateProp('columns', num === 1 ? undefined : num);
+                        if (num === 1) {
+                          updateProp('columnSplit', undefined);
+                        } else if (!columnSplitStatus.value) {
+                          updateProp('columnSplit', 'equal');
+                        }
+                      }}
+                    >
+                      {num} {num === 1 ? 'Col' : 'Cols'}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {((columnsStatus.value as number) || 1) > 1 && (
+                <div className="space-y-1 pt-1">
+                  <label htmlFor="props-column-split" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                    <span>Split Ratio</span>
+                  </label>
+                  <select
+                    id="props-column-split"
+                    className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                    value={(columnSplitStatus.value as string) || 'equal'}
+                    onChange={(e) => updateProp('columnSplit', e.target.value)}
+                  >
+                    {(columnsStatus.value as number) === 2 && (
+                      <>
+                        <option value="equal">50 / 50 (Equal)</option>
+                        <option value="70/30">70 / 30 (Main + Sidebar)</option>
+                        <option value="30/70">30 / 70 (Sidebar + Main)</option>
+                      </>
+                    )}
+                    {(columnsStatus.value as number) === 3 && (
+                      <>
+                        <option value="equal">Equal (1/3 each)</option>
+                        <option value="25/50/25">25 / 50 / 25 (Holy Grail)</option>
+                      </>
+                    )}
+                    {(columnsStatus.value as number) === 4 && (
+                      <option value="equal">Equal (1/4 each)</option>
+                    )}
+                  </select>
+                </div>
+              )}
+
+              {/* Make it Responsive Switch */}
+              <div className="pt-1.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="props-is-responsive" className="text-xs text-[var(--md-text)] flex items-center gap-1.5 cursor-pointer font-medium">
+                    <Smartphone size={12} className="text-purple-500" />
+                    <span>Make it Responsive</span>
+                  </label>
+                  <Switch
+                    id="props-is-responsive"
+                    checked={(isResponsiveStatus.value as boolean) ?? false}
+                    onCheckedChange={(checked) => {
+                      updateProp('isResponsive', checked ? true : undefined);
+                      if (checked && !mobileStackStatus.value) {
+                        updateProp('mobileStack', 'stack');
+                      }
+                    }}
+                    aria-label="Make it Responsive"
+                  />
+                </div>
+
+                {Boolean(isResponsiveStatus.value) && (
+                  <div className="pl-2 border-l-2 border-purple-500/40 space-y-2 pt-1">
+                    <div className="space-y-1">
+                      <label htmlFor="props-mobile-stack" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                        <span>Mobile Stacking</span>
+                      </label>
+                      <select
+                        id="props-mobile-stack"
+                        className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                        value={(mobileStackStatus.value as string) || 'stack'}
+                        onChange={(e) => updateProp('mobileStack', e.target.value)}
+                      >
+                        <option value="stack">Normal (Top to Bottom / Left to Right)</option>
+                        <option value="reverse">Reverse (Right/Bottom First)</option>
+                        <option value="scroll">Horizontal Swipe Scroll</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label htmlFor="props-tablet-layout" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                        <span>Tablet Mode</span>
+                      </label>
+                      <select
+                        id="props-tablet-layout"
+                        className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                        value={(tabletLayoutStatus.value as string) || 'maintain'}
+                        onChange={(e) => updateProp('tabletLayout', e.target.value === 'maintain' ? undefined : e.target.value)}
+                      >
+                        <option value="maintain">Maintain layout</option>
+                        <option value="stack">Stack to 1-col</option>
+                        <option value="2-col">2-column grid</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Part: Child Responsive Overrides */}
+          <div className="pt-2 border-t border-[var(--md-border)] space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Smartphone size={12} className="text-purple-500" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                  Responsive Overrides
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="props-mobile-order" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Mobile Stacking Order</span>
+                {mobileOrderStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
+              </label>
+              <select
+                id="props-mobile-order"
+                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                value={mobileOrderStatus.value !== undefined ? String(mobileOrderStatus.value) : ''}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                  updateProp('mobileOrder', val);
+                }}
+              >
+                <option value="">Auto (DOM flow order)</option>
+                <option value="1">1st (Top on mobile)</option>
+                <option value="2">2nd</option>
+                <option value="3">3rd</option>
+                <option value="4">4th</option>
+                <option value="99">Last (Bottom on mobile)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between pt-0.5">
+              <label htmlFor="props-hide-on-mobile" className="text-xs text-[var(--md-text)] cursor-pointer">
+                Hide on mobile (sm:hidden)
+              </label>
+              <Switch
+                id="props-hide-on-mobile"
+                checked={(hideOnMobileStatus.value as boolean) ?? false}
+                onCheckedChange={(checked) => updateProp('hideOnMobile', checked ? true : undefined)}
+                aria-label="Hide on mobile"
+              />
+            </div>
+          </div>
 
           {/* Part B: Behavior Flags Multi-Checkbox Group */}
           {allowedBehaviors.length > 0 && (
