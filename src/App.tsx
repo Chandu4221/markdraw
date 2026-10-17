@@ -1139,76 +1139,76 @@ export const App: React.FC = () => {
               }}
             >
               <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-0">
-                {/* Output Toolbar (Responsive with flex-wrap) */}
+                {/* Output Toolbar (Line 1: Tabs, Line 2: Preview/Raw on Left + Copy Actions on Right on SAME line) */}
                 <div className="min-h-10 px-2.5 py-1.5 border-b border-[var(--md-border)] flex items-center justify-between flex-wrap shrink-0 select-none gap-2 bg-[var(--md-surface)]">
-                  {/* Left Controls: Tabs + View Mode Toggle */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* Tabs */}
-                    <div
-                      role="tablist"
-                      aria-label="Output View Modes"
-                      className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
+                  {/* Primary Tabs */}
+                  <div
+                    role="tablist"
+                    aria-label="Output View Modes"
+                    className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
+                  >
+                    <button
+                      role="tab"
+                      aria-selected={outputTab === 'spec'}
+                      aria-label="Spec Table view"
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'spec'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
+                      onClick={() => setOutputTab('spec')}
                     >
-                      <button
-                        role="tab"
-                        aria-selected={outputTab === 'spec'}
-                        aria-label="Spec Table view"
-                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                          outputTab === 'spec'
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                        }`}
-                        onClick={() => setOutputTab('spec')}
-                      >
-                        <FileText size={13} />
-                        <span>Spec <span className="hidden xl:inline">Table</span></span>
-                      </button>
-                      <button
-                        role="tab"
-                        aria-selected={outputTab === 'grid'}
-                        aria-label="Spatial Grid view"
-                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                          outputTab === 'grid'
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                        }`}
-                        onClick={() => setOutputTab('grid')}
-                      >
-                        <LayoutGrid size={13} />
-                        <span><span className="hidden xl:inline">Spatial </span>Grid</span>
-                      </button>
-                      <button
-                        role="tab"
-                        aria-selected={outputTab === 'ascii'}
-                        aria-label="ASCII layout view"
-                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                          outputTab === 'ascii'
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                        }`}
-                        onClick={() => setOutputTab('ascii')}
-                      >
-                        <Terminal size={13} />
-                        <span>ASCII</span>
-                      </button>
-                      <button
-                        role="tab"
-                        aria-selected={outputTab === 'json'}
-                        aria-label="JSON AST view"
-                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                          outputTab === 'json'
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                        }`}
-                        onClick={() => setOutputTab('json')}
-                      >
-                        <Code size={13} />
-                        <span>JSON<span className="hidden xl:inline"> AST</span></span>
-                      </button>
-                    </div>
+                      <FileText size={13} />
+                      <span>Spec <span className="hidden xl:inline">Table</span></span>
+                    </button>
+                    <button
+                      role="tab"
+                      aria-selected={outputTab === 'grid'}
+                      aria-label="Spatial Grid view"
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'grid'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
+                      onClick={() => setOutputTab('grid')}
+                    >
+                      <LayoutGrid size={13} />
+                      <span><span className="hidden xl:inline">Spatial </span>Grid</span>
+                    </button>
+                    <button
+                      role="tab"
+                      aria-selected={outputTab === 'ascii'}
+                      aria-label="ASCII layout view"
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'ascii'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
+                      onClick={() => setOutputTab('ascii')}
+                    >
+                      <Terminal size={13} />
+                      <span>ASCII</span>
+                    </button>
+                    <button
+                      role="tab"
+                      aria-selected={outputTab === 'json'}
+                      aria-label="JSON AST view"
+                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                        outputTab === 'json'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                      }`}
+                      onClick={() => setOutputTab('json')}
+                    >
+                      <Code size={13} />
+                      <span>JSON<span className="hidden xl:inline"> AST</span></span>
+                    </button>
+                  </div>
 
-                    {/* View Mode Toggle (Preview vs Raw) for markdown tabs */}
-                    {(outputTab === 'spec' || outputTab === 'grid') && (
+                  {/* Secondary Controls: Preview/Raw Toggle on Left + Actions on Right (Always on the same line) */}
+                  <div className="flex items-center justify-between gap-2 flex-1 min-w-[280px]">
+                    {/* View Mode Toggle (Preview vs Raw) */}
+                    {(outputTab === 'spec' || outputTab === 'grid') ? (
                       <div
                         role="group"
                         aria-label="Display View Mode"
@@ -1245,61 +1245,63 @@ export const App: React.FC = () => {
                           <span>Raw</span>
                         </button>
                       </div>
+                    ) : (
+                      <div />
                     )}
-                  </div>
 
-                  {/* Actions (always visible, flows gracefully to next line when narrow) */}
-                  <div className="flex items-center gap-1 shrink-0 ml-auto">
-                    <Button
-                      variant={copied ? 'success' : 'brand'}
-                      size="sm"
-                      onClick={handleCopy}
-                      className="h-7 gap-1.5 text-xs font-medium shrink-0"
-                      title="Copy lean contract (Directive + Spec Table)"
-                      aria-label="Copy to Clipboard"
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={12} />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={12} />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant={copiedFull ? 'success' : 'outline'}
-                      size="sm"
-                      onClick={handleCopyFullContract}
-                      className="h-7 gap-1.5 text-xs font-medium shrink-0"
-                      title="Copy full contract with auto-generated canvas legend"
-                      aria-label="Copy Full Contract"
-                    >
-                      {copiedFull ? (
-                        <>
-                          <Check size={12} />
-                          <span>Copied Full</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={12} />
-                          <span>Copy Full</span>
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={handleDownload}
-                      className="shrink-0"
-                      title="Download Source"
-                      aria-label="Download Source"
-                    >
-                      <Download size={14} />
-                    </Button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0 ml-auto">
+                      <Button
+                        variant={copied ? 'success' : 'brand'}
+                        size="sm"
+                        onClick={handleCopy}
+                        className="h-7 gap-1.5 text-xs font-medium shrink-0 px-2.5"
+                        title="Copy lean contract (Directive + Spec Table)"
+                        aria-label="Copy to Clipboard"
+                      >
+                        {copied ? (
+                          <>
+                            <Check size={12} />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant={copiedFull ? 'success' : 'outline'}
+                        size="sm"
+                        onClick={handleCopyFullContract}
+                        className="h-7 gap-1.5 text-xs font-medium shrink-0 px-2.5"
+                        title="Copy full contract with auto-generated canvas legend"
+                        aria-label="Copy Full Contract"
+                      >
+                        {copiedFull ? (
+                          <>
+                            <Check size={12} />
+                            <span>Copied Full</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} />
+                            <span>Copy Full</span>
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={handleDownload}
+                        className="shrink-0"
+                        title="Download Source"
+                        aria-label="Download Source"
+                      >
+                        <Download size={14} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
