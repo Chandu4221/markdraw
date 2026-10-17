@@ -370,6 +370,58 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             {/* Top-left uniform semantic chip */}
             <Chip label="card" maxWidth={w} />
 
+            {/* Mobile Order / Hidden badges */}
+            {props.mobileOrder !== undefined && w >= 80 && (
+              <g>
+                <rect
+                  x={w - 56}
+                  y={4}
+                  width={50}
+                  height={15}
+                  rx={3}
+                  fill="rgba(168, 85, 247, 0.15)"
+                  stroke="rgba(168, 85, 247, 0.4)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={w - 31}
+                  y={14.5}
+                  textAnchor="middle"
+                  fill="rgb(168, 85, 247)"
+                  fontSize={8.5}
+                  fontWeight={600}
+                  fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                >
+                  📱 #{props.mobileOrder}
+                </text>
+              </g>
+            )}
+            {props.hideOnMobile && w >= 80 && (
+              <g>
+                <rect
+                  x={w - 56}
+                  y={props.mobileOrder !== undefined ? 22 : 4}
+                  width={50}
+                  height={15}
+                  rx={3}
+                  fill="rgba(239, 68, 68, 0.15)"
+                  stroke="rgba(239, 68, 68, 0.4)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={w - 31}
+                  y={(props.mobileOrder !== undefined ? 22 : 4) + 10.5}
+                  textAnchor="middle"
+                  fill="rgb(239, 68, 68)"
+                  fontSize={8.5}
+                  fontWeight={600}
+                  fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                >
+                  📱 hidden
+                </text>
+              </g>
+            )}
+
             {/* Card title */}
             {cardTitle && h >= 40 && (
               <text
@@ -508,6 +560,33 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
             {/* Top-left uniform semantic chip */}
             <Chip label={type} maxWidth={w} />
 
+            {/* Container Responsive Badge */}
+            {props.isResponsive && w >= 120 && (
+              <g>
+                <rect
+                  x={w - 74}
+                  y={4}
+                  width={68}
+                  height={16}
+                  rx={3}
+                  fill="rgba(168, 85, 247, 0.15)"
+                  stroke="rgba(168, 85, 247, 0.4)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={w - 40}
+                  y={15}
+                  textAnchor="middle"
+                  fill="rgb(168, 85, 247)"
+                  fontSize={9}
+                  fontWeight={600}
+                  fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                >
+                  📱 sm:{props.mobileStack || 'stack'}
+                </text>
+              </g>
+            )}
+
             {title && h >= 40 && (
               <text
                 x={10}
@@ -517,7 +596,7 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
                 fontWeight={700}
                 fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
               >
-                {title.slice(0, Math.floor(w / 9))}
+                {title.slice(0, Math.floor((w - (props.isResponsive ? 80 : 20)) / 9))}
               </text>
             )}
 
@@ -530,24 +609,48 @@ export const WireframePreview: React.FC<WireframePreviewProps> = ({
               </g>
             )}
 
-            {/* Column Dividers & Split pane divider */}
+            {/* Column Dividers & Split pane divider & Column Indicators */}
             {(() => {
               const cols = props.columns || (type === 'split_pane' ? 2 : 1);
               const split = props.columnSplit || (type === 'split_pane' ? 'equal' : undefined);
               const dividers = getColumnDividers(w, cols, split);
-              return dividers.map((divX, idx) => (
-                <line
-                  key={idx}
-                  x1={divX}
-                  y1={0}
-                  x2={divX}
-                  y2={h}
-                  stroke="var(--md-border-strong)"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 3"
-                  opacity={0.7}
-                />
-              ));
+              const allPoints = [0, ...dividers, w];
+              return (
+                <g>
+                  {dividers.map((divX, idx) => (
+                    <line
+                      key={idx}
+                      x1={divX}
+                      y1={0}
+                      x2={divX}
+                      y2={h}
+                      stroke="var(--md-border-strong)"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 3"
+                      opacity={0.7}
+                    />
+                  ))}
+                  {cols > 1 && h >= 60 && allPoints.slice(0, -1).map((start, idx) => {
+                    const end = allPoints[idx + 1];
+                    const midX = (start + end) / 2;
+                    return (
+                      <text
+                        key={`col-lbl-${idx}`}
+                        x={midX}
+                        y={h >= 80 ? 46 : 28}
+                        textAnchor="middle"
+                        fill="var(--md-text-muted)"
+                        fontSize={9}
+                        fontWeight={500}
+                        opacity={0.6}
+                        fontFamily="var(--md-font-sans, 'Google Sans', sans-serif)"
+                      >
+                        Col {idx + 1}
+                      </text>
+                    );
+                  })}
+                </g>
+              );
             })()}
           </g>
         );

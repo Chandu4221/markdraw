@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Editor, TLShape } from '@tldraw/tldraw';
-import { ChevronDown, ChevronUp, Sliders, StickyNote, Activity, Columns, Smartphone } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sliders, StickyNote, Activity, Columns, Smartphone, LayoutGrid } from 'lucide-react';
 import { getAllowedBehaviors } from '../core/widgets/widgetCatalog';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 
 interface PropsPanelProps {
   editor: Editor | null;
+  onOpenMobilePreview?: () => void;
 }
 
 const COMMON_ICONS = [
@@ -42,7 +43,7 @@ const PAGE_RESOLUTIONS: Record<string, number> = {
   mobile: 375
 };
 
-export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
+export const PropsPanel: React.FC<PropsPanelProps> = ({ editor, onOpenMobilePreview }) => {
   const [selectedShapes, setSelectedShapes] = useState<TLShape[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -83,15 +84,17 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
     return { isMixed, value: isMixed ? undefined : firstVal };
   };
 
-  const updateProp = (key: string, val: any) => {
+  const updateProps = (patch: Record<string, any>) => {
     const updates = selectedShapes.map((shape) => {
+      // Get the freshest shape from editor to avoid stale closure state
+      const currentShape = editor.getShape(shape.id) || shape;
       const updatedProps: Record<string, any> = {
-        ...shape.props,
-        [key]: val
+        ...currentShape.props,
+        ...patch
       };
 
-      if (key === 'variant' && (shape.props as any)?.widgetType === 'page') {
-        const fixedWidth = PAGE_RESOLUTIONS[val];
+      if ('variant' in patch && (currentShape.props as any)?.widgetType === 'page') {
+        const fixedWidth = PAGE_RESOLUTIONS[patch.variant];
         if (fixedWidth) {
           updatedProps.w = fixedWidth;
         }
@@ -105,6 +108,88 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
     });
 
     editor.updateShapes(updates);
+  };
+
+  const updateProp = (key: string, val: any) => {
+    updateProps({ [key]: val });
+  };
+
+  const handleSplitIntoColumns = () => {
+    if (!editor || selectedShapes.length !== 1) return;
+    const parentShape = selectedShapes[0];
+    const p = (parentShape.props as any) || {};
+    const cols = typeof p.columns === 'number' && p.columns > 1 ? p.columns : 2;
+    const split = p.columnSplit || 'equal';
+    const isResp = Boolean(p.isResponsive);
+    const mobStack = p.mobileStack || 'stack';
+
+    const parentBounds = editor.getShapePageBounds(parentShape);
+    if (!parentBounds) return;
+
+    const pad = 14;
+    const gap = 12;
+    const innerW = parentBounds.w - pad * 2;
+    const innerH = Math.max(120, parentBounds.h - pad * 2 - (parentBounds.h > 60 ? 30 : 0));
+    const startX = parentBounds.x + pad;
+    const startY = parentBounds.y + (parentBounds.h > 60 ? 38 : pad);
+
+    // Calculate column widths
+    const colWidths: number[] = [];
+    if (cols === 2) {
+      if (split === '70/30') {
+        const w1 = Math.round((innerW - gap) * 0.7);
+        colWidths.push(w1, innerW - gap - w1);
+      } else if (split === '30/70') {
+        const w1 = Math.round((innerW - gap) * 0.3);
+        colWidths.push(w1, innerW - gap - w1);
+      } else {
+        const w1 = Math.round((innerW - gap) / 2);
+        colWidths.push(w1, w1);
+      }
+    } else if (cols === 3) {
+      if (split === '25/50/25') {
+        const w1 = Math.round((innerW - gap * 2) * 0.25);
+        const w2 = Math.round((innerW - gap * 2) * 0.5);
+        colWidths.push(w1, w2, innerW - gap * 2 - w1 - w2);
+      } else {
+        const w1 = Math.round((innerW - gap * 2) / 3);
+        colWidths.push(w1, w1, innerW - gap * 2 - w1 * 2);
+      }
+    } else if (cols === 4) {
+      const w1 = Math.round((innerW - gap * 3) / 4);
+      colWidths.push(w1, w1, w1, innerW - gap * 3 - w1 * 3);
+    }
+
+    // Create column card shapes inside parent
+    let curX = startX;
+    const newShapes: any[] = [];
+    const newShapeIds: any[] = [];
+
+    colWidths.forEach((w, idx) => {
+      const colNum = idx + 1;
+      const order = mobStack === 'reverse' ? cols - idx : colNum;
+      const shapeId = `shape:col-${Date.now()}-${colNum}` as any;
+      newShapeIds.push(shapeId);
+      newShapes.push({
+        id: shapeId,
+        type: 'ui-widget',
+        x: curX,
+        y: startY,
+        props: {
+          w,
+          h: innerH,
+          widgetType: 'card',
+          label: `Column ${colNum}`,
+          variant: 'outline',
+          parentId: parentShape.id,
+          mobileOrder: isResp ? order : undefined
+        }
+      });
+      curX += w + gap;
+    });
+
+    editor.createShapes(newShapes);
+    editor.setSelectedShapes(newShapeIds);
   };
 
   const getVariantOptions = () => {
@@ -208,7 +293,13 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   };
 
   return (
-    <div className="absolute top-3 right-3 w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none">
+    <div
+      className="absolute top-3 right-3 w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none"
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Header */}
       <div className="h-9 px-3 border-b border-[var(--md-border)] flex items-center justify-between bg-[var(--md-surface)]">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -486,11 +577,16 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
                           : 'border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text)]'
                       }`}
                       onClick={() => {
-                        updateProp('columns', num === 1 ? undefined : num);
                         if (num === 1) {
-                          updateProp('columnSplit', undefined);
-                        } else if (!columnSplitStatus.value) {
-                          updateProp('columnSplit', 'equal');
+                          updateProps({
+                            columns: undefined,
+                            columnSplit: undefined
+                          });
+                        } else {
+                          updateProps({
+                            columns: num,
+                            columnSplit: (columnSplitStatus.value as string) || 'equal'
+                          });
                         }
                       }}
                     >
@@ -501,34 +597,49 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
               </div>
 
               {((columnsStatus.value as number) || 1) > 1 && (
-                <div className="space-y-1 pt-1">
-                  <label htmlFor="props-column-split" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
-                    <span>Split Ratio</span>
-                  </label>
-                  <select
-                    id="props-column-split"
-                    className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
-                    value={(columnSplitStatus.value as string) || 'equal'}
-                    onChange={(e) => updateProp('columnSplit', e.target.value)}
-                  >
-                    {(columnsStatus.value as number) === 2 && (
-                      <>
-                        <option value="equal">50 / 50 (Equal)</option>
-                        <option value="70/30">70 / 30 (Main + Sidebar)</option>
-                        <option value="30/70">30 / 70 (Sidebar + Main)</option>
-                      </>
-                    )}
-                    {(columnsStatus.value as number) === 3 && (
-                      <>
-                        <option value="equal">Equal (1/3 each)</option>
-                        <option value="25/50/25">25 / 50 / 25 (Holy Grail)</option>
-                      </>
-                    )}
-                    {(columnsStatus.value as number) === 4 && (
-                      <option value="equal">Equal (1/4 each)</option>
-                    )}
-                  </select>
-                </div>
+                <>
+                  <div className="space-y-1 pt-1">
+                    <label htmlFor="props-column-split" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                      <span>Split Ratio</span>
+                    </label>
+                    <select
+                      id="props-column-split"
+                      className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                      value={(columnSplitStatus.value as string) || 'equal'}
+                      onChange={(e) => updateProp('columnSplit', e.target.value)}
+                    >
+                      {(columnsStatus.value as number) === 2 && (
+                        <>
+                          <option value="equal">50 / 50 (Equal)</option>
+                          <option value="70/30">70 / 30 (Main + Sidebar)</option>
+                          <option value="30/70">30 / 70 (Sidebar + Main)</option>
+                        </>
+                      )}
+                      {(columnsStatus.value as number) === 3 && (
+                        <>
+                          <option value="equal">Equal (1/3 each)</option>
+                          <option value="25/50/25">25 / 50 / 25 (Holy Grail)</option>
+                        </>
+                      )}
+                      {(columnsStatus.value as number) === 4 && (
+                        <option value="equal">Equal (1/4 each)</option>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Split into individual column cards button */}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSplitIntoColumns}
+                      className="w-full flex items-center justify-center gap-1.5 py-1 px-2 text-xs font-semibold rounded-[4px] border border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors cursor-pointer shadow-xs"
+                      title="Create individual column card shapes on canvas"
+                    >
+                      <LayoutGrid size={12} />
+                      <span>Split into {(columnsStatus.value as number)} Column Cards</span>
+                    </button>
+                  </div>
+                </>
               )}
 
               {/* Make it Responsive Switch */}
@@ -542,10 +653,10 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
                     id="props-is-responsive"
                     checked={(isResponsiveStatus.value as boolean) ?? false}
                     onCheckedChange={(checked) => {
-                      updateProp('isResponsive', checked ? true : undefined);
-                      if (checked && !mobileStackStatus.value) {
-                        updateProp('mobileStack', 'stack');
-                      }
+                      updateProps({
+                        isResponsive: checked ? true : undefined,
+                        mobileStack: checked ? ((mobileStackStatus.value as string) || 'stack') : undefined
+                      });
                     }}
                     aria-label="Make it Responsive"
                   />
@@ -584,58 +695,73 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
                         <option value="2-col">2-column grid</option>
                       </select>
                     </div>
+
+                    {onOpenMobilePreview && (
+                      <div className="pt-0.5">
+                        <button
+                          type="button"
+                          onClick={onOpenMobilePreview}
+                          className="w-full flex items-center justify-center gap-1.5 py-1 px-2 text-xs font-semibold rounded-[4px] border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer shadow-xs"
+                        >
+                          <Smartphone size={12} />
+                          <span>Live Mobile Preview</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Part: Child Responsive Overrides */}
-          <div className="pt-2 border-t border-[var(--md-border)] space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Smartphone size={12} className="text-purple-500" />
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
-                  Responsive Overrides
-                </span>
+          {/* Part: Child Responsive Overrides (only for non-container widgets or child columns) */}
+          {!isContainer && (
+            <div className="pt-2 border-t border-[var(--md-border)] space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Smartphone size={12} className="text-purple-500" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                    Responsive Overrides
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="props-mobile-order" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                  <span>Mobile Stacking Order</span>
+                  {mobileOrderStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
+                </label>
+                <select
+                  id="props-mobile-order"
+                  className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                  value={mobileOrderStatus.value !== undefined ? String(mobileOrderStatus.value) : ''}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                    updateProp('mobileOrder', val);
+                  }}
+                >
+                  <option value="">Auto (DOM flow order)</option>
+                  <option value="1">1st (Top on mobile)</option>
+                  <option value="2">2nd</option>
+                  <option value="3">3rd</option>
+                  <option value="4">4th</option>
+                  <option value="99">Last (Bottom on mobile)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-between pt-0.5">
+                <label htmlFor="props-hide-on-mobile" className="text-xs text-[var(--md-text)] cursor-pointer">
+                  Hide on mobile (sm:hidden)
+                </label>
+                <Switch
+                  id="props-hide-on-mobile"
+                  checked={(hideOnMobileStatus.value as boolean) ?? false}
+                  onCheckedChange={(checked) => updateProp('hideOnMobile', checked ? true : undefined)}
+                  aria-label="Hide on mobile"
+                />
               </div>
             </div>
-
-            <div className="space-y-1">
-              <label htmlFor="props-mobile-order" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
-                <span>Mobile Stacking Order</span>
-                {mobileOrderStatus.isMixed && <span className="text-[10px] text-[var(--md-text-subtle)]">(mixed)</span>}
-              </label>
-              <select
-                id="props-mobile-order"
-                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
-                value={mobileOrderStatus.value !== undefined ? String(mobileOrderStatus.value) : ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
-                  updateProp('mobileOrder', val);
-                }}
-              >
-                <option value="">Auto (DOM flow order)</option>
-                <option value="1">1st (Top on mobile)</option>
-                <option value="2">2nd</option>
-                <option value="3">3rd</option>
-                <option value="4">4th</option>
-                <option value="99">Last (Bottom on mobile)</option>
-              </select>
-            </div>
-
-            <div className="flex items-center justify-between pt-0.5">
-              <label htmlFor="props-hide-on-mobile" className="text-xs text-[var(--md-text)] cursor-pointer">
-                Hide on mobile (sm:hidden)
-              </label>
-              <Switch
-                id="props-hide-on-mobile"
-                checked={(hideOnMobileStatus.value as boolean) ?? false}
-                onCheckedChange={(checked) => updateProp('hideOnMobile', checked ? true : undefined)}
-                aria-label="Hide on mobile"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Part B: Behavior Flags Multi-Checkbox Group */}
           {allowedBehaviors.length > 0 && (

@@ -56,7 +56,9 @@ import {
   PanelRightOpen,
   Tag,
   Keyboard,
-  Eye
+  Eye,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownPreview } from './components/MarkdownPreview';
@@ -171,6 +173,174 @@ export const App: React.FC = () => {
       return next;
     });
   };
+
+  // Canvas Viewport Mode (Desktop vs Mobile Simulation)
+  const [canvasViewport, setCanvasViewport] = useState<'desktop' | 'mobile'>('desktop');
+  const desktopLayoutCacheRef = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
+
+  const handleSetCanvasViewport = useCallback((mode: 'desktop' | 'mobile') => {
+    if (!editor) return;
+    if (mode === canvasViewport) return;
+
+    if (mode === 'mobile') {
+      const shapes = editor.getCurrentPageShapes().filter((s) => s.type === 'ui-widget');
+      const cache = new Map<string, { x: number; y: number; w: number; h: number }>();
+      const updates: any[] = [];
+
+      // 1. Check for page shapes and resize to mobile (375px)
+      const pageShapes = shapes.filter((s) => (s.props as any)?.widgetType === 'page');
+      pageShapes.forEach((page) => {
+        cache.set(page.id, {
+          x: page.x,
+          y: page.y,
+          w: (page.props as any).w,
+          h: (page.props as any).h
+        });
+        updates.push({
+          id: page.id,
+          type: page.type,
+          props: {
+            ...page.props,
+            w: 375
+          }
+        });
+      });
+
+      // 2. Check for responsive containers
+      const responsiveContainers = shapes.filter((s) => {
+        const p = s.props as any;
+        return Boolean(p?.isResponsive);
+      });
+
+      responsiveContainers.forEach((container) => {
+        const cProps = (container.props as any) || {};
+        const cBounds = editor.getShapePageBounds(container);
+        if (!cBounds) return;
+
+        // Find child shapes bound to this container
+        const children = shapes.filter((s) => {
+          if (s.id === container.id) return false;
+          const p = s.props as any;
+          if (p?.parentId === container.id) return true;
+          const b = editor.getShapePageBounds(s);
+          return (
+            b &&
+            b.x >= cBounds.x &&
+            b.y >= cBounds.y &&
+            b.x + b.w <= cBounds.x + cBounds.w + 10 &&
+            b.y + b.h <= cBounds.y + cBounds.h + 10
+          );
+        });
+
+        if (children.length > 0) {
+          // Sort children by mobileOrder
+          const isReverse = cProps.mobileStack === 'reverse';
+          const sorted = [...children].sort((a, b) => {
+            const ordA = (a.props as any)?.mobileOrder ?? 999;
+            const ordB = (b.props as any)?.mobileOrder ?? 999;
+            if (ordA !== ordB) return ordA - ordB;
+            return a.x - b.x;
+          });
+
+          if (isReverse && !sorted.some((s) => (s.props as any)?.mobileOrder !== undefined)) {
+            sorted.reverse();
+          }
+
+          let curY = container.y + ((container.props as any).h > 60 ? 38 : 14);
+          const stackWidth = Math.max(100, Math.min(345, (container.props as any).w - 28));
+
+          sorted.forEach((child) => {
+            const chProps = (child.props as any) || {};
+            if (!cache.has(child.id)) {
+              cache.set(child.id, {
+                x: child.x,
+                y: child.y,
+                w: chProps.w,
+                h: chProps.h
+              });
+            }
+
+            updates.push({
+              id: child.id,
+              type: child.type,
+              x: container.x + 14,
+              y: curY,
+              props: {
+                ...chProps,
+                w: stackWidth
+              }
+            });
+
+            curY += (chProps.h || 120) + 12;
+          });
+
+          const neededHeight = curY - container.y + 16;
+          if (neededHeight > (container.props as any).h) {
+            if (!cache.has(container.id)) {
+              cache.set(container.id, {
+                x: container.x,
+                y: container.y,
+                w: (container.props as any).w,
+                h: (container.props as any).h
+              });
+            }
+            updates.push({
+              id: container.id,
+              type: container.type,
+              props: {
+                ...container.props,
+                h: neededHeight
+              }
+            });
+          }
+        }
+      });
+
+      desktopLayoutCacheRef.current = cache;
+      if (updates.length > 0) {
+        editor.updateShapes(updates);
+      }
+      setCanvasViewport('mobile');
+      setToastMessage('📱 Mobile viewport simulation active (stacked)');
+      setTimeout(() => setToastMessage(null), 2500);
+    } else {
+      // Restore desktop layout
+      const cache = desktopLayoutCacheRef.current;
+      const updates: any[] = [];
+      cache.forEach((bounds, shapeId) => {
+        const shape = editor.getShape(shapeId as any);
+        if (shape) {
+          updates.push({
+            id: shapeId,
+            type: shape.type,
+            x: bounds.x,
+            y: bounds.y,
+            props: {
+              ...shape.props,
+              w: bounds.w,
+              h: bounds.h
+            }
+          });
+        }
+      });
+
+      desktopLayoutCacheRef.current.clear();
+      if (updates.length > 0) {
+        editor.updateShapes(updates);
+      }
+      setCanvasViewport('desktop');
+      setToastMessage('🖥️ Desktop layout restored');
+      setTimeout(() => setToastMessage(null), 2500);
+    }
+  }, [editor, canvasViewport]);
+
+  const handleOpenMobilePreview = useCallback(() => {
+    setIsRightPanelOpen(true);
+    setOutputTab('spec');
+    setOutputDisplayMode('preview');
+    setToastMessage('📱 Switched to Live Mobile Preview');
+    setTimeout(() => setToastMessage(null), 2500);
+  }, []);
 
   // Theme Management (monochrome dark/light)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -938,13 +1108,17 @@ export const App: React.FC = () => {
               />
 
               {/* Properties Panel */}
-              <PropsPanel editor={editor} />
+              <PropsPanel editor={editor} onOpenMobilePreview={handleOpenMobilePreview} />
 
               {/* Floating Canvas Controls Bar */}
               <div
                 role="toolbar"
                 aria-label="Canvas Actions"
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] select-none"
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               >
                 <button
                   className={`p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer ${
@@ -1090,6 +1264,42 @@ export const App: React.FC = () => {
                     }`}
                   >
                     Realistic
+                  </button>
+                </div>
+
+                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
+
+                {/* Canvas Viewport Simulation Control */}
+                <div
+                  role="group"
+                  aria-label="Canvas Viewport Mode"
+                  className="flex items-center gap-0.5 p-0.5 rounded-[4px] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0 select-none"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSetCanvasViewport('desktop')}
+                    title="Desktop Viewport (1280px)"
+                    className={`flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                      canvasViewport === 'desktop'
+                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
+                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    }`}
+                  >
+                    <Monitor size={11} />
+                    <span>Desktop</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetCanvasViewport('mobile')}
+                    title="Mobile Viewport Simulation (375px)"
+                    className={`flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                      canvasViewport === 'mobile'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    }`}
+                  >
+                    <Smartphone size={11} />
+                    <span>Mobile</span>
                   </button>
                 </div>
               </div>
