@@ -151,10 +151,10 @@ describe('Custom UI Widgets System', () => {
     const btn = createWidgetShape('btn-1', 'button', 10, 10, 100, 40, { label: 'Click' });
     const result = MarkDrawCompiler.compile([btn], null, { includeLegend: true });
 
-    expect(result.markdownSpec).toContain('## MarkDraw Semantic Legend');
+    expect(result.markdownSpec).toContain('### MarkDraw Canvas Legend');
     expect(result.markdownSpec).toContain('[btn "Text" variant]');
-    expect(result.markdownSpec).toContain('Text shown as `───` lines on canvas');
-    expect(result.markdownGrid).toContain('## MarkDraw Semantic Legend');
+    expect(result.markdownSpec).toContain('[Text Placeholder]');
+    expect(result.markdownGrid).toContain('### MarkDraw Canvas Legend');
   });
 
   it('ensures byte-for-byte deterministic output when includeTimestamp is false', () => {

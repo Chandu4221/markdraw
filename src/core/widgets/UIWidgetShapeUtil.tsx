@@ -21,7 +21,8 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
     showText: T.optional(T.boolean),
     altText: T.optional(T.string),
     behaviors: T.optional(T.arrayOf(T.string)),
-    note: T.optional(T.string)
+    note: T.optional(T.string),
+    parentId: T.optional(T.string)
   };
 
   override getDefaultProps(): IUIWidgetShape['props'] {
@@ -40,7 +41,8 @@ export class UIWidgetShapeUtil extends BaseBoxShapeUtil<IUIWidgetShape> {
       showText: false,
       altText: '',
       behaviors: [],
-      note: ''
+      note: '',
+      parentId: undefined
     };
   }
 

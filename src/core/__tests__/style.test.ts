@@ -18,6 +18,7 @@ function mockNode(
 ): IRNode {
   return {
     id,
+    shortId: id.slice(-4) || 'stl1',
     bounds: { x, y, w, h },
     children,
     direction: 'Leaf',
@@ -168,13 +169,13 @@ describe('Part A — Geometric Style Inference (src/core/style.ts)', () => {
       expect(dist).toBe('dist:wrap');
     });
 
-    it('infers dist:space-between for evenly spaced 1D items', () => {
+    it('suppresses dist inference for single flow row items', () => {
       const c1 = mockNode('c1', 20, 50, 100, 40);
       const c2 = mockNode('c2', 200, 50, 100, 40);
       const c3 = mockNode('c3', 380, 50, 100, 40);
 
       const dist = inferDistribution([c1, c2, c3]);
-      expect(dist).toBe('dist:space-between');
+      expect(dist).toBeUndefined();
     });
   });
 

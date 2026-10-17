@@ -1,9 +1,11 @@
 import { TLShape, Editor } from '@tldraw/tldraw';
-import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
-import { AABB, CompilationOptions } from './types';
+import { computeAABB, getEnclosureRatio, sanitizeMarkdown } from './geometry';
+import { AABB, CompilationOptions, UIWidgetProps } from './types';
 import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
 import { InferredStyle, inferNodeStyle } from './style';
 import { AI_DIRECTIVE_HEADER } from './directive';
+import { generateShortId } from './ids';
+import { annotateSiblingPatterns } from './patterns';
 
 export interface IRBounds {
   h: number;
@@ -33,6 +35,8 @@ export interface IRNode {
   children: IRNode[];
   direction: 'Column' | 'Leaf' | 'Row';
   id: string;
+  shortId: string;
+  parentId?: string;
   label: string;
   parent: string | null;
   path: string;
@@ -40,12 +44,14 @@ export interface IRNode {
   style?: InferredStyle;
   textProps: IRTextProps;
   widgetType: string;
+  patternCount?: number;
 }
 
 export interface IRTree {
   elementCount: number;
   roots: IRNode[];
   skippedShapes?: number;
+  lints?: string[];
 }
 
 export function resolveWidgetRole(widgetType: string): string {
@@ -54,6 +60,7 @@ export function resolveWidgetRole(widgetType: string): string {
     case 'page':
     case 'section':
     case 'card':
+    case 'carousel':
     case 'hero':
     case 'header':
     case 'footer':
@@ -174,24 +181,26 @@ export function buildIRTree(
   // Only process ui-widget shapes; ignore everything else
   const widgetShapes = shapes.filter((s) => s.type === 'ui-widget');
   if (widgetShapes.length === 0) {
-    return { elementCount: 0, roots: [] };
+    return { elementCount: 0, roots: [], lints: [] };
   }
 
   const items: IntermediateItem[] = [];
+  const usedShortIds = new Set<string>();
+  const lints: string[] = [];
   let skippedShapes = 0;
 
   for (const s of widgetShapes) {
     try {
-      const props = (s.props || {}) as Record<string, any>;
-      const widgetType = (props.widgetType as string) || 'unknown';
+      const props = (s.props || {}) as Partial<UIWidgetProps>;
+      const widgetType = props.widgetType || 'unknown';
 
       let x = s.x;
       let y = s.y;
       let w = typeof props.w === 'number' ? props.w : 100;
       let h = typeof props.h === 'number' ? props.h : 100;
 
-      if (editor && typeof (editor as any).getShapePageBounds === 'function') {
-        const pageBounds = (editor as any).getShapePageBounds(s);
+      if (editor && typeof editor.getShapePageBounds === 'function') {
+        const pageBounds = editor.getShapePageBounds(s);
         if (pageBounds) {
           x = pageBounds.x;
           y = pageBounds.y;
@@ -227,12 +236,19 @@ export function buildIRTree(
       }
 
       const role = resolveWidgetRole(widgetType);
+      const shortId = generateShortId(s.id, usedShortIds);
+      const explicitParentId =
+        typeof props.parentId === 'string' && props.parentId.trim() !== ''
+          ? props.parentId.trim()
+          : undefined;
 
       const node: IRNode = {
         bounds,
         children: [],
         direction: 'Leaf',
         id: s.id,
+        shortId,
+        parentId: explicitParentId,
         label: label || `${widgetType}_${s.id.slice(-4)}`,
         parent: null,
         path: 'Root',
@@ -252,26 +268,70 @@ export function buildIRTree(
     }
   }
 
-  // Sort descending by area to establish containment hierarchy
+  // Sort descending by area to establish default containment hierarchy
   items.sort((a, b) => b.area - a.area);
+
+  const shapeMap = new Map<string, IntermediateItem>();
+  for (const item of items) {
+    shapeMap.set(item.node.id, item);
+  }
 
   const roots: IRNode[] = [];
 
   for (const item of items) {
     let immediateParent: IRNode | null = null;
-    let minParentArea = Infinity;
 
-    for (const candidate of items) {
-      if (candidate.node.id === item.node.id) continue;
+    // 1. Explicit parent binding check first
+    if (item.node.parentId) {
+      const candidate = shapeMap.get(item.node.parentId);
+      if (candidate && candidate.node.id !== item.node.id) {
+        // Prevent simple cycles: verify candidate's ancestor chain does not include item
+        let curr: IntermediateItem | undefined = candidate;
+        let hasCycle = false;
+        const visited = new Set<string>([item.node.id]);
 
-      if (
-        candidate.area > item.area &&
-        isEnclosed(item.aabb, candidate.aabb, containmentThreshold)
-      ) {
-        if (candidate.area < minParentArea) {
-          minParentArea = candidate.area;
+        while (curr && curr.node.parentId) {
+          if (visited.has(curr.node.parentId)) {
+            hasCycle = true;
+            break;
+          }
+          visited.add(curr.node.parentId);
+          curr = shapeMap.get(curr.node.parentId);
+        }
+
+        if (!hasCycle) {
           immediateParent = candidate.node;
         }
+      }
+    }
+
+    // 2. Geometric enclosure fallback if explicit parent was not resolved
+    if (!immediateParent) {
+      let minParentArea = Infinity;
+      let chosenRatio = 1.0;
+
+      for (const candidate of items) {
+        if (candidate.node.id === item.node.id) continue;
+
+        if (candidate.area > item.area) {
+          const ratio = getEnclosureRatio(item.aabb, candidate.aabb);
+          if (ratio >= containmentThreshold) {
+            if (candidate.area < minParentArea) {
+              minParentArea = candidate.area;
+              immediateParent = candidate.node;
+              chosenRatio = ratio;
+            }
+          }
+        }
+      }
+
+      // Check loose containment lint (< 0.92)
+      if (immediateParent && chosenRatio < 0.92) {
+        lints.push(
+          `"${item.node.label}" (#${item.node.shortId}) is loosely contained (${Math.round(
+            chosenRatio * 100
+          )}%) — drag fully inside or set parent explicitly.`
+        );
       }
     }
 
@@ -290,15 +350,25 @@ export function buildIRTree(
     }
   }
 
-  // Process layout flow direction and paths top-down
-  const processSubtree = (node: IRNode, currentPath: string) => {
+  // Process layout flow direction, annotate sibling patterns, and build deterministic `#id` paths
+  const processSubtree = (node: IRNode, currentPath: string, depth: number) => {
     node.path = currentPath;
+
+    // Depth lint: non-page widget deeper than 3 levels
+    if (node.widgetType !== 'page' && depth > 3) {
+      lints.push(
+        `Deep hierarchy: "${node.label}" (#${node.shortId}) is ${depth} levels deep (consider flattening).`
+      );
+    }
+
     if (node.children.length > 0) {
       node.direction = inferDirection(node.children);
       sortChildren(node.children, node.direction);
-      const nextPath = `${currentPath} > ${node.label}`;
+      annotateSiblingPatterns(node.children);
+
       for (const child of node.children) {
-        processSubtree(child, nextPath);
+        const nextPath = `${currentPath} > #${child.shortId}`;
+        processSubtree(child, nextPath, depth + 1);
       }
     } else {
       node.direction = 'Leaf';
@@ -306,10 +376,19 @@ export function buildIRTree(
   };
 
   for (const root of roots) {
-    processSubtree(root, 'Root');
+    const rootPath = `Root > #${root.shortId}`;
+    processSubtree(root, rootPath, 0);
+
+    // Cards directly under page lint
+    if (root.widgetType === 'page') {
+      const cardChildren = root.children.filter((c) => c.widgetType === 'card');
+      if (cardChildren.length >= 2) {
+        lints.push(`${cardChildren.length} cards directly under page — consider grouping in a section.`);
+      }
+    }
   }
 
-  // Attach computed styles (Part A) to every node
+  // Attach computed styles to every node
   const attachStyles = (curr: IRNode, parent: IRNode | null, siblings: IRNode[]) => {
     curr.style = inferNodeStyle(curr, parent, siblings, options);
     for (const child of curr.children) {
@@ -324,7 +403,8 @@ export function buildIRTree(
   return {
     elementCount: items.length,
     roots,
-    skippedShapes
+    skippedShapes,
+    lints
   };
 }
 
@@ -336,10 +416,10 @@ export function sortKeysAlphabetically<T>(val: T): T {
     return val.map(sortKeysAlphabetically) as unknown as T;
   }
   if (val !== null && typeof val === 'object') {
-    const sortedObj: Record<string, any> = {};
+    const sortedObj: Record<string, unknown> = {};
     const keys = Object.keys(val).sort();
     for (const k of keys) {
-      sortedObj[k] = sortKeysAlphabetically((val as any)[k]);
+      sortedObj[k] = sortKeysAlphabetically((val as Record<string, unknown>)[k]);
     }
     return sortedObj as T;
   }
@@ -348,7 +428,7 @@ export function sortKeysAlphabetically<T>(val: T): T {
 
 export function pruneDefaultProps(node: IRNode): IRNode {
   const defaults = getCatalogDefaultProps(node.widgetType);
-  const cleanProps: Record<string, any> = {};
+  const cleanProps: Partial<IRTextProps> = {};
 
   if (node.textProps) {
     for (const [k, v] of Object.entries(node.textProps)) {
@@ -359,18 +439,18 @@ export function pruneDefaultProps(node: IRNode): IRNode {
       if (k === 'label' && isUntouchedLabel(node.widgetType, v as string)) continue;
       if (Array.isArray(v) && v.length === 0) continue;
       if (defaults[k] !== undefined && defaults[k] === v) continue;
-      cleanProps[k] = v;
+      (cleanProps as Record<string, unknown>)[k] = v;
     }
   }
 
-  const result: any = {
+  const result: IRNode = {
     ...node,
-    textProps: cleanProps as any,
+    textProps: cleanProps,
     children: node.children.map(pruneDefaultProps)
   };
 
   if (node.style) {
-    const cleanStyle: Record<string, any> = {};
+    const cleanStyle: InferredStyle = {};
     if (typeof node.style.widthPct === 'number') cleanStyle.widthPct = node.style.widthPct;
     if (node.style.align) cleanStyle.align = node.style.align;
     if (node.style.alignY) cleanStyle.alignY = node.style.alignY;
@@ -390,7 +470,7 @@ export function pruneDefaultProps(node: IRNode): IRNode {
     }
   }
 
-  return result as IRNode;
+  return result;
 }
 
 export function serializeIRToJsonAst(ir: IRTree | IRNode[]): string {

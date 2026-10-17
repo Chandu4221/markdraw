@@ -93,6 +93,7 @@ export interface UIWidgetProps {
   altText?: string;
   behaviors?: string[];
   note?: string;
+  parentId?: string;
 }
 
 export type IUIWidgetShape = TLBaseShape<'ui-widget', UIWidgetProps>;

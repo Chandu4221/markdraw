@@ -29,6 +29,7 @@ export class AsciiSerializer {
     const ln = node as LayoutNode;
     return {
       id: ln.id,
+      shortId: ln.id.slice(-4),
       widgetType: ln.widgetType || (ln.role === 'container' ? 'section' : ln.role === 'button' ? 'button' : 'heading'),
       role: ln.role,
       label: ln.label,

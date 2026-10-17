@@ -15,11 +15,15 @@ export function calculateIntersectionArea(a: AABB, b: AABB): number {
   return xOverlap * yOverlap;
 }
 
-export function isEnclosed(child: AABB, parent: AABB, threshold: number = 0.85): boolean {
+export function getEnclosureRatio(child: AABB, parent: AABB): number {
   const childArea = (child.x2 - child.x1) * (child.y2 - child.y1);
-  if (childArea <= 0) return false;
+  if (childArea <= 0) return 0;
   const intersection = calculateIntersectionArea(child, parent);
-  return (intersection / childArea) >= threshold;
+  return intersection / childArea;
+}
+
+export function isEnclosed(child: AABB, parent: AABB, threshold: number = 0.85): boolean {
+  return getEnclosureRatio(child, parent) >= threshold;
 }
 
 export function sanitizeMarkdown(text: string): string {

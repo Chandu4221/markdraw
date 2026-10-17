@@ -159,6 +159,32 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
   const altTextStatus = getPropStatus('altText');
   const behaviorsStatus = getPropStatus('behaviors');
   const noteStatus = getPropStatus('note');
+  const parentIdStatus = getPropStatus('parentId');
+
+  const candidateContainers = editor
+    ? editor.getCurrentPageShapes().filter((s) => {
+        if (s.type !== 'ui-widget') return false;
+        if (selectedShapes.some((sel) => sel.id === s.id)) return false;
+        const wType = (s.props as Record<string, unknown>)?.widgetType as string;
+        return [
+          'page',
+          'section',
+          'card',
+          'hero',
+          'header',
+          'footer',
+          'split_pane',
+          'modal',
+          'grid_gallery',
+          'data_table',
+          'table',
+          'carousel',
+          'tabs',
+          'sidebar',
+          'menubar'
+        ].includes(wType);
+      })
+    : [];
 
   const activeBehaviors: string[] = Array.isArray(behaviorsStatus.value) ? behaviorsStatus.value : [];
 
@@ -214,6 +240,37 @@ export const PropsPanel: React.FC<PropsPanelProps> = ({ editor }) => {
                 onChange={(e) => updateProp('label', e.target.value)}
                 placeholder={labelStatus.isMixed ? '— mixed —' : 'Label...'}
               />
+            </div>
+          )}
+
+          {/* Parent Container (Explicit Binding) */}
+          {count === 1 && (
+            <div className="space-y-1">
+              <label htmlFor="props-parent" className="text-[11px] font-medium text-[var(--md-text-muted)] flex items-center justify-between">
+                <span>Parent Container</span>
+                {parentIdStatus.value ? (
+                  <span className="text-[10px] text-blue-500 font-medium">explicit</span>
+                ) : (
+                  <span className="text-[10px] text-[var(--md-text-subtle)]">auto (geometric)</span>
+                )}
+              </label>
+              <select
+                id="props-parent"
+                className="h-7 w-full rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus:outline-none focus:ring-1 focus:ring-[var(--md-accent)] cursor-pointer"
+                value={(parentIdStatus.value as string) || ''}
+                onChange={(e) => updateProp('parentId', e.target.value || undefined)}
+              >
+                <option value="">Auto (Geometric enclosure)</option>
+                {candidateContainers.map((container) => {
+                  const p = (container.props as Record<string, unknown>) || {};
+                  const label = (p.label as string) || (p.widgetType as string) || container.id.slice(-4);
+                  return (
+                    <option key={container.id} value={container.id}>
+                      {String(p.widgetType)}: {label}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
           )}
 

@@ -155,6 +155,9 @@ export function detectSiblingPatterns(children: IRNode[]): string {
       const patternTypes = types.slice(i, i + bestL);
       const patternTags = patternTypes.map(getWidgetTagName).join(', ');
       segments.push(`${bestK} × [${patternTags}] (repeated group — likely card/list items)`);
+      for (let pIdx = i; pIdx < i + bestK * bestL; pIdx++) {
+        children[pIdx].patternCount = bestK;
+      }
       i += bestK * bestL;
     } else {
       segments.push(formatSemanticNotation(children[i]));
@@ -164,3 +167,11 @@ export function detectSiblingPatterns(children: IRNode[]): string {
 
   return segments.join(', ');
 }
+
+/**
+ * Annotates children with patternCount if they participate in repeated pattern groups.
+ */
+export function annotateSiblingPatterns(children: IRNode[]): void {
+  detectSiblingPatterns(children);
+}
+

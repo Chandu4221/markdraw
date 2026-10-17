@@ -3,14 +3,12 @@ import { AI_DIRECTIVE_HEADER, AI_DIRECTIVE_VERSION } from '../directive';
 import { MarkDrawCompiler } from '../compiler';
 
 describe('Part D — AI Directive Compliance Header', () => {
-  it('defines version 2.8 and contains all 5 mandatory compliance rules', () => {
-    expect(AI_DIRECTIVE_VERSION).toBe('2.8');
-    expect(AI_DIRECTIVE_HEADER).toContain('> **AI DIRECTIVE — READ FIRST**');
-    expect(AI_DIRECTIVE_HEADER).toContain('1. This document is a **binding layout contract**');
-    expect(AI_DIRECTIVE_HEADER).toContain('2. Do NOT relocate, reorder, restyle, or omit');
-    expect(AI_DIRECTIVE_HEADER).toContain('3. Content marked `content: unspecified`');
-    expect(AI_DIRECTIVE_HEADER).toContain('4. Everything not specified here (colors, typography');
-    expect(AI_DIRECTIVE_HEADER).toContain('5. If this contract is impossible to satisfy');
+  it('defines version 2.9 and contains binding contract rules', () => {
+    expect(AI_DIRECTIVE_VERSION).toBe('2.9');
+    expect(AI_DIRECTIVE_HEADER).toContain('> This is a binding layout contract from MarkDraw v2.9');
+    expect(AI_DIRECTIVE_HEADER).toContain('`[Text Placeholder]` means you MUST generate content');
+    expect(AI_DIRECTIVE_HEADER).toContain('everything unspecified (colors, type, imagery) is your freedom');
+    expect(AI_DIRECTIVE_HEADER).toContain('N × [pattern] and all counts are binding, not suggestions');
   });
 
   it('prepends AI Directive header to compiled markdown spec', () => {
@@ -23,7 +21,7 @@ describe('Part D — AI Directive Compliance Header', () => {
     } as any;
 
     const res = MarkDrawCompiler.compile([s]);
-    expect(res.markdownSpec.startsWith('> **AI DIRECTIVE — READ FIRST**')).toBe(true);
+    expect(res.markdownSpec.startsWith('> This is a binding layout contract from MarkDraw v2.9')).toBe(true);
     expect(res.markdownSpec).toContain('### MarkDraw UI Specification');
   });
 

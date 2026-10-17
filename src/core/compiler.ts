@@ -17,13 +17,14 @@ import {
   formatSemanticNotation,
   DYNAMIC_LEGEND_MARKDOWN
 } from './notation';
+import { generateCanvasLegend } from './legend';
 import { AsciiSerializer } from './ascii';
-import { computeAABB, isEnclosed, sanitizeMarkdown } from './geometry';
+import { computeAABB, sanitizeMarkdown } from './geometry';
 import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
 import { detectSiblingPatterns } from './patterns';
 import { AI_DIRECTIVE_HEADER } from './directive';
 
-export const MARKDRAW_VERSION = '2.8';
+export const MARKDRAW_VERSION = '3.0.0';
 
 function capitalize(str: string): string {
   if (!str) return '';
@@ -103,11 +104,11 @@ export class MarkDrawCompiler {
       sizeBucketTolerance: options?.sizeBucketTolerance ?? 2,
       alignTolerance: options?.alignTolerance ?? 3,
       includeTimestamp: options?.includeTimestamp ?? false,
-      includeLegend: options?.includeLegend ?? true,
+      includeLegend: options?.includeLegend ?? false,
       pageNote: options?.pageNote ?? ''
     };
 
-    // Part 3: All compilation flows strictly Shapes -> IR -> Serializers
+    // All compilation flows strictly Shapes -> IR -> Serializers
     const ir: IRTree = buildIRTree(shapes, editor, opts.containmentThreshold, opts);
 
     const specBody = this.serializeSpecTable(ir.roots, opts);
@@ -116,7 +117,7 @@ export class MarkDrawCompiler {
     const jsonAst = serializeIRToJsonAst(ir.roots);
 
     const directivePrefix = `${AI_DIRECTIVE_HEADER}\n\n`;
-    const legendPrefix = opts.includeLegend ? `${DYNAMIC_LEGEND_MARKDOWN}\n\n---\n\n` : '';
+    const legendPrefix = opts.includeLegend ? `${generateCanvasLegend(ir.roots)}\n\n---\n\n` : '';
     const warningSuffix =
       ir.skippedShapes && ir.skippedShapes > 0
         ? `\n\n_Warning: ${ir.skippedShapes} shape(s) skipped due to processing errors._`
@@ -128,7 +129,8 @@ export class MarkDrawCompiler {
       markdownAscii: `${legendPrefix}${asciiBody}`,
       jsonAst,
       timestamp: opts.includeTimestamp ? new Date().toISOString() : '',
-      elementCount: ir.elementCount
+      elementCount: ir.elementCount,
+      lints: ir.lints || []
     };
   }
 
@@ -136,7 +138,7 @@ export class MarkDrawCompiler {
     const results: NormalizedShape[] = [];
 
     for (const s of shapes) {
-      const props = (s.props || {}) as Record<string, any>;
+      const props = (s.props || {}) as Record<string, unknown>;
       const rawText = (props.text || props.name || props.label || '') as string;
       const text = sanitizeMarkdown(rawText);
 
@@ -145,8 +147,8 @@ export class MarkDrawCompiler {
       let w = typeof props.w === 'number' ? props.w : 100;
       let h = typeof props.h === 'number' ? props.h : 100;
 
-      if (editor && typeof (editor as any).getShapePageBounds === 'function') {
-        const pageBounds = (editor as any).getShapePageBounds(s);
+      if (editor && typeof editor.getShapePageBounds === 'function') {
+        const pageBounds = editor.getShapePageBounds(s);
         if (pageBounds) {
           x = pageBounds.x;
           y = pageBounds.y;
@@ -155,19 +157,19 @@ export class MarkDrawCompiler {
         }
       }
 
-      if (s.type !== 'text' && (w < 4 || h < 4)) continue;
+      if (w < 4 || h < 4) continue;
 
       const bounds = { x, y, w, h };
       const aabb = computeAABB(bounds);
-      const widgetType = props.widgetType as string | undefined;
-      const role: SemanticRole = (widgetType ? resolveWidgetRole(widgetType) : 'unknown') as SemanticRole;
+      const widgetType = (props.widgetType as string) || undefined;
+      const role = (widgetType ? resolveWidgetRole(widgetType) : 'unknown') as SemanticRole;
 
       results.push({
         id: s.id,
         type: s.type,
         bounds,
         aabb,
-        color: props.color || 'black',
+        color: (props.color as string) || 'black',
         isDashed: props.dash === 'dashed',
         text,
         role,
@@ -180,11 +182,11 @@ export class MarkDrawCompiler {
   }
 
   public static formatProps(node: IRNode | LayoutNode): string {
-    const p = (node as any).textProps || (node as any).widgetProps;
-    const style = (node as any).style;
+    const p = (node as IRNode).textProps || (node as LayoutNode).widgetProps;
+    const style = node.style;
     if (!p && !style) return '—';
 
-    const type = (node as any).widgetType || '';
+    const type = node.widgetType || '';
     const defaults = getCatalogDefaultProps(type);
     const propsPairs: string[] = [];
 
@@ -193,7 +195,10 @@ export class MarkDrawCompiler {
         p.variant &&
         p.variant !== defaults.variant &&
         p.variant !== 'default' &&
-        p.variant !== 'solid'
+        p.variant !== 'solid' &&
+        type !== 'grid_gallery' &&
+        type !== 'data_table' &&
+        type !== 'table'
       ) {
         propsPairs.push(`variant="${p.variant}"`);
       }
@@ -207,13 +212,17 @@ export class MarkDrawCompiler {
       ) {
         propsPairs.push(`checked=${p.checked}`);
       }
-      if (p.options && p.options !== defaults.options) {
+      if (p.options && p.options !== defaults.options && type !== 'tabs') {
         propsPairs.push(`options=[${p.options}]`);
       }
       if (
         typeof p.value === 'number' &&
         p.value > 0 &&
-        p.value !== defaults.value
+        p.value !== defaults.value &&
+        type !== 'list' &&
+        type !== 'avatar_group' &&
+        type !== 'steps' &&
+        type !== 'pagination'
       ) {
         propsPairs.push(`value=${p.value}`);
       }
@@ -232,6 +241,59 @@ export class MarkDrawCompiler {
         p.showText !== defaults.showText
       ) {
         propsPairs.push(`showText=${p.showText}`);
+      }
+    }
+
+    // Section 1.3: Explicit counts & dims
+    if (type === 'avatar_group') {
+      const count = typeof p?.value === 'number' && p.value > 0 ? p.value : 3;
+      propsPairs.push(`count:${count}`);
+    } else if (type === 'list') {
+      const count = typeof p?.value === 'number' && p.value > 0 ? p.value : 5;
+      propsPairs.push(`count:${count}`);
+    } else if (type === 'steps') {
+      let count = 4;
+      if (typeof p?.value === 'number' && p.value > 0) {
+        count = p.value;
+      } else if (p?.variant) {
+        const m = p.variant.match(/\d+-(\d+)/);
+        if (m) count = parseInt(m[1], 10);
+      }
+      propsPairs.push(`count:${count}`);
+    } else if (type === 'pagination') {
+      let count = 5;
+      if (typeof p?.value === 'number' && p.value > 0) {
+        count = p.value;
+      } else if (p?.variant) {
+        const m = p.variant.match(/\d+\/(\d+)/);
+        if (m) count = parseInt(m[1], 10);
+      }
+      propsPairs.push(`count:${count}`);
+    } else if (type === 'tabs') {
+      let count = 3;
+      if (typeof p?.value === 'number' && p.value > 0) {
+        count = p.value;
+      } else if (p?.options) {
+        const opts = p.options.split(/[|,]/).filter(Boolean);
+        if (opts.length > 0) count = opts.length;
+      }
+      propsPairs.push(`count:${count}`);
+    }
+
+    // Pattern group repeated child counts
+    if (
+      typeof (node as IRNode).patternCount === 'number' &&
+      (node as IRNode).patternCount! >= 2
+    ) {
+      propsPairs.push(`count:${(node as IRNode).patternCount}`);
+    }
+
+    // Grids: always spell out "4 cols × 3 rows"
+    if (type === 'grid_gallery' || type === 'data_table' || type === 'table') {
+      const v = p?.variant || (type === 'grid_gallery' ? '3x2' : '4x3');
+      const m = v.match(/^(\d+)x(\d+)$/);
+      if (m) {
+        propsPairs.push(`${m[1]} cols × ${m[2]} rows`);
       }
     }
 
@@ -289,16 +351,21 @@ export class MarkDrawCompiler {
     const ln = node as LayoutNode;
     return {
       id: ln.id,
-      widgetType: ln.widgetType || (ln.role === 'container' ? 'section' : ln.role === 'button' ? 'button' : 'heading'),
+      shortId: ln.id.slice(-4),
+      widgetType:
+        ln.widgetType ||
+        (ln.role === 'container' ? 'section' : ln.role === 'button' ? 'button' : 'heading'),
       role: ln.role,
       label: ln.label,
-      textProps: (ln.widgetProps as any) || { label: ln.shape?.text || ln.label },
+      textProps: (ln.widgetProps as unknown as IRNode['textProps']) || {
+        label: ln.shape?.text || ln.label
+      },
       bounds: ln.shape?.bounds || { x: 0, y: 0, w: 100, h: 40 },
       children: (ln.children || []).map((c) => this.toIRNode(c)),
       parent: ln.parent,
       direction: ln.direction,
       path: ln.path,
-      style: (ln as any).style
+      style: ln.style
     };
   }
 
@@ -319,7 +386,7 @@ export class MarkDrawCompiler {
 
     const rootPage = irRoots.find((r) => r.widgetType === 'page');
     const effectivePageNote =
-      options?.pageNote || (rootPage?.textProps as any)?.note || (rootPage?.style as any)?.note;
+      options?.pageNote || rootPage?.textProps?.note || rootPage?.style?.note;
     if (effectivePageNote) {
       rows.push(`**Page note:** ${effectivePageNote}  `);
     }
@@ -342,7 +409,7 @@ export class MarkDrawCompiler {
       } else {
         const rawLabel = node.textProps?.label || node.label;
         if (isUntouchedLabel(node.widgetType, rawLabel)) {
-          childBadges = '"content: unspecified"';
+          childBadges = '"content: [Text Placeholder]"';
         } else if (rawLabel) {
           childBadges = `"${rawLabel}"`;
         } else {
@@ -424,110 +491,5 @@ export class MarkDrawCompiler {
     }
 
     return lines.join('\n');
-  }
-
-  // Backward compatibility helper for legacy unit tests
-  public static buildHierarchy(
-    shapes: NormalizedShape[],
-    containmentThreshold: number = 0.85
-  ): LayoutNode[] {
-    if (shapes.length === 0) return [];
-
-    const sortedByAreaDesc = [...shapes].sort(
-      (a, b) => b.bounds.w * b.bounds.h - a.bounds.w * a.bounds.h
-    );
-
-    const nodeRegistry = new Map<string, LayoutNode>();
-    for (const shape of shapes) {
-      const fallbackLabel = shape.widgetType
-        ? `${capitalize(shape.widgetType)}_${shape.id.slice(-4)}`
-        : `${shape.type}_${shape.id.slice(-4)}`;
-
-      const label = shape.text || fallbackLabel;
-
-      const node: LayoutNode = {
-        id: shape.id,
-        shape,
-        role: shape.role,
-        label,
-        path: 'Root',
-        direction: 'Leaf',
-        children: [],
-        parent: null,
-        widgetType: shape.widgetType || (shape.role === 'button' ? 'button' : shape.role === 'container' ? 'section' : 'heading'),
-        widgetProps: shape.widgetProps || { label }
-      };
-      nodeRegistry.set(shape.id, node);
-    }
-
-    const roots: LayoutNode[] = [];
-
-    for (const shape of sortedByAreaDesc) {
-      const node = nodeRegistry.get(shape.id)!;
-      let immediateParent: LayoutNode | null = null;
-      let minParentArea = Infinity;
-
-      for (const candidate of shapes) {
-        if (candidate.id === shape.id) continue;
-        const candidateArea = candidate.bounds.w * candidate.bounds.h;
-        const childArea = shape.bounds.w * shape.bounds.h;
-
-        if (
-          candidateArea > childArea &&
-          isEnclosed(shape.aabb, candidate.aabb, containmentThreshold)
-        ) {
-          if (candidateArea < minParentArea) {
-            minParentArea = candidateArea;
-            immediateParent = nodeRegistry.get(candidate.id) || null;
-          }
-        }
-      }
-
-      if (immediateParent) {
-        immediateParent.children.push(node);
-        node.parent = immediateParent.id;
-      } else {
-        roots.push(node);
-      }
-    }
-
-    for (const node of nodeRegistry.values()) {
-      if (node.children.length >= 2 && node.role !== 'container') {
-        node.role = 'container';
-      }
-    }
-
-    const processSubtree = (node: LayoutNode, currentPath: string) => {
-      node.path = currentPath;
-      if (node.children.length > 0) {
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        for (const child of node.children) {
-          const cx = child.shape.bounds.x + child.shape.bounds.w / 2;
-          const cy = child.shape.bounds.y + child.shape.bounds.h / 2;
-          if (cx < minX) minX = cx;
-          if (cx > maxX) maxX = cx;
-          if (cy < minY) minY = cy;
-          if (cy > maxY) maxY = cy;
-        }
-        node.direction = (maxY - minY) > (maxX - minX) ? 'Column' : 'Row';
-        if (node.direction === 'Row') {
-          node.children.sort((a, b) => a.shape.bounds.x - b.shape.bounds.x);
-        } else {
-          node.children.sort((a, b) => a.shape.bounds.y - b.shape.bounds.y);
-        }
-        const nextPath = `${currentPath} > ${node.label}`;
-        for (const child of node.children) {
-          processSubtree(child, nextPath);
-        }
-      } else {
-        node.direction = 'Leaf';
-      }
-    };
-
-    for (const root of roots) {
-      processSubtree(root, 'Root');
-    }
-
-    return roots;
   }
 }

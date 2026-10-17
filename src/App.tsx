@@ -87,13 +87,14 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   sizeBucketTolerance: 2,
   alignTolerance: 3,
   includeTimestamp: false,
-  includeLegend: true,
+  includeLegend: false,
   pageNote: ''
 };
 
 export const App: React.FC = () => {
   const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'ascii' | 'json'>('spec');
   const [copied, setCopied] = useState<boolean>(false);
+  const [copiedFull, setCopiedFull] = useState<boolean>(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [paletteWidth, setPaletteWidth] = useState<number>(() => {
@@ -642,6 +643,30 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleCopyFullContract = async () => {
+    if (!editorRef.current) return;
+    const shapes = editorRef.current.getCurrentPageShapes();
+    const fullRes = MarkDrawCompiler.compile(shapes, editorRef.current, {
+      ...options,
+      includeLegend: true
+    });
+    const textToCopy = fullRes.markdownSpec;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedFull(true);
+      setTimeout(() => setCopiedFull(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedFull(true);
+      setTimeout(() => setCopiedFull(false), 2000);
+    }
+  };
+
   const handleDownload = () => {
     const ext = outputTab === 'json' ? 'json' : outputTab === 'ascii' ? 'txt' : 'md';
     const blob = new Blob([getActiveContent()], { type: 'text/plain;charset=utf-8' });
@@ -1116,7 +1141,7 @@ export const App: React.FC = () => {
                       size="sm"
                       onClick={handleCopy}
                       className="h-7 gap-1.5 text-xs font-medium shrink-0"
-                      title="Copy to Clipboard"
+                      title="Copy lean contract (Directive + Spec Table)"
                       aria-label="Copy to Clipboard"
                     >
                       {copied ? (
@@ -1132,6 +1157,26 @@ export const App: React.FC = () => {
                       )}
                     </Button>
                     <Button
+                      variant={copiedFull ? 'success' : 'outline'}
+                      size="sm"
+                      onClick={handleCopyFullContract}
+                      className="h-7 gap-1.5 text-xs font-medium shrink-0"
+                      title="Copy full contract with auto-generated canvas legend"
+                      aria-label="Copy Full Contract"
+                    >
+                      {copiedFull ? (
+                        <>
+                          <Check size={12} />
+                          <span>Copied Full</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={12} />
+                          <span>Copy Full</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="icon-sm"
                       onClick={handleDownload}
@@ -1143,6 +1188,18 @@ export const App: React.FC = () => {
                     </Button>
                   </div>
                 </div>
+
+                {/* Informational Lints Banner */}
+                {compilation.lints && compilation.lints.length > 0 && (
+                  <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                    {compilation.lints.map((lint, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5">
+                        <AlertCircle size={13} className="shrink-0 text-amber-500" />
+                        <span>{lint}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Output Viewport */}
                 <div className="flex-1 overflow-auto p-3 bg-[var(--md-bg)]">

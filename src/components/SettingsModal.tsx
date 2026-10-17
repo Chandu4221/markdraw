@@ -34,7 +34,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       sizeBucketTolerance: 2,
       alignTolerance: 3,
       includeTimestamp: false,
-      includeLegend: true,
+      includeLegend: false,
       pageNote: options.pageNote || ''
     });
   };

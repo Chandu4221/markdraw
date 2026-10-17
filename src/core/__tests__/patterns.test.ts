@@ -5,6 +5,7 @@ import { IRNode } from '../ir';
 function mockChild(widgetType: string, label: string = ''): IRNode {
   return {
     id: `id-${Math.random().toString(36).slice(2, 7)}`,
+    shortId: 'ptn1',
     widgetType,
     role: 'unknown',
     label,

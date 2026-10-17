@@ -125,25 +125,7 @@ export function inferDistribution(children: IRNode[]): string | undefined {
     return 'dist:wrap';
   }
 
-  // 2. Single row (or single column) distribution
-  const row = [...children].sort((a, b) => a.bounds.x - b.bounds.x);
-  const gaps: number[] = [];
-  for (let i = 0; i < row.length - 1; i++) {
-    const gap = row[i + 1].bounds.x - (row[i].bounds.x + row[i].bounds.w);
-    gaps.push(gap);
-  }
-
-  const avgGap = gaps.reduce((acc, g) => acc + g, 0) / gaps.length;
-  const maxGapDiff = Math.max(...gaps) - Math.min(...gaps);
-  const gapsEqual = maxGapDiff <= 20;
-
-  // We can measure edge clustering
-  if (gapsEqual && avgGap >= 0) {
-    // If gaps between items are equal
-    // If center clustered: large space on sides compared to internal gaps
-    return 'dist:space-between';
-  }
-
+  // 2. Single flow row: suppress dist inference (adds no information)
   return undefined;
 }
 
@@ -161,13 +143,13 @@ export function inferNodeStyle(
   const alignTol = options?.alignTolerance ?? 3;
 
   // If node has behavior flags from props
-  const rawBehaviors = (node.textProps as any)?.behaviors;
+  const rawBehaviors = node.textProps?.behaviors;
   if (Array.isArray(rawBehaviors) && rawBehaviors.length > 0) {
     style.behaviors = [...rawBehaviors];
   }
 
   // If node has note from props
-  const rawNote = (node.textProps as any)?.note;
+  const rawNote = node.textProps?.note;
   if (typeof rawNote === 'string' && rawNote.trim() !== '') {
     style.note = rawNote.trim();
   }

@@ -18,6 +18,7 @@ export type UIWidgetType =
   | 'grid_gallery'
   | 'split_pane'
   | 'modal'
+  | 'carousel'
   | 'page'
 
   // Forms & Inputs
@@ -92,6 +93,7 @@ export interface UIWidgetProps {
   altText?: string;
   behaviors?: string[];
   note?: string;
+  parentId?: string;
 }
 
 export type IUIWidgetShape = TLBaseShape<'ui-widget', UIWidgetProps>;
@@ -154,6 +156,7 @@ export interface LayoutNode {
   parent: string | null;
   widgetType?: string;
   widgetProps?: Record<string, any>;
+  style?: import('./style').InferredStyle;
 }
 
 export interface CompilationOptions {
@@ -163,7 +166,7 @@ export interface CompilationOptions {
   sizeBucketTolerance?: number;  // default 2 (±2% tolerance)
   alignTolerance?: number;       // default 3 (±3% tolerance)
   includeTimestamp?: boolean;    // default false (for determinism)
-  includeLegend?: boolean;       // default true
+  includeLegend?: boolean;       // default false
   pageNote?: string;             // page-level note in document header
 }
 
@@ -174,4 +177,5 @@ export interface CompilationResult {
   jsonAst: string;
   timestamp: string;
   elementCount: number;
+  lints?: string[];
 }

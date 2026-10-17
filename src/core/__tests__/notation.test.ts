@@ -5,6 +5,7 @@ import { IRNode } from '../ir';
 function mockNode(widgetType: string, label: string = '', textProps: any = {}): IRNode {
   return {
     id: 'test-1',
+    shortId: 'tst1',
     widgetType,
     role: 'unknown',
     label,

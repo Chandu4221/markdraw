@@ -1,4 +1,4 @@
-# MarkDraw v2.5 (Wireframe Edition) 📐
+# MarkDraw v3.0 📐
 
 > **Canvas-to-Markdown Spatial Compiler for Large Language Models**  
 > 100% Client-Side SPA · Lo-Fi Wireframe Renderer · Clean IR AST · Double-Click Editing · Built with React 19, TypeScript, and `@tldraw/tldraw`.

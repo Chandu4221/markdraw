@@ -1,107 +1,107 @@
 import { describe, it, expect } from 'vitest';
 import { MarkDrawCompiler } from '../compiler';
-import { NormalizedShape } from '../types';
-import { computeAABB } from '../geometry';
+import { buildIRTree } from '../ir';
+import { TLShape } from '@tldraw/tldraw';
 
-function createShape(
+function createWidgetShape(
   id: string,
-  type: string,
+  widgetType: string,
   x: number,
   y: number,
   w: number,
   h: number,
-  role: any = 'container',
-  text: string = ''
-): NormalizedShape {
-  const bounds = { x, y, w, h };
+  label: string = ''
+): TLShape {
   return {
-    id,
-    type,
-    bounds,
-    aabb: computeAABB(bounds),
-    role,
-    text,
-    color: 'black',
-    isDashed: false
-  };
+    id: id as any,
+    type: 'ui-widget',
+    x,
+    y,
+    props: {
+      w,
+      h,
+      widgetType,
+      label
+    }
+  } as TLShape;
 }
 
 describe('Compiler Hierarchy & Serializers', () => {
-  it('correctly creates multi-level hierarchy: Screen -> Card -> Button', () => {
+  it('correctly creates multi-level hierarchy: Screen -> Card -> Button with shortId paths', () => {
     // Screen: (0, 0, 400, 800)
     // Card: (20, 100, 360, 200) inside Screen
     // Button: (40, 150, 120, 40) inside Card
-    const screen = createShape('screen', 'geo', 0, 0, 400, 800, 'container', 'MobileFrame');
-    const card = createShape('card', 'geo', 20, 100, 360, 200, 'container', 'ProfileCard');
-    const button = createShape('button', 'geo', 40, 150, 120, 40, 'button', 'SaveButton');
+    const screen = createWidgetShape('shape:screen', 'section', 0, 0, 400, 800, 'MobileFrame');
+    const card = createWidgetShape('shape:card', 'card', 20, 100, 360, 200, 'ProfileCard');
+    const button = createWidgetShape('shape:button', 'button', 40, 150, 120, 40, 'SaveButton');
 
-    const roots = MarkDrawCompiler.buildHierarchy([screen, card, button]);
+    const tree = buildIRTree([screen, card, button]);
 
-    expect(roots.length).toBe(1);
-    expect(roots[0].id).toBe('screen');
-    expect(roots[0].path).toBe('Root');
+    expect(tree.roots.length).toBe(1);
+    expect(tree.roots[0].id).toBe('shape:screen');
+    expect(tree.roots[0].path).toBe(`Root > #${tree.roots[0].shortId}`);
 
-    expect(roots[0].children.length).toBe(1);
-    const cardNode = roots[0].children[0];
-    expect(cardNode.id).toBe('card');
-    expect(cardNode.parent).toBe('screen');
-    expect(cardNode.path).toBe('Root > MobileFrame');
+    expect(tree.roots[0].children.length).toBe(1);
+    const cardNode = tree.roots[0].children[0];
+    expect(cardNode.id).toBe('shape:card');
+    expect(cardNode.parent).toBe('shape:screen');
+    expect(cardNode.path).toBe(`${tree.roots[0].path} > #${cardNode.shortId}`);
 
     expect(cardNode.children.length).toBe(1);
     const buttonNode = cardNode.children[0];
-    expect(buttonNode.id).toBe('button');
-    expect(buttonNode.parent).toBe('card');
-    expect(buttonNode.path).toBe('Root > MobileFrame > ProfileCard');
+    expect(buttonNode.id).toBe('shape:button');
+    expect(buttonNode.parent).toBe('shape:card');
+    expect(buttonNode.path).toBe(`${cardNode.path} > #${buttonNode.shortId}`);
   });
 
   it('infers Column direction for vertically stacked items and sorts by y', () => {
-    const parent = createShape('parent', 'geo', 0, 0, 200, 400, 'container', 'List');
-    const item1 = createShape('item1', 'geo', 20, 200, 160, 40, 'input', 'Second');
-    const item2 = createShape('item2', 'geo', 20, 50, 160, 40, 'input', 'First');
+    const parent = createWidgetShape('shape:parent', 'section', 0, 0, 200, 400, 'List');
+    const item1 = createWidgetShape('shape:item1', 'input', 20, 200, 160, 40, 'Second');
+    const item2 = createWidgetShape('shape:item2', 'input', 20, 50, 160, 40, 'First');
 
-    const roots = MarkDrawCompiler.buildHierarchy([parent, item1, item2]);
-    expect(roots[0].direction).toBe('Column');
-    expect(roots[0].children[0].id).toBe('item2');
-    expect(roots[0].children[1].id).toBe('item1');
+    const tree = buildIRTree([parent, item1, item2]);
+    expect(tree.roots[0].direction).toBe('Column');
+    expect(tree.roots[0].children[0].id).toBe('shape:item2');
+    expect(tree.roots[0].children[1].id).toBe('shape:item1');
   });
 
   it('infers Row direction for horizontally aligned items and sorts by x', () => {
-    const parent = createShape('parent', 'geo', 0, 0, 400, 100, 'container', 'Nav');
-    const right = createShape('right', 'geo', 250, 20, 80, 40, 'button', 'RightBtn');
-    const left = createShape('left', 'geo', 30, 20, 80, 40, 'button', 'LeftBtn');
+    const parent = createWidgetShape('shape:parent', 'section', 0, 0, 400, 100, 'Nav');
+    const right = createWidgetShape('shape:right', 'button', 250, 20, 80, 40, 'RightBtn');
+    const left = createWidgetShape('shape:left', 'button', 30, 20, 80, 40, 'LeftBtn');
 
-    const roots = MarkDrawCompiler.buildHierarchy([parent, right, left]);
-    expect(roots[0].direction).toBe('Row');
-    expect(roots[0].children[0].id).toBe('left');
-    expect(roots[0].children[1].id).toBe('right');
+    const tree = buildIRTree([parent, right, left]);
+    expect(tree.roots[0].direction).toBe('Row');
+    expect(tree.roots[0].children[0].id).toBe('shape:left');
+    expect(tree.roots[0].children[1].id).toBe('shape:right');
   });
 
   it('promotes any shape holding >= 2 items to container', () => {
-    const box = createShape('box', 'geo', 0, 0, 300, 300, 'input', 'Box');
-    const child1 = createShape('c1', 'geo', 10, 10, 50, 50, 'button', 'B1');
-    const child2 = createShape('c2', 'geo', 10, 80, 50, 50, 'button', 'B2');
+    const box = createWidgetShape('shape:box', 'input', 0, 0, 300, 300, 'Box');
+    const child1 = createWidgetShape('shape:c1', 'button', 10, 10, 50, 50, 'B1');
+    const child2 = createWidgetShape('shape:c2', 'button', 10, 80, 50, 50, 'B2');
 
-    const roots = MarkDrawCompiler.buildHierarchy([box, child1, child2]);
-    expect(roots[0].role).toBe('container');
+    const tree = buildIRTree([box, child1, child2]);
+    expect(tree.roots[0].role).toBe('container');
   });
 
   it('serializes hierarchy table to valid Markdown', () => {
-    const screen = createShape('screen', 'geo', 0, 0, 400, 800, 'container', 'MobileFrame');
-    const button = createShape('button', 'geo', 40, 150, 120, 40, 'button', 'SaveButton');
-    const roots = MarkDrawCompiler.buildHierarchy([screen, button]);
+    const screen = createWidgetShape('shape:screen', 'section', 0, 0, 400, 800, 'MobileFrame');
+    const button = createWidgetShape('shape:button', 'button', 40, 150, 120, 40, 'SaveButton');
+    const tree = buildIRTree([screen, button]);
 
-    const md = MarkDrawCompiler.serializeSpecTable(roots);
+    const md = MarkDrawCompiler.serializeSpecTable(tree.roots);
     expect(md).toContain('### MarkDraw UI Specification');
     expect(md).toContain('[section "MobileFrame"]');
     expect(md).toContain('[btn "SaveButton"]');
   });
 
   it('serializes spatial grid to tabular Markdown', () => {
-    const col1 = createShape('c1', 'geo', 10, 20, 100, 50, 'button', 'Header1');
-    const col2 = createShape('c2', 'geo', 150, 25, 100, 50, 'button', 'Header2');
+    const col1 = createWidgetShape('shape:c1', 'button', 10, 20, 100, 50, 'Header1');
+    const col2 = createWidgetShape('shape:c2', 'button', 150, 25, 100, 50, 'Header2');
 
-    const roots = MarkDrawCompiler.buildHierarchy([col1, col2]);
-    const grid = MarkDrawCompiler.serializeSpatialGrid(roots);
+    const tree = buildIRTree([col1, col2]);
+    const grid = MarkDrawCompiler.serializeSpatialGrid(tree.roots);
 
     expect(grid).toContain('### Spatial Grid Layout Table');
     expect(grid).toContain('| Col 1 | Col 2 |');
@@ -153,7 +153,7 @@ describe('Compiler Hierarchy & Serializers', () => {
     const lines = res.markdownSpec.split('\n');
 
     // Page root gets placement '—'
-    const pageRow = lines.find((l) => l.includes('`Root`') && l.includes('page'));
+    const pageRow = lines.find((l) => l.includes('`Root > #') && l.includes('<Page>'));
     expect(pageRow).toContain('| — |');
 
     // Hero gets placement 'header'
@@ -173,7 +173,7 @@ describe('Compiler Hierarchy & Serializers', () => {
     expect(footRow).toContain('| footer |');
   });
 
-  it('omits default-valued props and emits bare tags with content: unspecified for untouched widgets', () => {
+  it('omits default-valued props and emits bare tags with content: [Text Placeholder] for untouched widgets', () => {
     // Untouched button with default props
     const btnUntouched = {
       id: 'btn-def' as any,
@@ -193,9 +193,9 @@ describe('Compiler Hierarchy & Serializers', () => {
 
     const res = MarkDrawCompiler.compile([btnUntouched]);
     expect(res.markdownSpec).toContain('**[btn]**');
-    expect(res.markdownSpec).toContain('"content: unspecified"');
+    expect(res.markdownSpec).toContain('"content: [Text Placeholder]"');
     // Props & Attributes should be '—' since all props match catalog defaults
-    expect(res.markdownSpec).toContain('| — | "content: unspecified" |');
+    expect(res.markdownSpec).toContain('| — | "content: [Text Placeholder]" |');
     // Confirm no noise like checked=false or showText=false anywhere
     expect(res.markdownSpec).not.toContain('checked=false');
     expect(res.markdownSpec).not.toContain('showText=false');
@@ -231,4 +231,3 @@ describe('Compiler Hierarchy & Serializers', () => {
     expect(res1.jsonAst).toBe(res2.jsonAst);
   });
 });
-
