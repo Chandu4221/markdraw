@@ -92,6 +92,12 @@ npm run dev
 npm run test
 ```
 
+### Run Benchmark Harness (v3.0 Decision Gate)
+```bash
+npm run bench
+```
+Evaluates the automated structural fidelity scoring engine across 20 wireframe fixtures across 4 categories (`conventional`, `unconventional`, `dashboard`, `mobile`), testing MarkDraw's Lean Contract against ASCII visual proxies and raw ASTs, and logs findings to `bench/REPORT.md`.
+
 ### Production Build
 ```bash
 npm run build
