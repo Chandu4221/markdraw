@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Tldraw, Editor } from '@tldraw/tldraw';
+import { TldrawCanvas, Editor } from './canvas/tldraw';
 import { MarkDrawCompiler, MARKDRAW_VERSION } from './core/compiler';
 import { CompilationResult, CompilationOptions } from './core/types';
 import { LegendModal } from './components/LegendModal';
@@ -7,11 +7,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { DocumentMenu } from './components/DocumentMenu';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { UnifiedInspectorPanel } from './components/UnifiedInspectorPanel';
 import { CompilationOptionsContext } from './core/CompilationOptionsContext';
-import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from './annotation/migrate';
-import { LegacyWidgetShapeUtil } from './annotation/legacyShapeUtil';
 import { ALL_ROLES } from './annotation/roles';
 import {
   getDocRegistry,
@@ -64,8 +61,6 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   annotationMode: true
 };
 
-const TRANSITIONAL_SHAPE_UTILS = [LegacyWidgetShapeUtil];
-
 export const App: React.FC = () => {
   const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'ascii' | 'json'>('spec');
   const [outputDisplayMode, setOutputDisplayMode] = useState<'preview' | 'raw'>(() => {
@@ -96,7 +91,7 @@ export const App: React.FC = () => {
   const [canvasPercent, setCanvasPercent] = useState<number>(55);
   const [activeDrag, setActiveDrag] = useState<'right' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [, setEditor] = useState<Editor | null>(null);
   const [compileDuration, setCompileDuration] = useState<number | null>(null);
 
   const workspaceRef = useRef<HTMLDivElement | null>(null);
@@ -737,20 +732,15 @@ export const App: React.FC = () => {
                 window.dispatchEvent(new Event('resize'));
               }}
             >
-              <Tldraw
+              <TldrawCanvas
                 key={activeDoc.id}
                 persistenceKey={activeDoc.persistenceKey}
-                shapeUtils={TRANSITIONAL_SHAPE_UTILS}
-                components={{
-                  StylePanel: UnifiedInspectorPanel
+                onDriverReady={(_driver, rawEditor) => {
+                  setEditor(rawEditor);
+                  editorRef.current = rawEditor;
                 }}
-                onMount={handleEditorMount}
-              />
-
-              {/* Semantic Annotation Layer Overlays */}
-              <RoleChipsOverlay
-                editor={editor}
-                showChips={showRoleChips}
+                onEditorMount={handleEditorMount}
+                showRoleChips={showRoleChips}
                 onCopyContract={() => showToast('Copied contract to clipboard')}
               />
 

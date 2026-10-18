@@ -1,6 +1,6 @@
 // src/components/RolePanel.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Editor, TLShape } from '@tldraw/tldraw';
+import { Editor, TLShape } from '../canvas/tldraw';
 import {
   Sliders,
   ChevronDown,

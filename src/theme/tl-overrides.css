@@ -1,4 +1,7 @@
-/* MarkDraw Deep Overrides for tldraw Canvas — v2.8 Clean Aesthetic */
+/* MarkDraw Deep Overrides for tldraw Canvas
+ * ⚠️ FROZEN IN V5 PHASE 1 (§4.1): Do not add new rules to this file.
+ * This file will be shrunk in Phase 2 and completely deleted in Phase 3 upon Excalidraw migration.
+ */
 
 .tl-container {
   --color-accent: var(--md-accent) !important;

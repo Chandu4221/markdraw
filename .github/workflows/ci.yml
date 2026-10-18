@@ -1,0 +1,42 @@
+name: CI & Architecture Enforcement
+
+on:
+  push:
+    branches: [ main, v4-annotation, v5, v5-canvas-adapter ]
+  pull_request:
+    branches: [ main, v4-annotation, v5, v5-canvas-adapter ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc -b
+
+      - name: Run Test Suite
+        run: npx vitest run
+
+      - name: Run Deterministic Benchmark Harness
+        run: npm run bench
+
+      - name: Enforce Import Boundaries
+        run: node scripts/check-imports.mjs
+
+      - name: Enforce File Size Limits
+        run: node scripts/check-file-size.mjs
+
+      - name: Production Build
+        run: npm run build

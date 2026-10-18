@@ -6,7 +6,7 @@ import {
   DefaultStylePanelContent,
   TLUiStylePanelProps,
   usePassThroughWheelEvents
-} from '@tldraw/tldraw';
+} from '../canvas/tldraw';
 import {
   ChevronDown,
   ChevronRight,
