@@ -10,7 +10,8 @@ import {
   Sun,
   Moon,
   PanelRightClose,
-  PanelRightOpen
+  PanelRightOpen,
+  HelpCircle
 } from 'lucide-react';
 
 export interface AppHeaderProps {
@@ -35,8 +36,8 @@ export interface AppHeaderProps {
   onOpenSettings: () => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
-  canvasEngine?: 'excalidraw' | 'tldraw';
-  onToggleEngine?: () => void;
+  onSelectTemplate?: (template: any) => void;
+  onOpenOnboarding?: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -61,8 +62,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenSettings,
   theme,
   toggleTheme,
-  canvasEngine = 'excalidraw',
-  onToggleEngine
+  onSelectTemplate,
+  onOpenOnboarding
 }) => {
   return (
     <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
@@ -76,16 +77,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border border-[var(--md-border)]">
           v{MARKDRAW_VERSION}
         </span>
-        {onToggleEngine && (
-          <button
-            type="button"
-            onClick={onToggleEngine}
-            className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-accent)] border border-[var(--md-border)] hover:border-[var(--md-accent)] cursor-pointer transition-colors"
-            title="Click to toggle between Excalidraw (MIT) and tldraw canvas engines"
-          >
-            Engine: {canvasEngine === 'excalidraw' ? 'Excalidraw (MIT)' : 'tldraw'}
-          </button>
-        )}
+        <span
+          className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--color-surface-2)] text-[var(--color-accent)] border border-[var(--color-line-subtle)]"
+          title="MarkDraw v5 is powered by the vendor-neutral @excalidraw/excalidraw (MIT) engine"
+        >
+          Excalidraw (MIT)
+        </span>
 
         {/* Document Menu */}
         <DocumentMenu
@@ -98,6 +95,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           onDeleteDoc={onDeleteDoc}
           onExportFile={onExportFile}
           onImportFile={onImportFile}
+          onSelectTemplate={onSelectTemplate}
         />
       </div>
 
@@ -177,6 +175,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <span className="text-[var(--md-border)]">|</span>
           <span>Roles: <strong className="text-[var(--md-text-bold)] font-mono">{roleCount}</strong></span>
         </div>
+
+        {onOpenOnboarding && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenOnboarding}
+            title="MarkDraw Quick Tour & Onboarding"
+            aria-label="MarkDraw Quick Tour & Onboarding"
+          >
+            <HelpCircle size={15} />
+          </Button>
+        )}
 
         <Button
           variant="ghost"

@@ -4,15 +4,10 @@ import path from 'path';
 
 const SRC_DIR = path.resolve(process.cwd(), 'src');
 
-const ALLOWED_TLDRAW_DIRS = [
-  path.join(SRC_DIR, 'canvas', 'tldraw'),
-  // Transitional during Phase 1; to be fully decoupled in Phase 2/3
-  path.join(SRC_DIR, 'annotation'),
-  path.join(SRC_DIR, 'core')
-];
+const ALLOWED_TLDRAW_DIRS = [];
 
 function isPathAllowedForTldraw(filePath) {
-  return ALLOWED_TLDRAW_DIRS.some((dir) => filePath.startsWith(dir));
+  return false;
 }
 
 function scanFiles(dir) {

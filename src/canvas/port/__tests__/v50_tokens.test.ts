@@ -44,4 +44,42 @@ describe('v5.0 Design System & Tokens Enforcement (§4, §10)', () => {
     expect(tokensContent).toContain('--duration-fast');
     expect(tokensContent).toContain('--duration-normal');
   });
+
+  it('contains zero raw hex literals in components outside tokens.css and test files', () => {
+    const componentsDir = path.resolve(process.cwd(), 'src/components');
+    const files: string[] = [];
+
+    function scan(dir: string) {
+      for (const item of fs.readdirSync(dir)) {
+        const full = path.join(dir, item);
+        if (fs.statSync(full).isDirectory()) {
+          if (item !== '__tests__') scan(full);
+        } else if (full.endsWith('.tsx') || full.endsWith('.ts')) {
+          files.push(full);
+        }
+      }
+    }
+    scan(componentsDir);
+
+    const hexRegex = /#[0-9a-fA-F]{3,8}\b/g;
+    const hexViolations: string[] = [];
+
+    for (const f of files) {
+      const content = fs.readFileSync(f, 'utf-8');
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Allow MarkdownPreview test table or documentation comments
+        if (f.endsWith('MarkdownPreview.tsx') && line.includes('#8ac')) continue;
+        if (line.includes('//') && (line.includes('color') || line.includes('hex'))) continue;
+        const matches = line.match(hexRegex);
+        if (matches) {
+          hexViolations.push(`${path.relative(process.cwd(), f)}:${i + 1} -> ${line.trim()}`);
+        }
+      }
+    }
+
+    expect(hexViolations).toEqual([]);
+  });
 });
+

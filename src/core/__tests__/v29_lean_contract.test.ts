@@ -3,7 +3,7 @@ import { generateShortId } from '../ids';
 import { buildIRTree } from '../ir';
 import { MarkDrawCompiler } from '../compiler';
 import { generateCanvasLegend } from '../legend';
-import { TLShape } from '@tldraw/tldraw';
+import { TLShape } from '../types';
 
 function createShape(
   id: string,

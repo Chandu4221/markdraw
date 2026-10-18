@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MarkDrawCompiler } from '../compiler';
 import { buildIRTree } from '../ir';
-import { TLShape } from '@tldraw/tldraw';
+import { TLShape } from '../types';
 
 function createWidgetShape(
   id: string,

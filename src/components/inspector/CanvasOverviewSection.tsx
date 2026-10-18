@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tag, Copy, Check } from 'lucide-react';
 import { getShapeMeta } from '../../annotation/shapeMeta';
-import { Editor, TLShape } from '../../canvas/tldraw';
+import { Editor, TLShape } from '../../core/types';
 
 interface CanvasOverviewSectionProps {
   editor: Editor;

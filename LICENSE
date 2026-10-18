@@ -19,22 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-==============================================================================
-Third-Party Dependency Notice: @tldraw/tldraw
-==============================================================================
-
-This software includes and builds upon the `@tldraw/tldraw` library developed by
-Tldraw (https://tldraw.dev).
-
-`@tldraw/tldraw` is NOT licensed under the MIT License. It is distributed under
-its own proprietary license terms:
-- Free for development, non-commercial, and hobby use (subject to watermark terms).
-- Production, commercial, or hosted use REQUIRES a commercial license key purchased
-  from Tldraw.
-
-For complete terms and pricing, please consult the official Tldraw license:
-https://tldraw.dev/community/license
-
-Users and distributors of MarkDraw are responsible for ensuring compliance with
-Tldraw's licensing terms when integrating or deploying products built with this software.

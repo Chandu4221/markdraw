@@ -1,14 +1,18 @@
 {
   "name": "markdraw",
   "private": true,
-  "version": "5.0.0-dev",
+  "version": "5.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run build:cli",
+    "build:cli": "esbuild src/cli/compile.ts --bundle --platform=node --format=esm --packages=external --outfile=bin/markdraw --banner:js=\"#!/usr/bin/env node\" && chmod +x bin/markdraw",
     "preview": "vite preview",
     "test": "vitest run",
     "bench": "vite-node bench/runner.ts"
+  },
+  "bin": {
+    "markdraw": "./bin/markdraw"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",
@@ -21,7 +25,6 @@
     "@radix-ui/react-switch": "^1.4.1",
     "@radix-ui/react-tabs": "^1.2.1",
     "@radix-ui/react-tooltip": "^1.4.1",
-    "@tldraw/tldraw": "^3.8.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.454.0",

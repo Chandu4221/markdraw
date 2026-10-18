@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { TLShape, createShapeId } from '@tldraw/tldraw';
+import { TLShape, createShapeId } from '../../core/types';
 import {
   UnitDefinition,
   createUnitDefinition,

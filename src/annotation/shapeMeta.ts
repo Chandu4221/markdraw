@@ -1,5 +1,5 @@
 // src/annotation/shapeMeta.ts
-import { TLShape, Editor } from '@tldraw/tldraw';
+import { TLShape, Editor } from '../core/types';
 import { MarkDrawMeta, ROLE_SCHEMA_VERSION, createDefaultMarkDrawMeta } from './types';
 import { RoleName } from './roles';
 

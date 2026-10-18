@@ -1,0 +1,3124 @@
+#!/usr/bin/env node
+
+// src/cli/compile.ts
+import fs from "fs";
+import path from "path";
+
+// src/core/geometry.ts
+function computeAABB(bounds) {
+  return {
+    x1: bounds.x,
+    y1: bounds.y,
+    x2: bounds.x + bounds.w,
+    y2: bounds.y + bounds.h
+  };
+}
+function calculateIntersectionArea(a, b) {
+  const xOverlap = Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1));
+  const yOverlap = Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+  return xOverlap * yOverlap;
+}
+function getEnclosureRatio(child, parent) {
+  const childArea = (child.x2 - child.x1) * (child.y2 - child.y1);
+  if (childArea <= 0) return 0;
+  const intersection = calculateIntersectionArea(child, parent);
+  return intersection / childArea;
+}
+function sanitizeMarkdown(text) {
+  if (!text) return "";
+  return text.replace(/\|/g, "\\|").replace(/\r?\n/g, "<br/>").trim();
+}
+
+// src/core/style.ts
+function getWidthPct(node, parent) {
+  if (!parent || parent.bounds.w <= 0) return 100;
+  return Math.round(node.bounds.w / parent.bounds.w * 100);
+}
+function getWidthBucket(node, parent, tolerance = 2) {
+  const widthPct = getWidthPct(node, parent);
+  if (widthPct > 100) {
+    return `overflow:${widthPct}%`;
+  }
+  if (widthPct >= 95 - tolerance && widthPct <= 100) {
+    return "full-width";
+  }
+  if (Math.abs(widthPct - 75) <= tolerance) {
+    return "75%";
+  }
+  if (widthPct >= 66 - tolerance && widthPct <= 67 + tolerance || Math.abs(widthPct - 66.67) <= tolerance) {
+    return "2/3";
+  }
+  if (Math.abs(widthPct - 50) <= tolerance) {
+    return "50%";
+  }
+  if (widthPct >= 33 - tolerance && widthPct <= 34 + tolerance || Math.abs(widthPct - 33.33) <= tolerance) {
+    return "1/3";
+  }
+  if (Math.abs(widthPct - 25) <= tolerance) {
+    return "25%";
+  }
+  return `${widthPct}%`;
+}
+function inferDistribution(children) {
+  if (!children || children.length < 2) return void 0;
+  const rows = [];
+  const sortedByY = [...children].sort((a, b) => a.bounds.y - b.bounds.y);
+  for (const child of sortedByY) {
+    let placed = false;
+    for (const row of rows) {
+      if (Math.abs(child.bounds.y - row[0].bounds.y) <= 16) {
+        row.push(child);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      rows.push([child]);
+    }
+  }
+  if (rows.length >= 2) {
+    const colCount = rows[0].length;
+    const isUniformCols = colCount >= 2 && rows.every((r) => r.length === colCount);
+    if (isUniformCols) {
+      for (const row of rows) {
+        row.sort((a, b) => a.bounds.x - b.bounds.x);
+      }
+      let colsAligned = true;
+      for (let c = 0; c < colCount; c++) {
+        const colX0 = rows[0][c].bounds.x;
+        for (let r = 1; r < rows.length; r++) {
+          if (Math.abs(rows[r][c].bounds.x - colX0) > 24) {
+            colsAligned = false;
+            break;
+          }
+        }
+        if (!colsAligned) break;
+      }
+      if (colsAligned) {
+        return `dist:grid cols:${colCount} rows:${rows.length}`;
+      }
+    }
+    return "dist:wrap";
+  }
+  return void 0;
+}
+function inferNodeStyle(node, parent, siblings = [], options) {
+  const style = {};
+  const sizeTol = options?.sizeBucketTolerance ?? 2;
+  const alignTol = options?.alignTolerance ?? 3;
+  const rawBehaviors = node.textProps?.behaviors;
+  if (Array.isArray(rawBehaviors) && rawBehaviors.length > 0) {
+    style.behaviors = [...rawBehaviors];
+  }
+  const rawNote = node.textProps?.note;
+  if (typeof rawNote === "string" && rawNote.trim() !== "") {
+    style.note = rawNote.trim();
+  }
+  if (typeof node.textProps?.columns === "number" && node.textProps.columns > 1) {
+    style.columns = node.textProps.columns;
+    if (node.textProps.columnSplit) {
+      style.columnSplit = node.textProps.columnSplit;
+    }
+  }
+  if (node.textProps?.isResponsive) {
+    style.isResponsive = true;
+    style.mobileStack = node.textProps.mobileStack || "stack";
+    if (node.textProps.tabletLayout) {
+      style.tabletLayout = node.textProps.tabletLayout;
+    }
+  }
+  if (typeof node.textProps?.mobileOrder === "number") {
+    style.mobileOrder = node.textProps.mobileOrder;
+  }
+  if (node.textProps?.hideOnMobile) {
+    style.hideOnMobile = true;
+  }
+  if (node.children && node.children.length >= 2) {
+    const dist = inferDistribution(node.children);
+    if (dist) {
+      style.dist = dist;
+    }
+  }
+  if (!parent || parent.bounds.w <= 0 || parent.bounds.h <= 0) {
+    return style;
+  }
+  const widthPct = getWidthPct(node, parent);
+  style.widthPct = widthPct;
+  const bucket = getWidthBucket(node, parent, sizeTol);
+  let omitWidth = false;
+  if (siblings.length >= 2) {
+    const allSameBucket = siblings.every(
+      (sib) => getWidthBucket(sib, parent, sizeTol) === bucket
+    );
+    if (allSameBucket) {
+      omitWidth = true;
+    }
+  }
+  if (!omitWidth) {
+    if (bucket === "full-width") {
+      style.widthToken = "full-width";
+    } else if (bucket.startsWith("overflow:")) {
+      style.widthToken = bucket;
+    } else {
+      style.widthToken = `width:${bucket}`;
+    }
+  }
+  const heightPct = Math.round(node.bounds.h / parent.bounds.h * 100);
+  if (heightPct < 10) {
+    style.heightToken = "short";
+  } else if (heightPct < 35) {
+    style.heightToken = "compact";
+  }
+  const parentCenterX = parent.bounds.x + parent.bounds.w / 2;
+  const childCenterX = node.bounds.x + node.bounds.w / 2;
+  const offsetPct = Math.abs(childCenterX - parentCenterX) / parent.bounds.w * 100;
+  const widthRatio = node.bounds.w / parent.bounds.w;
+  if (widthRatio >= 0.95) {
+  } else if (offsetPct <= alignTol) {
+    style.align = "center";
+  } else if (node.bounds.x >= parent.bounds.x + parent.bounds.w * (2 / 3) - 2 || childCenterX >= parent.bounds.x + parent.bounds.w * (2 / 3)) {
+    style.align = "right";
+  }
+  if (node.bounds.h < 0.6 * parent.bounds.h) {
+    const relTop = node.bounds.y - parent.bounds.y;
+    const relBottom = parent.bounds.y + parent.bounds.h - (node.bounds.y + node.bounds.h);
+    const parentCenterY = parent.bounds.y + parent.bounds.h / 2;
+    const childCenterY = node.bounds.y + node.bounds.h / 2;
+    const offsetYPct = Math.abs(childCenterY - parentCenterY) / parent.bounds.h * 100;
+    if (relTop <= 0.15 * parent.bounds.h) {
+      style.alignY = "top";
+    } else if (offsetYPct <= alignTol + 2) {
+      style.alignY = "middle";
+    } else if (relBottom <= 0.15 * parent.bounds.h) {
+      style.alignY = "bottom";
+    }
+  }
+  const overflowLeft = node.bounds.x < parent.bounds.x - 0.05 * parent.bounds.w;
+  const overflowRight = node.bounds.x + node.bounds.w > parent.bounds.x + parent.bounds.w + 0.05 * parent.bounds.w;
+  const overflowTop = node.bounds.y < parent.bounds.y - 0.05 * parent.bounds.h;
+  const overflowBottom = node.bounds.y + node.bounds.h > parent.bounds.y + parent.bounds.h + 0.05 * parent.bounds.h;
+  if (overflowLeft || overflowRight || overflowTop || overflowBottom) {
+    style.rel = "overflow";
+  } else {
+    let hasOverlap = false;
+    const nodeIndex = siblings.findIndex((s) => s.id === node.id);
+    if (nodeIndex > 0) {
+      for (let i = 0; i < nodeIndex; i++) {
+        const prev = siblings[i];
+        const ix1 = Math.max(node.bounds.x, prev.bounds.x);
+        const iy1 = Math.max(node.bounds.y, prev.bounds.y);
+        const ix2 = Math.min(
+          node.bounds.x + node.bounds.w,
+          prev.bounds.x + prev.bounds.w
+        );
+        const iy2 = Math.min(
+          node.bounds.y + node.bounds.h,
+          prev.bounds.y + prev.bounds.h
+        );
+        if (ix2 > ix1 && iy2 > iy1) {
+          const intersectArea = (ix2 - ix1) * (iy2 - iy1);
+          const minArea = Math.min(
+            node.bounds.w * node.bounds.h,
+            prev.bounds.w * prev.bounds.h
+          );
+          if (minArea > 0) {
+            const ratio = intersectArea / minArea;
+            if (ratio >= 0.15 && ratio <= 0.6) {
+              hasOverlap = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (hasOverlap) {
+      style.rel = "overlap";
+    } else {
+      const leftInset = (node.bounds.x - parent.bounds.x) / parent.bounds.w;
+      const rightInset = (parent.bounds.x + parent.bounds.w - (node.bounds.x + node.bounds.w)) / parent.bounds.w;
+      if (leftInset >= 0.15 && rightInset >= 0.15 && Math.abs(leftInset - rightInset) <= 0.05) {
+        style.rel = "inset";
+      }
+    }
+  }
+  return style;
+}
+
+// src/core/directive.ts
+var AI_DIRECTIVE_HEADER = `> This is a binding layout contract from MarkDraw v4.0. Follow every tag, id, count, placement, width, align, and flag EXACTLY; render positions relative to the parent even if unconventional. \`[Text Placeholder]\` means you MUST generate content (only sanctioned improvisation); everything unspecified (colors, type, imagery) is your freedom \u2014 if the contract is impossible, say so instead of deviating.
+> N \xD7 [pattern] and all counts are binding, not suggestions.`;
+
+// src/core/ids.ts
+function fnv1a32(str) {
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return hash >>> 0;
+}
+function generateShortId(shapeId, existing) {
+  const raw = shapeId.startsWith("shape:") ? shapeId.slice(6) : shapeId;
+  const hashVal = fnv1a32(raw);
+  const baseStr = (hashVal % 46656).toString(36).padStart(3, "0");
+  let candidate = baseStr;
+  let counter = 2;
+  if (existing) {
+    while (existing.has(candidate)) {
+      candidate = `${baseStr}_${counter}`;
+      counter++;
+    }
+    existing.add(candidate);
+  }
+  return candidate;
+}
+
+// src/annotation/roleDefaults.ts
+var ROLE_DEFAULT_PROPS = {
+  page: { variant: "hd" },
+  section: {},
+  card: { variant: "outline" },
+  navbar: {},
+  sidebar: {},
+  footer: {},
+  heading: { variant: "h2" },
+  para: {},
+  img: {},
+  video: {},
+  button: { variant: "solid" },
+  input: { placeholder: "Enter text..." },
+  textarea: { placeholder: "Enter multiline text..." },
+  select: { options: "Option 1, Option 2, Option 3" },
+  checkbox: { checked: false },
+  radio: { checked: false },
+  switch: { checked: false },
+  slider: { value: 50 },
+  stepper: { value: 1 },
+  table: {},
+  tabs: { options: "Tab 1, Tab 2, Tab 3" },
+  avatar: {},
+  badge: { variant: "outline" },
+  banner: { variant: "info" },
+  dialog: {},
+  separator: { variant: "solid" },
+  carousel: { variant: "contained" },
+  stat: {},
+  steps: { options: "Step 1, Step 2, Step 3" },
+  nav: { options: "Link 1, Link 2, Link 3" },
+  group: {}
+};
+function getRoleDefaultProps(role) {
+  return ROLE_DEFAULT_PROPS[role] || {};
+}
+var COMMON_UNTOUCHED_LABELS = /* @__PURE__ */ new Set([
+  "save changes",
+  "click me",
+  "enter text...",
+  "enter multiline text...",
+  "lorem ipsum dolor sit amet"
+]);
+function isUntouchedRoleLabel(role, label) {
+  if (!label || label.trim() === "") return true;
+  const clean = label.trim().toLowerCase();
+  const cleanRole = role.toLowerCase().replace(/_/g, " ");
+  if (clean === cleanRole || clean === cleanRole.replace(/\s+/g, "")) {
+    return true;
+  }
+  if (COMMON_UNTOUCHED_LABELS.has(clean)) {
+    return true;
+  }
+  return false;
+}
+
+// src/core/notation.ts
+function escapeNotation(str) {
+  if (!str) return "";
+  return str.replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/"/g, '\\"').replace(/\r?\n/g, " ").trim();
+}
+function getEffectiveLabel(type, label) {
+  if (isUntouchedRoleLabel(type, label)) {
+    return "";
+  }
+  return label || "";
+}
+function getEffectiveProp(type, key, val) {
+  if (val === void 0 || val === null || val === "") return "";
+  const defaults = getRoleDefaultProps(type);
+  if (defaults[key] !== void 0 && defaults[key] === val) {
+    return "";
+  }
+  return val;
+}
+function formatSemanticNotation(node) {
+  if (node.isUnit && node.unitName) {
+    return `[${node.unitName}]`;
+  }
+  if (node.isAnnotationNode) {
+    const role = node.role;
+    const p2 = node.textProps || {};
+    const rawLabel = p2.label || node.label;
+    const hasLiteral = !isUntouchedRoleLabel(role, rawLabel);
+    const primaryLabel = hasLiteral ? rawLabel : "";
+    let tag = "";
+    switch (role) {
+      case "page": {
+        tag = primaryLabel ? `[page "${escapeNotation(primaryLabel)}"]` : "[page]";
+        break;
+      }
+      case "heading": {
+        const v = p2.variant;
+        const varSuffix = v && v !== "default" ? ` ${v}` : "";
+        tag = primaryLabel ? `[heading "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[heading${varSuffix}]` : "[heading]";
+        break;
+      }
+      case "button": {
+        const v = p2.variant;
+        const varSuffix = v && v !== "default" && v !== "solid" ? ` ${v}` : "";
+        tag = primaryLabel ? `[button "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[button${varSuffix}]` : "[button]";
+        break;
+      }
+      case "avatar": {
+        tag = "[avatar]";
+        break;
+      }
+      case "card": {
+        const v = p2.variant;
+        const varSuffix = v && v !== "default" && v !== "outline" ? ` ${v}` : "";
+        tag = primaryLabel ? `[card "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[card${varSuffix}]` : "[card]";
+        break;
+      }
+      case "section": {
+        const v = p2.variant;
+        const varSuffix = v && v !== "default" ? ` ${v}` : "";
+        tag = primaryLabel ? `[section "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[section${varSuffix}]` : "[section]";
+        break;
+      }
+      case "para": {
+        tag = "[para]";
+        break;
+      }
+      case "img": {
+        tag = "[img]";
+        break;
+      }
+      case "video": {
+        tag = "[video]";
+        break;
+      }
+      case "navbar": {
+        const v = p2.variant;
+        const varSuffix = v && v !== "default" ? ` ${v}` : "";
+        tag = primaryLabel ? `[navbar "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[navbar${varSuffix}]` : "[navbar]";
+        break;
+      }
+      default: {
+        const v = p2.variant;
+        const varSuffix = v && v !== "default" ? ` ${v}` : "";
+        tag = primaryLabel ? `[${role} "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[${role}${varSuffix}]` : `[${role}]`;
+        break;
+      }
+    }
+    if (Array.isArray(p2.behaviors) && p2.behaviors.length > 0) {
+      const nonRespFlags = p2.behaviors.filter((f) => f !== "responsive");
+      if (nonRespFlags.length > 0 && tag.endsWith("]")) {
+        return `${tag.slice(0, -1)} ${nonRespFlags.join(" ")}]`;
+      }
+    }
+    return tag;
+  }
+  const baseTag = formatBaseNotation(node);
+  const p = node.textProps || {};
+  if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
+    if (baseTag.endsWith("]")) {
+      return `${baseTag.slice(0, -1)} ${p.behaviors.join(" ")}]`;
+    }
+  }
+  return baseTag;
+}
+function formatBaseNotation(node) {
+  const type = node.widgetType;
+  const p = node.textProps || {};
+  const primaryLabel = getEffectiveLabel(type, p.label || node.label);
+  switch (type) {
+    case "button": {
+      const txt = primaryLabel;
+      const v = getEffectiveProp("button", "variant", p.variant);
+      const varSuffix = v && v !== "solid" && v !== "default" ? ` ${v}` : "";
+      return txt ? `[btn "${escapeNotation(txt)}"${varSuffix}]` : `[btn${varSuffix}]`;
+    }
+    case "heading": {
+      const v = p.variant;
+      const varSuffix = v && v !== "default" ? ` ${v}` : "";
+      return primaryLabel ? `[header "${escapeNotation(primaryLabel)}"${varSuffix}]` : varSuffix ? `[header${varSuffix}]` : "[header]";
+    }
+    case "paragraph":
+      return "[para]";
+    case "input": {
+      const placeholder = getEffectiveProp("input", "placeholder", p.placeholder) || primaryLabel;
+      return placeholder ? `[input "${escapeNotation(placeholder)}"]` : "[input]";
+    }
+    case "search": {
+      const placeholder = getEffectiveProp("search", "placeholder", p.placeholder) || primaryLabel;
+      return placeholder ? `[search "${escapeNotation(placeholder)}"]` : "[search]";
+    }
+    case "password": {
+      const placeholder = p.placeholder;
+      return placeholder ? `[password "${escapeNotation(placeholder)}"]` : "[password]";
+    }
+    case "textarea": {
+      const placeholder = p.placeholder || primaryLabel || "";
+      return placeholder ? `[textarea "${escapeNotation(placeholder)}"]` : "[textarea]";
+    }
+    case "date_picker": {
+      const placeholder = p.placeholder || primaryLabel;
+      return placeholder ? `[date "${escapeNotation(placeholder)}"]` : "[date]";
+    }
+    case "file_upload": {
+      const txt = primaryLabel || "Upload";
+      return `[file "${escapeNotation(txt)}"]`;
+    }
+    case "select": {
+      const opts = getEffectiveProp("select", "options", p.options) || getEffectiveProp("select", "placeholder", p.placeholder);
+      return opts ? `[select "${escapeNotation(opts)}"]` : "[select]";
+    }
+    case "slider": {
+      const val = typeof p.value === "number" ? p.value : 50;
+      return `[slider ${val}]`;
+    }
+    case "stepper": {
+      const val = typeof p.value === "number" ? p.value : 1;
+      return `[stepper ${val}]`;
+    }
+    case "color_swatch": {
+      const v = p.variant || primaryLabel;
+      return v ? `[color "${escapeNotation(v)}"]` : "[color]";
+    }
+    case "checkbox": {
+      const txt = primaryLabel;
+      const flag = p.checked ? "on" : "off";
+      return txt ? `[check "${escapeNotation(txt)}" ${flag}]` : `[check ${flag}]`;
+    }
+    case "radio": {
+      const txt = primaryLabel;
+      const flag = p.checked ? "on" : "off";
+      return txt ? `[radio "${escapeNotation(txt)}" ${flag}]` : `[radio ${flag}]`;
+    }
+    case "toggle": {
+      const flag = p.checked ? "on" : "off";
+      return `[toggle ${flag}]`;
+    }
+    case "navbar":
+    case "menubar": {
+      const items = getEffectiveProp(type, "options", p.options) || primaryLabel;
+      return items ? `[nav "${escapeNotation(items)}"]` : "[navbar]";
+    }
+    case "sidebar": {
+      const items = getEffectiveProp("sidebar", "options", p.options) || primaryLabel;
+      return items ? `[sidebar "${escapeNotation(items)}"]` : "[sidebar]";
+    }
+    case "footer_nav": {
+      const items = getEffectiveProp("footer_nav", "options", p.options) || primaryLabel;
+      return items ? `[footer_nav "${escapeNotation(items)}"]` : "[footer_nav]";
+    }
+    case "link": {
+      const txt = primaryLabel;
+      return txt ? `[link "${escapeNotation(txt)}"]` : "[link]";
+    }
+    case "chip": {
+      const txt = primaryLabel;
+      return txt ? `[chip "${escapeNotation(txt)}"]` : "[chip]";
+    }
+    case "badge": {
+      const txt = primaryLabel;
+      return txt ? `[badge "${escapeNotation(txt)}"]` : "[badge]";
+    }
+    case "tabs": {
+      const opts = getEffectiveProp("tabs", "options", p.options);
+      return opts ? `[tabs "${escapeNotation(opts)}"]` : "[tabs]";
+    }
+    case "breadcrumbs": {
+      const pathStr = getEffectiveProp("breadcrumbs", "options", p.options) || primaryLabel;
+      return pathStr ? `[crumb "${escapeNotation(pathStr)}"]` : "[crumb]";
+    }
+    case "steps": {
+      const range = p.variant || "1-4";
+      const txt = primaryLabel;
+      return txt ? `[steps ${range} "${escapeNotation(txt)}"]` : `[steps ${range}]`;
+    }
+    case "pagination": {
+      const val = p.variant || "1/5";
+      return `[pag ${val}]`;
+    }
+    case "page": {
+      const txt = primaryLabel;
+      const v = p.variant;
+      const varSuffix = v && v !== "default" ? ` ${v}` : "";
+      return txt ? `[page "${escapeNotation(txt)}"${varSuffix}]` : varSuffix ? `[page${varSuffix}]` : "[page]";
+    }
+    case "section": {
+      const txt = primaryLabel;
+      return txt ? `[section "${escapeNotation(txt)}"]` : "[section]";
+    }
+    case "header": {
+      const txt = primaryLabel;
+      return txt ? `[header "${escapeNotation(txt)}"]` : "[header]";
+    }
+    case "footer": {
+      const txt = primaryLabel;
+      return txt ? `[footer "${escapeNotation(txt)}"]` : "[footer]";
+    }
+    case "card": {
+      const txt = primaryLabel;
+      const v = p.variant;
+      const varSuffix = v && v !== "default" && v !== "outline" && v !== "solid" ? ` ${v}` : "";
+      return txt ? `[card "${escapeNotation(txt)}"${varSuffix}]` : varSuffix ? `[card${varSuffix}]` : "[card]";
+    }
+    case "carousel": {
+      const txt = primaryLabel;
+      const v = p.variant;
+      const varSuffix = v && v !== "default" && v !== "contained" ? ` ${v}` : "";
+      return txt ? `[carousel "${escapeNotation(txt)}"${varSuffix}]` : varSuffix ? `[carousel${varSuffix}]` : "[carousel]";
+    }
+    case "hero": {
+      const txt = primaryLabel;
+      return txt ? `[hero "${escapeNotation(txt)}"]` : "[hero]";
+    }
+    case "modal": {
+      const txt = primaryLabel;
+      return txt ? `[modal "${escapeNotation(txt)}"]` : "[modal]";
+    }
+    case "split_pane":
+      return "[split]";
+    case "grid_gallery": {
+      const v = p.variant || "3x2";
+      return `[grid ${v}]`;
+    }
+    case "list": {
+      const count = typeof p.value === "number" && p.value > 0 ? p.value : 5;
+      return `[list ${count}]`;
+    }
+    case "blockquote":
+      return "[quote]";
+    case "code_block": {
+      const code = primaryLabel;
+      return code ? `[code "${escapeNotation(code)}"]` : "[code]";
+    }
+    case "stat_kpi": {
+      const kpi = primaryLabel;
+      return kpi ? `[kpi "${escapeNotation(kpi)}"]` : "[kpi]";
+    }
+    case "image_frame": {
+      const alt = getEffectiveProp("image_frame", "altText", p.altText) || primaryLabel;
+      return alt ? `[img "${escapeNotation(alt)}"]` : "[img]";
+    }
+    case "video_frame": {
+      const src = primaryLabel;
+      return src ? `[video "${escapeNotation(src)}"]` : "[video]";
+    }
+    case "avatar":
+      return "[avatar]";
+    case "avatar_group":
+      return "[avatar_group]";
+    case "thumbnail_strip":
+      return "[thumbnails]";
+    case "icon": {
+      const name = getEffectiveProp("icon", "iconName", p.iconName) || primaryLabel;
+      return name ? `[icon "${escapeNotation(name)}"]` : "[icon]";
+    }
+    case "divider":
+      return "[divider]";
+    case "spacer":
+      return "[spacer]";
+    case "progress_bar": {
+      const val = typeof p.value === "number" ? p.value : 60;
+      return `[progress ${val}]`;
+    }
+    case "skeleton":
+      return "[skeleton]";
+    case "tooltip": {
+      const txt = primaryLabel;
+      return txt ? `[tooltip "${escapeNotation(txt)}"]` : "[tooltip]";
+    }
+    case "toast": {
+      const txt = primaryLabel;
+      return txt ? `[toast "${escapeNotation(txt)}"]` : "[toast]";
+    }
+    case "empty_state": {
+      const txt = primaryLabel;
+      return txt ? `[empty "${escapeNotation(txt)}"]` : "[empty]";
+    }
+    case "banner": {
+      const txt = primaryLabel;
+      const v = p.variant || "warn";
+      return txt ? `[banner "${escapeNotation(txt)}" ${v}]` : `[banner ${v}]`;
+    }
+    case "data_table": {
+      const v = p.variant || "4x3";
+      return `[table ${v}]`;
+    }
+    default:
+      return type ? `[${type}]` : "[unknown]";
+  }
+}
+
+// src/core/patterns.ts
+function getWidgetTagName(widgetType) {
+  switch (widgetType) {
+    case "button":
+      return "btn";
+    case "heading":
+      return "header";
+    case "paragraph":
+      return "para";
+    case "image_frame":
+      return "img";
+    case "video_frame":
+      return "video";
+    case "checkbox":
+      return "check";
+    case "radio":
+      return "radio";
+    case "toggle":
+      return "toggle";
+    case "select":
+      return "select";
+    case "slider":
+      return "slider";
+    case "date_picker":
+      return "date";
+    case "file_upload":
+      return "file";
+    case "navigation":
+    case "navbar":
+    case "footer_nav":
+      return "nav";
+    case "breadcrumbs":
+      return "crumb";
+    case "pagination":
+      return "pag";
+    case "steps":
+      return "steps";
+    case "progress_bar":
+      return "progress";
+    case "code_block":
+      return "code";
+    case "stat_kpi":
+      return "kpi";
+    case "split_pane":
+      return "split";
+    case "grid_gallery":
+      return "grid";
+    case "data_table":
+    case "table":
+      return "table";
+    case "icon":
+      return "icon";
+    case "avatar":
+      return "avatar";
+    case "divider":
+      return "divider";
+    case "spacer":
+      return "spacer";
+    case "toast":
+      return "toast";
+    case "tooltip":
+      return "tooltip";
+    case "empty_state":
+      return "empty";
+    case "banner":
+      return "banner";
+    default:
+      return widgetType.replace(/_/g, "-");
+  }
+}
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+function isPrimitivePattern(p) {
+  const len = p.length;
+  for (let subLen = 1; subLen <= Math.floor(len / 2); subLen++) {
+    if (len % subLen === 0) {
+      const sub = p.slice(0, subLen);
+      let allMatch = true;
+      for (let j = subLen; j < len; j += subLen) {
+        if (!arraysEqual(sub, p.slice(j, j + subLen))) {
+          allMatch = false;
+          break;
+        }
+      }
+      if (allMatch) return false;
+    }
+  }
+  return true;
+}
+function detectSiblingPatterns(children) {
+  if (!children || children.length === 0) {
+    return "\u2014";
+  }
+  if (children.length === 1) {
+    return formatSemanticNotation(children[0]);
+  }
+  const types = children.map((c) => c.widgetType || "unknown");
+  const n = types.length;
+  const segments = [];
+  let i = 0;
+  while (i < n) {
+    let bestL = 0;
+    let bestK = 0;
+    let bestScore = 0;
+    for (let L = 1; L <= 4; L++) {
+      if (i + L > n) continue;
+      const pattern = types.slice(i, i + L);
+      if (!isPrimitivePattern(pattern)) continue;
+      let k = 1;
+      while (i + (k + 1) * L <= n) {
+        const nextSlice = types.slice(i + k * L, i + (k + 1) * L);
+        if (arraysEqual(pattern, nextSlice)) {
+          k++;
+        } else {
+          break;
+        }
+      }
+      if (k >= 2) {
+        const score = k * L;
+        if (score > bestScore) {
+          bestScore = score;
+          bestL = L;
+          bestK = k;
+        }
+      }
+    }
+    if (bestK >= 2 && bestL > 0) {
+      const patternTypes = types.slice(i, i + bestL);
+      const patternTags = patternTypes.map(getWidgetTagName).join(", ");
+      segments.push(`${bestK} \xD7 [${patternTags}] (repeated group \u2014 likely card/list items)`);
+      for (let pIdx = i; pIdx < i + bestK * bestL; pIdx++) {
+        children[pIdx].patternCount = bestK;
+      }
+      i += bestK * bestL;
+    } else {
+      segments.push(formatSemanticNotation(children[i]));
+      i++;
+    }
+  }
+  return segments.join(", ");
+}
+function annotateSiblingPatterns(children) {
+  detectSiblingPatterns(children);
+}
+
+// src/annotation/types.ts
+var ROLE_SCHEMA_VERSION = 1;
+
+// src/annotation/shapeMeta.ts
+function getShapeMeta(shape) {
+  const meta = shape.meta?.markdraw;
+  if (!meta || typeof meta !== "object") return null;
+  const m = meta;
+  if (m.schema !== ROLE_SCHEMA_VERSION) return null;
+  return meta;
+}
+
+// src/annotation/roles.ts
+var ROLE_NAMES = Object.freeze([
+  "page",
+  "section",
+  "card",
+  "navbar",
+  "sidebar",
+  "footer",
+  "heading",
+  "para",
+  "img",
+  "video",
+  "button",
+  "input",
+  "textarea",
+  "select",
+  "checkbox",
+  "radio",
+  "switch",
+  "slider",
+  "stepper",
+  "table",
+  "tabs",
+  "avatar",
+  "badge",
+  "banner",
+  "dialog",
+  "separator",
+  "carousel",
+  "stat",
+  "steps",
+  "nav",
+  "group"
+]);
+var ROLE_DEFINITIONS = Object.freeze({
+  page: {
+    name: "page",
+    aliases: ["screen", "artboard"],
+    decisionRule: "top-level viewport; one per root frame",
+    category: "structure",
+    flags: ["responsive"]
+  },
+  section: {
+    name: "section",
+    aliases: ["container", "band", "block", "content"],
+    decisionRule: "page band dividing the artifact vertically",
+    category: "structure",
+    flags: ["sticky", "parallax"]
+  },
+  card: {
+    name: "card",
+    aliases: ["tile", "item", "post", "article", "content-box"],
+    decisionRule: "repeatable content unit",
+    category: "structure",
+    flags: ["floating", "expandable"]
+  },
+  navbar: {
+    name: "navbar",
+    aliases: ["appbar", "topbar", "navigation menu"],
+    decisionRule: "primary navigation band",
+    category: "navigation",
+    flags: ["sticky", "floating", "overlay", "fixed"]
+  },
+  sidebar: {
+    name: "sidebar",
+    aliases: ["drawer-rail", "side panel"],
+    decisionRule: "secondary side navigation",
+    category: "navigation",
+    flags: ["sticky", "collapse:drawer"]
+  },
+  footer: {
+    name: "footer",
+    aliases: ["page-footer"],
+    decisionRule: "bottom band",
+    category: "structure",
+    flags: ["sticky", "fixed"]
+  },
+  heading: {
+    name: "heading",
+    aliases: ["h1\u2013h6", "h1", "h2", "h3", "h4", "h5", "h6", "title", "headline", "header-text"],
+    decisionRule: "text heading ONLY \u2014 never a band",
+    category: "content",
+    flags: []
+  },
+  para: {
+    name: "para",
+    aliases: ["paragraph", "body", "text block"],
+    decisionRule: "body text",
+    category: "content",
+    flags: []
+  },
+  img: {
+    name: "img",
+    aliases: ["picture", "image", "image_frame", "thumbnail", "media"],
+    decisionRule: "static media",
+    category: "content",
+    flags: ["parallax"]
+  },
+  video: {
+    name: "video",
+    aliases: ["player", "video_frame"],
+    decisionRule: "motion media",
+    category: "content",
+    flags: ["autoplay"]
+  },
+  button: {
+    name: "button",
+    aliases: ["btn", "cta"],
+    decisionRule: "actionable control",
+    category: "interaction",
+    flags: ["fixed"]
+  },
+  input: {
+    name: "input",
+    aliases: ["field", "text field", "form field"],
+    decisionRule: "single-line entry (variants: password, file, date)",
+    category: "interaction",
+    flags: []
+  },
+  textarea: {
+    name: "textarea",
+    aliases: ["multiline"],
+    decisionRule: "multi-line entry",
+    category: "interaction",
+    flags: []
+  },
+  select: {
+    name: "select",
+    aliases: ["dropdown", "picker"],
+    decisionRule: "choice from list",
+    category: "interaction",
+    flags: []
+  },
+  checkbox: {
+    name: "checkbox",
+    aliases: ["check"],
+    decisionRule: "boolean control",
+    category: "interaction",
+    flags: []
+  },
+  radio: {
+    name: "radio",
+    aliases: ["option"],
+    decisionRule: "single choice from set",
+    category: "interaction",
+    flags: []
+  },
+  switch: {
+    name: "switch",
+    aliases: ["toggle"],
+    decisionRule: "on/off control",
+    category: "interaction",
+    flags: []
+  },
+  slider: {
+    name: "slider",
+    aliases: ["range"],
+    decisionRule: "ranged control",
+    category: "interaction",
+    flags: []
+  },
+  stepper: {
+    name: "stepper",
+    aliases: ["number input"],
+    decisionRule: "+/- numeric control",
+    category: "interaction",
+    flags: []
+  },
+  table: {
+    name: "table",
+    aliases: ["data_table", "grid"],
+    decisionRule: "tabular data",
+    category: "content",
+    flags: []
+  },
+  tabs: {
+    name: "tabs",
+    aliases: ["tab bar"],
+    decisionRule: "sibling view switcher",
+    category: "navigation",
+    flags: ["scroll-snap"]
+  },
+  avatar: {
+    name: "avatar",
+    aliases: ["profile pic", "user image"],
+    decisionRule: "person image",
+    category: "content",
+    flags: []
+  },
+  badge: {
+    name: "badge",
+    aliases: ["chip", "tag", "pill", "label"],
+    decisionRule: "small status label",
+    category: "feedback",
+    flags: []
+  },
+  banner: {
+    name: "banner",
+    aliases: ["alert", "callout", "notice"],
+    decisionRule: "inline message strip (never alert)",
+    category: "feedback",
+    flags: ["overlay", "dismissible"]
+  },
+  dialog: {
+    name: "dialog",
+    aliases: ["modal", "popup", "overlay", "lightbox"],
+    decisionRule: "floating overlay panel",
+    category: "feedback",
+    flags: ["fullscreen", "draggable"]
+  },
+  separator: {
+    name: "separator",
+    aliases: ["divider", "hr", "rule"],
+    decisionRule: "structural line",
+    category: "structure",
+    flags: []
+  },
+  carousel: {
+    name: "carousel",
+    aliases: ["slider-gallery", "stories"],
+    decisionRule: "sliding group",
+    category: "content",
+    flags: ["autoplay", "scroll-snap", "fullscreen"]
+  },
+  stat: {
+    name: "stat",
+    aliases: ["kpi", "metric"],
+    decisionRule: "number + label unit",
+    category: "content",
+    flags: []
+  },
+  steps: {
+    name: "steps",
+    aliases: ["wizard"],
+    decisionRule: "sequential progress",
+    category: "navigation",
+    flags: []
+  },
+  nav: {
+    name: "nav",
+    aliases: ["link list", "footer_nav"],
+    decisionRule: "generic link group",
+    category: "navigation",
+    flags: []
+  },
+  group: {
+    name: "group",
+    aliases: ["unit wrapper"],
+    decisionRule: "invisible semantic grouping, no visual box",
+    category: "utility",
+    flags: []
+  }
+});
+var ROLE_LIST = Object.freeze(
+  ROLE_NAMES.map((name) => ROLE_DEFINITIONS[name])
+);
+function isValidRole(role) {
+  return ROLE_NAMES.includes(role);
+}
+function isAllowedRoleFlag(role, flag) {
+  if (!isValidRole(role)) return false;
+  return ROLE_DEFINITIONS[role].flags.includes(flag);
+}
+
+// src/core/types.ts
+function createShapeId(id) {
+  if (id) {
+    return id.startsWith("shape:") ? id : `shape:${id}`;
+  }
+  return `shape:${Math.random().toString(36).slice(2, 9)}`;
+}
+
+// src/annotation/migrate.ts
+var V3_WIDGET_TO_V4_ROLE_MAP = Object.freeze({
+  // Structure
+  page: { targetRole: "page" },
+  section: { targetRole: "section" },
+  card: { targetRole: "card" },
+  navbar: { targetRole: "navbar" },
+  sidebar: { targetRole: "sidebar" },
+  footer: { targetRole: "footer" },
+  header: { targetRole: "heading" },
+  menubar: { targetRole: "navbar" },
+  footer_nav: { targetRole: "nav" },
+  nav: { targetRole: "nav" },
+  hero: { targetRole: "section", variant: "hero" },
+  split_pane: { targetRole: "section", variant: "split" },
+  grid_gallery: { targetRole: "section", variant: "grid" },
+  modal: { targetRole: "dialog" },
+  carousel: { targetRole: "carousel" },
+  steps: { targetRole: "steps" },
+  tabs: { targetRole: "tabs" },
+  // Content
+  heading: { targetRole: "heading" },
+  para: { targetRole: "para" },
+  text: { targetRole: "para" },
+  label: { targetRole: "para" },
+  image_frame: { targetRole: "img" },
+  img: { targetRole: "img" },
+  thumbnail_strip: { targetRole: "img", variant: "strip" },
+  video_frame: { targetRole: "video" },
+  avatar: { targetRole: "avatar" },
+  avatar_group: { targetRole: "avatar" },
+  icon: { targetRole: "badge", variant: "icon" },
+  // Feedback & Utility
+  stat_kpi: { targetRole: "stat" },
+  kpi: { targetRole: "stat" },
+  badge: { targetRole: "badge" },
+  banner: { targetRole: "banner" },
+  button: { targetRole: "button" },
+  input: { targetRole: "input" },
+  search: { targetRole: "input", variant: "search" },
+  password: { targetRole: "input", variant: "password" },
+  textarea: { targetRole: "textarea" },
+  select: { targetRole: "select" },
+  checkbox: { targetRole: "checkbox" },
+  radio: { targetRole: "radio" },
+  toggle: { targetRole: "switch" },
+  slider: { targetRole: "slider" },
+  stepper: { targetRole: "stepper" },
+  file_upload: { targetRole: "input", variant: "file" },
+  date_picker: { targetRole: "input", variant: "date" },
+  color_swatch: { targetRole: "badge", variant: "swatch" },
+  table: { targetRole: "table" },
+  data_table: { targetRole: "table" },
+  divider: { targetRole: "separator" },
+  spacer: { targetRole: "group" },
+  progress: { targetRole: "stat", variant: "progress" }
+});
+function isV3Widget(shape) {
+  if (shape.type === "ui-widget") return true;
+  const props = shape.props;
+  if (props && typeof props.widgetType === "string") return true;
+  return false;
+}
+function migrateShapes(shapes) {
+  const lints = [];
+  const migratedShapes = [];
+  const helperBounds = (s) => {
+    const p = s.props || {};
+    return {
+      x: s.x || 0,
+      y: s.y || 0,
+      w: typeof p.w === "number" && p.w || 100,
+      h: typeof p.h === "number" && p.h || 50
+    };
+  };
+  const promotedContainerIds = /* @__PURE__ */ new Set();
+  for (const s of shapes) {
+    const b = helperBounds(s);
+    let count = 0;
+    for (const other of shapes) {
+      if (other.id === s.id) continue;
+      const ob = helperBounds(other);
+      if (b.w >= ob.w && b.h >= ob.h) {
+        const ix1 = Math.max(b.x, ob.x);
+        const iy1 = Math.max(b.y, ob.y);
+        const ix2 = Math.min(b.x + b.w, ob.x + ob.w);
+        const iy2 = Math.min(b.y + b.h, ob.y + ob.h);
+        if (ix2 > ix1 && iy2 > iy1) {
+          const intersect = (ix2 - ix1) * (iy2 - iy1);
+          if (intersect / (ob.w * ob.h) >= 0.5) {
+            count++;
+          }
+        }
+      }
+    }
+    if (count >= 2) {
+      promotedContainerIds.add(s.id);
+    }
+  }
+  for (const shape of shapes) {
+    if (!isV3Widget(shape)) {
+      migratedShapes.push(shape);
+      continue;
+    }
+    const rawProps = shape.props || {};
+    const widgetType = typeof rawProps.widgetType === "string" ? rawProps.widgetType : "card";
+    const rule = V3_WIDGET_TO_V4_ROLE_MAP[widgetType] || { targetRole: "card" };
+    let targetRole = rule.targetRole;
+    if (promotedContainerIds.has(shape.id) && targetRole !== "page" && targetRole !== "section") {
+      targetRole = "card";
+    }
+    const roleDef = ROLE_DEFINITIONS[targetRole];
+    const allowedFlags = new Set(roleDef ? roleDef.flags : []);
+    const label = typeof rawProps.label === "string" && rawProps.label.trim() || typeof rawProps.text === "string" && rawProps.text.trim() || typeof rawProps.name === "string" && rawProps.name.trim() || void 0;
+    const incomingFlags = Array.isArray(rawProps.behaviors) ? rawProps.behaviors : Array.isArray(rawProps.flags) ? rawProps.flags : [];
+    const validBehaviors = [];
+    for (const flag of incomingFlags) {
+      if (allowedFlags.has(flag)) {
+        validBehaviors.push(flag);
+      } else {
+        lints.push(`Flag "${flag}" has no meaning for role "${targetRole}" \u2014 dropped.`);
+      }
+    }
+    const props = {};
+    if (label) props.label = label;
+    if (typeof rawProps.variant === "string" && rawProps.variant !== "default" && rawProps.variant !== "solid") {
+      props.variant = rawProps.variant;
+    } else if (rule.variant) {
+      props.variant = rule.variant;
+    }
+    if (typeof rawProps.placeholder === "string") props.placeholder = rawProps.placeholder;
+    if (typeof rawProps.options === "string") props.options = rawProps.options;
+    if (typeof rawProps.count === "number") props.count = rawProps.count;
+    if (typeof rawProps.note === "string") props.note = rawProps.note;
+    if (typeof rawProps.value === "number") props.value = rawProps.value;
+    if (typeof rawProps.columns === "number") props.columns = rawProps.columns;
+    if (typeof rawProps.columnSplit === "string") props.columnSplit = rawProps.columnSplit;
+    if (typeof rawProps.isResponsive === "boolean") props.isResponsive = rawProps.isResponsive;
+    if (typeof rawProps.mobileStack === "string") props.mobileStack = rawProps.mobileStack;
+    if (typeof rawProps.tabletLayout === "string") props.tabletLayout = rawProps.tabletLayout;
+    if (typeof rawProps.mobileOrder === "number") props.mobileOrder = rawProps.mobileOrder;
+    if (typeof rawProps.hideOnMobile === "boolean") props.hideOnMobile = rawProps.hideOnMobile;
+    if (validBehaviors.length > 0) props.behaviors = validBehaviors;
+    let parentId = typeof rawProps.parentId === "string" ? rawProps.parentId : shape.parentId && shape.parentId.startsWith("shape:") ? shape.parentId : null;
+    if (!parentId && targetRole !== "page") {
+      const candidates = shapes.filter((c) => {
+        if (c.id === shape.id) return false;
+        const cProps = c.props || {};
+        const cType = typeof cProps.widgetType === "string" ? cProps.widgetType : "";
+        const cRule = V3_WIDGET_TO_V4_ROLE_MAP[cType];
+        const cRole = promotedContainerIds.has(c.id) ? "card" : cRule?.targetRole || cProps.role;
+        return cRole === "page" || cRole === "section" || cRole === "card" || cRole === "dialog";
+      });
+      candidates.sort((a, b) => {
+        const aProps = a.props || {};
+        const bProps = b.props || {};
+        const aArea = (aProps.w || 100) * (aProps.h || 100);
+        const bArea = (bProps.w || 100) * (bProps.h || 100);
+        return aArea - bArea;
+      });
+      const sBounds = {
+        x: shape.x || 0,
+        y: shape.y || 0,
+        w: typeof rawProps.w === "number" && rawProps.w || 100,
+        h: typeof rawProps.h === "number" && rawProps.h || 50
+      };
+      const sAABB = { minX: sBounds.x, minY: sBounds.y, maxX: sBounds.x + sBounds.w, maxY: sBounds.y + sBounds.h };
+      for (const cand of candidates) {
+        const cProps = cand.props || {};
+        const cBounds = {
+          x: cand.x || 0,
+          y: cand.y || 0,
+          w: typeof cProps.w === "number" && cProps.w || 100,
+          h: typeof cProps.h === "number" && cProps.h || 100
+        };
+        const cAABB = { minX: cBounds.x, minY: cBounds.y, maxX: cBounds.x + cBounds.w, maxY: cBounds.y + cBounds.h };
+        if (cBounds.w >= sBounds.w && cBounds.h >= sBounds.h) {
+          const ix1 = Math.max(sAABB.minX, cAABB.minX);
+          const iy1 = Math.max(sAABB.minY, cAABB.minY);
+          const ix2 = Math.min(sAABB.maxX, cAABB.maxX);
+          const iy2 = Math.min(sAABB.maxY, cAABB.maxY);
+          if (ix2 > ix1 && iy2 > iy1) {
+            const intersectArea = (ix2 - ix1) * (iy2 - iy1);
+            const childArea = sBounds.w * sBounds.h;
+            if (childArea > 0 && intersectArea / childArea >= 0.5) {
+              parentId = cand.id;
+              break;
+            }
+          }
+        }
+      }
+    }
+    const responsive = rawProps.isResponsive || rawProps.hideOnMobile || typeof rawProps.mobileOrder === "number" ? {
+      order: typeof rawProps.mobileOrder === "number" ? rawProps.mobileOrder : "auto",
+      primary: false,
+      smVisible: rawProps.hideOnMobile ? "hidden" : "visible",
+      smFullWidth: false,
+      tablet: rawProps.tabletLayout || "maintain"
+    } : null;
+    const markdrawMeta = {
+      schema: ROLE_SCHEMA_VERSION,
+      role: targetRole,
+      unitId: null,
+      parentId,
+      responsive,
+      props,
+      v3WidgetType: widgetType
+    };
+    const w = typeof rawProps.w === "number" && rawProps.w || 100;
+    const h = typeof rawProps.h === "number" && rawProps.h || 50;
+    let targetType = shape.type;
+    let targetShapeProps = { ...rawProps };
+    if (shape.type === "ui-widget") {
+      if (targetRole === "page") {
+        targetType = "frame";
+        targetShapeProps = {
+          w,
+          h,
+          name: label || "Page"
+        };
+      } else if (targetRole === "group") {
+        targetType = "group";
+        targetShapeProps = {};
+      } else {
+        targetType = "geo";
+        targetShapeProps = {
+          geo: "rectangle",
+          w,
+          h,
+          text: label || ""
+        };
+      }
+    }
+    const id = shape.id || createShapeId();
+    const migratedShape = {
+      ...shape,
+      id,
+      type: targetType,
+      props: targetShapeProps,
+      meta: {
+        ...shape.meta || {},
+        markdraw: markdrawMeta
+      }
+    };
+    migratedShapes.push(migratedShape);
+  }
+  return {
+    shapes: migratedShapes,
+    lints,
+    docVersion: 4
+  };
+}
+
+// src/core/ir.ts
+function inferDirection(children) {
+  if (children.length <= 1) return "Row";
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const child of children) {
+    const cx = child.bounds.x + child.bounds.w / 2;
+    const cy = child.bounds.y + child.bounds.h / 2;
+    if (cx < minX) minX = cx;
+    if (cx > maxX) maxX = cx;
+    if (cy < minY) minY = cy;
+    if (cy > maxY) maxY = cy;
+  }
+  const spanX = maxX - minX;
+  const spanY = maxY - minY;
+  return spanY > spanX ? "Column" : "Row";
+}
+function sortChildren(children, direction) {
+  if (direction === "Row") {
+    children.sort((a, b) => a.bounds.x - b.bounds.x);
+  } else {
+    children.sort((a, b) => a.bounds.y - b.bounds.y);
+  }
+}
+function buildIRTree(shapes, editor, containmentThreshold = 0.85, options) {
+  const hasWidgets = shapes.some((s) => s.type === "ui-widget");
+  const migration = hasWidgets ? migrateShapes(shapes) : null;
+  const effectiveShapes = migration ? migration.shapes : shapes;
+  return buildAnnotationIRTree(effectiveShapes, editor, containmentThreshold, options, migration?.lints);
+}
+function countSubtree(node) {
+  if (!node) return 0;
+  let count = 1;
+  for (const c of node.children) {
+    count += countSubtree(c);
+  }
+  return count;
+}
+function buildAnnotationIRTree(shapes, editor, _containmentThreshold = 0.85, options, extraLints = []) {
+  if (shapes.length === 0) {
+    return { elementCount: 0, roots: [], lints: [] };
+  }
+  const usedShortIds = /* @__PURE__ */ new Set();
+  const rawLints = extraLints.map((text) => ({ text }));
+  const relations = [];
+  const frames = shapes.filter((s) => s.type === "frame");
+  const groups = shapes.filter((s) => s.type === "group");
+  const arrows = shapes.filter((s) => s.type === "arrow");
+  const otherShapes = shapes.filter(
+    (s) => s.type !== "frame" && s.type !== "group" && s.type !== "arrow" && s.type !== "line"
+  );
+  const getBounds = (shape) => {
+    if (editor && typeof editor.getShapePageBounds === "function") {
+      const b = editor.getShapePageBounds(shape);
+      if (b) return { x: b.x, y: b.y, w: b.w, h: b.h };
+    }
+    const p = shape.props || {};
+    const w = typeof p.w === "number" ? p.w : 100;
+    const h = typeof p.h === "number" ? p.h : 100;
+    const x = shape.x || 0;
+    const y = shape.y || 0;
+    return { x, y, w, h };
+  };
+  const taggedShapes = [];
+  const untaggedShapes = [];
+  for (const s of otherShapes) {
+    const meta = getShapeMeta(s);
+    if (meta && meta.role) {
+      taggedShapes.push(s);
+    } else {
+      untaggedShapes.push(s);
+    }
+  }
+  if (untaggedShapes.length > 0) {
+    const ids = untaggedShapes.map((s) => `#${generateShortId(s.id, usedShortIds)}`);
+    rawLints.push({
+      text: `Skipped ${untaggedShapes.length} untagged shapes: ${ids.join(", ")} \u2014 assign roles or delete.`
+    });
+  }
+  const nodeMap = /* @__PURE__ */ new Map();
+  const allShapesMap = /* @__PURE__ */ new Map();
+  for (const s of shapes) {
+    allShapesMap.set(s.id, s);
+  }
+  const unitDefs = options?.units || [];
+  for (const u of unitDefs) {
+    if (!u.baseRole) {
+      rawLints.push({
+        text: `Unit "${u.name}" has no base role \u2014 fix in the customization panel.`
+      });
+    }
+  }
+  for (const g of groups) {
+    const gMeta = getShapeMeta(g);
+    let unitId = gMeta?.unitId || null;
+    const memberShapes = shapes.filter((s) => s.parentId === g.id);
+    if (!unitId) {
+      for (const m of memberShapes) {
+        const mMeta = getShapeMeta(m);
+        if (mMeta?.unitId) {
+          unitId = mMeta.unitId;
+          break;
+        }
+      }
+    }
+    const unitDef = unitId ? unitDefs.find((u) => u.id === unitId) : null;
+    const isUnit = Boolean(unitId || unitDef || gMeta && gMeta.role === "card");
+    const baseRole = unitDef?.baseRole || gMeta?.role || (isUnit ? "card" : "group");
+    const unitName = unitDef?.name || gMeta?.props?.label || g.props?.name || (isUnit ? "Follow Card" : "group");
+    let bounds = getBounds(g);
+    if (bounds.w <= 100 && bounds.h <= 100 && memberShapes.length > 0) {
+      const childBounds = memberShapes.map(getBounds);
+      const minX = Math.min(...childBounds.map((b) => b.x));
+      const minY = Math.min(...childBounds.map((b) => b.y));
+      const maxX = Math.max(...childBounds.map((b) => b.x + b.w));
+      const maxY = Math.max(...childBounds.map((b) => b.y + b.h));
+      bounds = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+    const shortId = generateShortId(g.id, usedShortIds);
+    const groupNode = {
+      id: g.id,
+      shortId,
+      parentId: gMeta?.parentId || void 0,
+      label: unitName,
+      parent: null,
+      path: "Root",
+      role: baseRole,
+      unitId: unitId || (isUnit ? "u_unit" : void 0),
+      unitName: isUnit ? unitName : void 0,
+      isUnit,
+      bounds,
+      children: [],
+      direction: "Leaf",
+      textProps: {
+        label: unitName
+      },
+      widgetType: baseRole,
+      isAnnotationNode: true
+    };
+    nodeMap.set(g.id, groupNode);
+  }
+  for (const s of taggedShapes) {
+    const meta = getShapeMeta(s);
+    const role = meta.role;
+    const rawLabel = meta.props?.label || s.props?.text || "";
+    const label = sanitizeMarkdown(rawLabel);
+    const shortId = generateShortId(s.id, usedShortIds);
+    const bounds = getBounds(s);
+    const behaviors = [];
+    if (Array.isArray(meta.props?.behaviors)) {
+      for (const flag of meta.props.behaviors) {
+        if (isAllowedRoleFlag(role, flag)) {
+          behaviors.push(flag);
+        } else {
+          rawLints.push({
+            text: `Flag "${flag}" has no meaning for role "${role}" \u2014 dropped.`,
+            shapeId: s.id
+          });
+        }
+      }
+    }
+    const pMeta = meta.props || {};
+    const textProps = {
+      label: rawLabel || void 0,
+      placeholder: meta.props?.placeholder,
+      variant: meta.props?.variant,
+      options: meta.props?.options,
+      note: meta.props?.note,
+      count: meta.props?.count,
+      value: typeof pMeta.value === "number" ? pMeta.value : void 0,
+      columns: typeof pMeta.columns === "number" ? pMeta.columns : void 0,
+      columnSplit: typeof pMeta.columnSplit === "string" ? pMeta.columnSplit : void 0,
+      isResponsive: typeof pMeta.isResponsive === "boolean" ? pMeta.isResponsive : void 0,
+      mobileStack: typeof pMeta.mobileStack === "string" ? pMeta.mobileStack : void 0,
+      tabletLayout: typeof pMeta.tabletLayout === "string" ? pMeta.tabletLayout : void 0,
+      mobileOrder: typeof pMeta.mobileOrder === "number" ? pMeta.mobileOrder : void 0,
+      hideOnMobile: typeof pMeta.hideOnMobile === "boolean" ? pMeta.hideOnMobile : void 0,
+      behaviors: behaviors.length > 0 ? behaviors : void 0
+    };
+    if (meta.responsive) {
+      if (meta.responsive.smVisible === "hidden") textProps.hideOnMobile = true;
+      if (typeof meta.responsive.order === "number") textProps.mobileOrder = meta.responsive.order;
+      if (meta.responsive.tablet && meta.responsive.tablet !== "maintain") textProps.tabletLayout = meta.responsive.tablet;
+    }
+    const widgetType = meta.v3WidgetType || s.props?.widgetType || role;
+    const node = {
+      id: s.id,
+      shortId,
+      parentId: meta.parentId || void 0,
+      label: label || role,
+      parent: null,
+      path: "Root",
+      role,
+      bounds,
+      children: [],
+      direction: "Leaf",
+      textProps,
+      widgetType,
+      isAnnotationNode: true
+    };
+    nodeMap.set(s.id, node);
+  }
+  const frameNodes = [];
+  for (const f of frames) {
+    const meta = getShapeMeta(f);
+    const role = meta?.role || "page";
+    const rawName = meta?.props?.label || f.props?.name || "Page";
+    const label = sanitizeMarkdown(rawName);
+    const shortId = generateShortId(f.id, usedShortIds);
+    const bounds = getBounds(f);
+    const isResp = Boolean(
+      meta?.responsive || meta?.props?.behaviors?.includes("responsive") || f.props?.isResponsive
+    );
+    const behaviors = [];
+    if (isResp) behaviors.push("responsive");
+    const frameNode = {
+      id: f.id,
+      shortId,
+      label,
+      parent: null,
+      path: "Root",
+      role,
+      bounds,
+      children: [],
+      direction: "Leaf",
+      textProps: {
+        label: rawName,
+        note: meta?.props?.note || f.props?.note,
+        isResponsive: isResp,
+        behaviors: behaviors.length > 0 ? behaviors : void 0
+      },
+      widgetType: role,
+      isAnnotationNode: true
+    };
+    nodeMap.set(f.id, frameNode);
+    frameNodes.push(frameNode);
+  }
+  const nonFrameNodes = [...groups, ...taggedShapes].map((s) => nodeMap.get(s.id)).filter((n) => Boolean(n));
+  const looseShapes = [];
+  for (const node of nonFrameNodes) {
+    const s = allShapesMap.get(node.id);
+    const meta = getShapeMeta(s);
+    let assignedParentId = null;
+    if (meta?.parentId) {
+      const targetShape = allShapesMap.get(meta.parentId);
+      const targetNode = nodeMap.get(meta.parentId);
+      if (targetShape && targetNode && targetNode.id !== node.id) {
+        const nodeAABB = computeAABB(node.bounds);
+        const targetAABB = computeAABB(targetNode.bounds);
+        const ratio = getEnclosureRatio(nodeAABB, targetAABB);
+        if (ratio >= 0.5) {
+          assignedParentId = targetNode.id;
+        } else {
+          rawLints.push({
+            text: `#${node.shortId} has stale parentId "${meta.parentId}" \u2014 clear it or move the shape back inside.`,
+            shapeId: node.id
+          });
+        }
+      } else {
+        rawLints.push({
+          text: `#${node.shortId} has stale parentId "${meta.parentId}" \u2014 clear it or move the shape back inside.`,
+          shapeId: node.id
+        });
+      }
+    }
+    if (!assignedParentId && s.parentId && nodeMap.has(s.parentId)) {
+      const parentShape = allShapesMap.get(s.parentId);
+      if (parentShape && parentShape.type === "group") {
+        assignedParentId = s.parentId;
+      }
+    }
+    if (!assignedParentId) {
+      if (s.parentId && nodeMap.has(s.parentId)) {
+        const parentShape = allShapesMap.get(s.parentId);
+        if (parentShape && parentShape.type === "frame") {
+          assignedParentId = s.parentId;
+        }
+      }
+      if (!assignedParentId && frameNodes.length > 0) {
+        for (const fn of frameNodes) {
+          const fnAABB = computeAABB(fn.bounds);
+          const nAABB = computeAABB(node.bounds);
+          if (getEnclosureRatio(nAABB, fnAABB) >= 0.5) {
+            assignedParentId = fn.id;
+            break;
+          }
+        }
+      }
+    }
+    if (!assignedParentId && frameNodes.length === 0) {
+      const candidates = nonFrameNodes.filter((c) => c.id !== node.id && (c.role === "section" || c.role === "card")).sort((a, b) => a.bounds.w * a.bounds.h - b.bounds.w * b.bounds.h);
+      for (const candidate of candidates) {
+        const candidateAABB = computeAABB(candidate.bounds);
+        const nAABB = computeAABB(node.bounds);
+        if (candidate.bounds.w > node.bounds.w && candidate.bounds.h > node.bounds.h && getEnclosureRatio(nAABB, candidateAABB) >= 0.5) {
+          assignedParentId = candidate.id;
+          break;
+        }
+      }
+    }
+    if (assignedParentId) {
+      const parentNode = nodeMap.get(assignedParentId);
+      if (parentNode) {
+        parentNode.children.push(node);
+        node.parent = parentNode.id;
+      } else {
+        looseShapes.push(node);
+      }
+    } else {
+      looseShapes.push(node);
+    }
+  }
+  const activeRoots = [];
+  for (const fn of frameNodes) {
+    if (fn.children.length === 0) {
+      rawLints.push({
+        text: `Frame "${fn.label}" has no tagged shapes \u2014 skipped.`,
+        shapeId: fn.id
+      });
+    } else {
+      activeRoots.push(fn);
+    }
+  }
+  if (frameNodes.length === 0 && looseShapes.length > 0) {
+    activeRoots.push(...looseShapes);
+  } else if (looseShapes.length > 0 && !options?.scope) {
+    rawLints.push({
+      text: `${looseShapes.length} loose shapes outside any frame \u2014 move into a frame or select to compile.`
+    });
+  }
+  const rootPage = activeRoots.find((r) => r.role === "page");
+  if (rootPage && !rootPage.textProps?.isResponsive) {
+    for (const n of nonFrameNodes) {
+      if (n.textProps?.hideOnMobile || typeof n.textProps?.mobileOrder === "number") {
+        rawLints.push({
+          text: `Responsive props on #${n.shortId} but no responsive root page \u2014 tokens not emitted.`,
+          shapeId: n.id
+        });
+        delete n.textProps.hideOnMobile;
+        delete n.textProps.mobileOrder;
+      }
+    }
+  }
+  for (const arr of arrows) {
+    const props = arr.props || {};
+    const startBound = props.start?.boundShapeId;
+    const endBound = props.end?.boundShapeId;
+    if (startBound && endBound) {
+      const startNode = nodeMap.get(startBound);
+      const endNode = nodeMap.get(endBound);
+      if (startNode && endNode) {
+        const text = (props.text || "").trim();
+        const rel = text ? ` (${text})` : "";
+        relations.push(`Relations: #${startNode.shortId} \u2192 #${endNode.shortId}${rel}`);
+      } else {
+        rawLints.push({
+          text: "Arrow endpoint untagged \u2014 relation omitted.",
+          shapeId: arr.id
+        });
+      }
+    }
+  }
+  let scopedMeta;
+  let scopedIds = null;
+  if (options?.scope?.shapeIds && options.scope.shapeIds.length > 0) {
+    const rawIds = options.scope.shapeIds;
+    scopedIds = /* @__PURE__ */ new Set();
+    for (const id of rawIds) scopedIds.add(id);
+    let added = true;
+    while (added) {
+      added = false;
+      for (const [id, n] of nodeMap.entries()) {
+        if (!scopedIds.has(id) && n.parent && scopedIds.has(n.parent)) {
+          scopedIds.add(id);
+          added = true;
+        }
+      }
+    }
+    for (const id of Array.from(scopedIds)) {
+      let curr = nodeMap.get(id);
+      while (curr && curr.parent) {
+        scopedIds.add(curr.parent);
+        curr = nodeMap.get(curr.parent);
+      }
+    }
+    const primaryNode = nodeMap.get(rawIds[0]);
+    const scopeName = options.scope.scopeName || primaryNode?.unitName || primaryNode?.label || primaryNode?.role || "Selection";
+    const rootFrame = activeRoots.find((r) => scopedIds.has(r.id)) || activeRoots[0];
+    const totalNodesUnderRoot = countSubtree(rootFrame) - 1;
+    const filterSubtree = (node) => {
+      node.children = node.children.filter((c) => scopedIds.has(c.id));
+      for (const c of node.children) {
+        filterSubtree(c);
+      }
+    };
+    for (const r of activeRoots) {
+      filterSubtree(r);
+    }
+    const nodeCountInScope = primaryNode && primaryNode.isUnit ? primaryNode.children.length : countSubtree(primaryNode || rootFrame) - 1;
+    const unitCountInScope = Array.from(scopedIds).filter((id) => nodeMap.get(id)?.isUnit).length;
+    scopedMeta = {
+      scopeName,
+      unitCount: Math.max(1, unitCountInScope),
+      nodeCount: Math.max(1, nodeCountInScope),
+      totalNodes: totalNodesUnderRoot,
+      rootName: rootFrame ? rootFrame.label : "Canvas"
+    };
+  }
+  const processSubtree = (node, currentPath, depth) => {
+    node.path = currentPath;
+    if (node.children.length > 0) {
+      node.direction = inferDirection(node.children);
+      sortChildren(node.children, node.direction);
+      annotateSiblingPatterns(node.children);
+      const labelCounts = /* @__PURE__ */ new Map();
+      for (const child of node.children) {
+        const rawLabel = child.textProps?.label || child.label;
+        if (rawLabel && !isUntouchedRoleLabel(child.role, rawLabel)) {
+          const entry = labelCounts.get(rawLabel) || { count: 0, ids: [] };
+          entry.count++;
+          entry.ids.push(child.id);
+          labelCounts.set(rawLabel, entry);
+        }
+      }
+      for (const [text, entry] of labelCounts.entries()) {
+        if (entry.count >= 2) {
+          rawLints.push({
+            text: `Identical literal labels "${text}" across ${entry.count} repeated siblings \u2014 consider one template (legend rule: vary per item).`,
+            shapeId: node.id
+          });
+        }
+      }
+      for (const child of node.children) {
+        const nextPath = `${currentPath} > #${child.shortId}`;
+        processSubtree(child, nextPath, depth + 1);
+      }
+    } else {
+      node.direction = "Leaf";
+    }
+  };
+  for (const root of activeRoots) {
+    const rootPath = `Root > #${root.shortId}`;
+    processSubtree(root, rootPath, 0);
+  }
+  const attachStyles = (curr, parent, siblings) => {
+    curr.style = inferNodeStyle(curr, parent, siblings, options);
+    for (const child of curr.children) {
+      attachStyles(child, curr, curr.children);
+    }
+  };
+  for (const root of activeRoots) {
+    attachStyles(root, null, activeRoots);
+  }
+  let finalLints;
+  if (scopedIds && scopedIds.size > 0) {
+    finalLints = rawLints.filter((l) => l.shapeId && scopedIds.has(l.shapeId)).map((l) => l.text);
+  } else {
+    finalLints = rawLints.map((l) => l.text);
+  }
+  return {
+    elementCount: nodeMap.size,
+    roots: activeRoots,
+    lints: finalLints,
+    scopedMeta,
+    relations: relations.length > 0 ? relations : void 0
+  };
+}
+function sortKeysAlphabetically(val) {
+  if (Array.isArray(val)) {
+    return val.map(sortKeysAlphabetically);
+  }
+  if (val !== null && typeof val === "object") {
+    const sortedObj = {};
+    const keys = Object.keys(val).sort();
+    for (const k of keys) {
+      sortedObj[k] = sortKeysAlphabetically(val[k]);
+    }
+    return sortedObj;
+  }
+  return val;
+}
+function pruneDefaultProps(node) {
+  const roleOrType = node.role || node.widgetType;
+  const defaults = getRoleDefaultProps(roleOrType);
+  const cleanProps = {};
+  if (node.textProps) {
+    for (const [k, v] of Object.entries(node.textProps)) {
+      if (v === void 0 || v === null || v === "") continue;
+      if (k === "checked" && (v === false || v === defaults.checked)) continue;
+      if (k === "showText" && (v === false || v === defaults.showText)) continue;
+      if (k === "value" && (v === 0 || v === defaults.value)) continue;
+      if (k === "label" && isUntouchedRoleLabel(roleOrType, v)) continue;
+      if (Array.isArray(v) && v.length === 0) continue;
+      if (defaults[k] !== void 0 && defaults[k] === v) continue;
+      cleanProps[k] = v;
+    }
+  }
+  const result = {
+    ...node,
+    textProps: cleanProps,
+    children: node.children.map(pruneDefaultProps)
+  };
+  if (node.style) {
+    const cleanStyle = {};
+    if (typeof node.style.widthPct === "number") cleanStyle.widthPct = node.style.widthPct;
+    if (node.style.align) cleanStyle.align = node.style.align;
+    if (node.style.alignY) cleanStyle.alignY = node.style.alignY;
+    if (node.style.dist) {
+      cleanStyle.dist = node.style.dist.replace(/^dist:/, "");
+    }
+    if (node.style.rel) cleanStyle.rel = node.style.rel;
+    if (Array.isArray(node.style.behaviors) && node.style.behaviors.length > 0) {
+      cleanStyle.behaviors = node.style.behaviors;
+    }
+    if (node.style.note) cleanStyle.note = node.style.note;
+    if (Object.keys(cleanStyle).length > 0) {
+      result.style = cleanStyle;
+    } else {
+      delete result.style;
+    }
+  }
+  return result;
+}
+function serializeIRToJsonAst(ir) {
+  const data = Array.isArray(ir) ? ir : ir.roots;
+  const pruned = data.map((rootNode) => {
+    const p = pruneDefaultProps(rootNode);
+    return {
+      aiDirective: AI_DIRECTIVE_HEADER,
+      ...p
+    };
+  });
+  const sorted = sortKeysAlphabetically(pruned);
+  return JSON.stringify(sorted, null, 2);
+}
+
+// src/annotation/profiles/web.json
+var web_default = {
+  id: "web",
+  displayName: "Web",
+  directiveLines: [
+    "Use semantic HTML and a utility-first CSS approach.",
+    "Prefer responsive utility classes over custom media queries."
+  ],
+  roleAliases: {},
+  extraRoles: {},
+  conventions: [
+    "Single-column stacking on mobile unless sm tokens say otherwise."
+  ]
+};
+
+// src/annotation/profiles/android-material.json
+var android_material_default = {
+  id: "android-material",
+  displayName: "Android (Material 3)",
+  directiveLines: [
+    "Use Material 3 components and a Scaffold-based layout structure.",
+    "Prefer bottom navigation for top-level navigation on mobile."
+  ],
+  roleAliases: {
+    navbar: "TopAppBar",
+    nav: "NavigationBar",
+    banner: "Snackbar (inline)",
+    dialog: "Dialog",
+    switch: "Switch"
+  },
+  extraRoles: {
+    fab: {
+      name: "fab",
+      description: "Floating action button for the primary action",
+      flags: ["extended"]
+    },
+    bottom_sheet: {
+      name: "bottom_sheet",
+      description: "Bottom-anchored modal sheet"
+    },
+    scaffold: {
+      name: "scaffold",
+      description: "App-level layout skeleton wrapping the page"
+    }
+  },
+  conventions: [
+    "Top-level nav maps to bottom NavigationBar; secondary nav maps to a NavigationDrawer.",
+    "FAB for the single primary action of a screen."
+  ]
+};
+
+// src/annotation/profiles/index.ts
+var PLATFORM_PROFILES = {
+  web: web_default,
+  "android-material": android_material_default
+};
+function getPlatformProfile(id) {
+  if (id && PLATFORM_PROFILES[id]) {
+    return PLATFORM_PROFILES[id];
+  }
+  return PLATFORM_PROFILES.web;
+}
+
+// src/core/legend.ts
+function capitalize(s) {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+var ROLE_LEGEND_MAP = {
+  page: { notation: '[page "Title"]', meaning: "Page root / screen container", example: '[page "Home"]' },
+  section: { notation: '[section "Title"]', meaning: "Section container", example: '[section "Features"]' },
+  card: { notation: '[card "Title" variant]', meaning: "Card container (variants: outline, elevated)", example: '[card "Product" elevated]' },
+  dialog: { notation: '[dialog "Title"]', meaning: "Modal dialog window", example: '[dialog "Confirm"]' },
+  banner: { notation: '[banner "Notice"]', meaning: "Notification banner", example: '[banner "Update available"]' },
+  drawer: { notation: '[drawer "Title"]', meaning: "Slide-out drawer panel", example: '[drawer "Cart"]' },
+  group: { notation: "[group]", meaning: "Group of elements", example: "[group]" },
+  heading: { notation: '[heading "Title" level]', meaning: "Heading text (levels: h1, h2, h3)", example: '[heading "Overview" h2]' },
+  para: { notation: "[para]", meaning: "Body paragraph text", example: "[para]" },
+  img: { notation: "[img]", meaning: "Image placeholder", example: "[img]" },
+  video: { notation: "[video]", meaning: "Video player", example: "[video]" },
+  icon: { notation: '[icon "name"]', meaning: "Icon symbol", example: '[icon "search"]' },
+  avatar: { notation: "[avatar]", meaning: "User avatar / profile image", example: "[avatar]" },
+  badge: { notation: '[badge "Label"]', meaning: "Status or count badge", example: '[badge "New"]' },
+  divider: { notation: "[divider]", meaning: "Visual separator line", example: "[divider]" },
+  spacer: { notation: "[spacer]", meaning: "Layout spacing element", example: "[spacer]" },
+  button: { notation: '[button "Text" variant]', meaning: "Button (variants: solid, ghost)", example: '[button "Send" ghost]' },
+  input: { notation: '[input "Placeholder"]', meaning: "Single-line text input", example: '[input "Email..."]' },
+  textarea: { notation: '[textarea "Placeholder"]', meaning: "Multi-line text input", example: '[textarea "Notes..."]' },
+  select: { notation: '[select "A|B|C"]', meaning: "Dropdown select with choices", example: '[select "Option 1|Option 2"]' },
+  checkbox: { notation: '[checkbox "Label"]', meaning: "Checkbox input", example: '[checkbox "Remember me"]' },
+  radio: { notation: '[radio "Label"]', meaning: "Radio selection button", example: '[radio "Choice A"]' },
+  switch: { notation: "[switch on/off]", meaning: "Toggle switch", example: "[switch on]" },
+  slider: { notation: "[slider N]", meaning: "Range slider input", example: "[slider 50]" },
+  nav: { notation: "[nav]", meaning: "Navigation menu", example: "[nav]" },
+  navbar: { notation: '[navbar "A, B, C"]', meaning: "Top navigation bar", example: '[navbar "Home, Docs"]' },
+  tabs: { notation: '[tabs "A|B|C"]', meaning: "Tabbed navigation control", example: '[tabs "Overview|Specs"]' },
+  crumb: { notation: '[crumb "A > B"]', meaning: "Breadcrumb trail", example: '[crumb "Home > Products"]' },
+  pagination: { notation: "[pagination N]", meaning: "Pagination controls", example: "[pagination 5]" },
+  toast: { notation: '[toast "Message"]', meaning: "Transient toast message", example: '[toast "Saved successfully"]' },
+  tooltip: { notation: '[tooltip "Text"]', meaning: "Hover tooltip", example: '[tooltip "More info"]' }
+};
+var WIDGET_LEGEND_MAP = {
+  button: {
+    notation: '[btn "Text" variant]',
+    meaning: "Button (variants: solid, ghost)",
+    example: '[btn "Send" ghost]'
+  },
+  heading: {
+    notation: '[header "Title" h1]',
+    meaning: "Heading (levels: h1, h2, h3)",
+    example: '[header "About Us" h1]'
+  },
+  paragraph: {
+    notation: "[para]",
+    meaning: "Body paragraph (line glyph on canvas)",
+    example: "[para]"
+  },
+  input: {
+    notation: '[input "Placeholder"]',
+    meaning: "Text / form input field",
+    example: '[input "Email..."]'
+  },
+  search: {
+    notation: '[search "Query"]',
+    meaning: "Search input",
+    example: '[search "Search..."]'
+  },
+  password: {
+    notation: '[password "Placeholder"]',
+    meaning: "Password input",
+    example: "[password]"
+  },
+  textarea: {
+    notation: '[textarea "Placeholder"]',
+    meaning: "Multi-line text input",
+    example: '[textarea "Notes..."]'
+  },
+  checkbox: {
+    notation: '[check "Label" on/off]',
+    meaning: "Checkbox with state",
+    example: '[check "Remember me" on]'
+  },
+  radio: {
+    notation: '[radio "Label" on/off]',
+    meaning: "Radio button with state",
+    example: '[radio "Option" off]'
+  },
+  toggle: {
+    notation: "[toggle on/off]",
+    meaning: "Switch toggle with state",
+    example: "[toggle on]"
+  },
+  select: {
+    notation: '[select "A|B|C"]',
+    meaning: "Select dropdown with choices",
+    example: '[select "Option 1|Option 2"]'
+  },
+  slider: {
+    notation: "[slider N]",
+    meaning: "Range slider",
+    example: "[slider 50]"
+  },
+  stepper: {
+    notation: "[stepper N]",
+    meaning: "Numeric stepper",
+    example: "[stepper 3]"
+  },
+  color_swatch: {
+    notation: "[color]",
+    meaning: "Color picker / swatch",
+    example: "[color]"
+  },
+  date_picker: {
+    notation: '[date "Placeholder"]',
+    meaning: "Date picker input",
+    example: '[date "2026-10-17"]'
+  },
+  file_upload: {
+    notation: '[upload "Label"]',
+    meaning: "File upload dropzone",
+    example: '[upload "Upload CV"]'
+  },
+  navbar: {
+    notation: '[nav "A, B, C"]',
+    meaning: "Navigation bar items",
+    example: '[nav "Home, About, Docs"]'
+  },
+  menubar: {
+    notation: '[menubar "File|Edit"]',
+    meaning: "Application menu bar",
+    example: '[menubar "File|Edit|View"]'
+  },
+  sidebar: {
+    notation: '[sidebar "Title"]',
+    meaning: "Collapsible side navigation",
+    example: '[sidebar "Dashboard"]'
+  },
+  footer_nav: {
+    notation: '[footer_nav "A, B"]',
+    meaning: "Footer navigation links",
+    example: '[footer_nav "Terms, Privacy"]'
+  },
+  tabs: {
+    notation: '[tabs "A|B|C"]',
+    meaning: "Tab navigation group",
+    example: '[tabs "Overview|Specs"]'
+  },
+  breadcrumbs: {
+    notation: '[crumb "Path"]',
+    meaning: "Breadcrumb navigation",
+    example: '[crumb "Home / Docs / API"]'
+  },
+  steps: {
+    notation: '[steps 1-4 "Name"]',
+    meaning: "Multi-step progress flow",
+    example: '[steps 1-4 "Shipping"]'
+  },
+  pagination: {
+    notation: "[pag 1/5]",
+    meaning: "Pagination indicator",
+    example: "[pag 1/5]"
+  },
+  page: {
+    notation: '[page "Title"]',
+    meaning: "Top-level viewport / canvas boundary",
+    example: '[page "Main Dashboard"]'
+  },
+  section: {
+    notation: '[section "Title"]',
+    meaning: "Page structural band",
+    example: '[section "Portfolio"]'
+  },
+  card: {
+    notation: '[card "Title" variant]',
+    meaning: "Content card container",
+    example: '[card "Profile" elevated]'
+  },
+  carousel: {
+    notation: '[carousel "Title"]',
+    meaning: "Carousel / media slider container",
+    example: '[carousel "Hero" autoplay]'
+  },
+  hero: {
+    notation: "[hero]",
+    meaning: "Hero banner container",
+    example: "[hero]"
+  },
+  modal: {
+    notation: '[modal "Title"]',
+    meaning: "Dialog / modal window",
+    example: '[modal "Confirm"]'
+  },
+  split_pane: {
+    notation: "[split]",
+    meaning: "Split-pane container",
+    example: "[split]"
+  },
+  grid_gallery: {
+    notation: "[grid 3x2]",
+    meaning: "Grid container",
+    example: "[grid 3x2]"
+  },
+  data_table: {
+    notation: "[table 4x3]",
+    meaning: "Data table rows x cols",
+    example: "[table 4x3]"
+  },
+  table: {
+    notation: "[table 4x3]",
+    meaning: "Data table rows x cols",
+    example: "[table 4x3]"
+  },
+  list: {
+    notation: "[list N]",
+    meaning: "Vertical list of items",
+    example: "[list 5]"
+  },
+  blockquote: {
+    notation: "[quote]",
+    meaning: "Blockquote text",
+    example: "[quote]"
+  },
+  code_block: {
+    notation: '[code "Cmd"]',
+    meaning: "Monospaced code block",
+    example: '[code "npm install"]'
+  },
+  link: {
+    notation: '[link "Label"]',
+    meaning: "Hyperlink",
+    example: '[link "Learn more"]'
+  },
+  chip: {
+    notation: '[chip "Label"]',
+    meaning: "Tag or chip badge",
+    example: '[chip "React"]'
+  },
+  stat_kpi: {
+    notation: '[kpi "1.2k"]',
+    meaning: "KPI metric with label",
+    example: '[kpi "1.2k"]'
+  },
+  image_frame: {
+    notation: '[img "Alt"]',
+    meaning: "Media placeholder with \u2715 cross",
+    example: '[img "hero-banner"]'
+  },
+  video_frame: {
+    notation: '[video "File"]',
+    meaning: "Video player placeholder",
+    example: '[video "intro.mp4"]'
+  },
+  avatar: {
+    notation: "[avatar]",
+    meaning: "Avatar placeholder",
+    example: "[avatar]"
+  },
+  avatar_group: {
+    notation: "[avatar_group]",
+    meaning: "Overlapping avatar group",
+    example: "[avatar_group]"
+  },
+  thumbnail_strip: {
+    notation: "[thumbnails]",
+    meaning: "Horizontal thumbnail gallery",
+    example: "[thumbnails]"
+  },
+  badge: {
+    notation: '[badge "Label"]',
+    meaning: "Status or notification badge",
+    example: '[badge "New"]'
+  },
+  icon: {
+    notation: '[icon "Name"]',
+    meaning: "Named iconography placeholder",
+    example: '[icon "settings"]'
+  },
+  divider: {
+    notation: "[divider]",
+    meaning: "Visual separator",
+    example: "[divider]"
+  },
+  spacer: {
+    notation: "[spacer]",
+    meaning: "Layout spacing block",
+    example: "[spacer]"
+  },
+  progress_bar: {
+    notation: "[progress N]",
+    meaning: "Progress bar indicator",
+    example: "[progress 60]"
+  },
+  skeleton: {
+    notation: "[skeleton]",
+    meaning: "Content loading placeholder",
+    example: "[skeleton]"
+  },
+  tooltip: {
+    notation: '[tooltip "Text"]',
+    meaning: "Floating tooltip hint",
+    example: '[tooltip "Help info"]'
+  },
+  toast: {
+    notation: '[toast "Text"]',
+    meaning: "Ephemeral toast alert",
+    example: '[toast "Saved!"]'
+  },
+  empty_state: {
+    notation: '[empty "Text"]',
+    meaning: "Zero-data empty state",
+    example: '[empty "No projects found"]'
+  },
+  banner: {
+    notation: '[banner "Text" variant]',
+    meaning: "Warning or alert banner",
+    example: '[banner "Warning" warn]'
+  },
+  header: {
+    notation: "[header]",
+    meaning: "Header region container",
+    example: "[header]"
+  },
+  footer: {
+    notation: "[footer]",
+    meaning: "Footer region container",
+    example: "[footer]"
+  }
+};
+var BEHAVIOR_DESCRIPTIONS = {
+  sticky: "Fixes position to viewport edge during scroll",
+  floating: "Elevated floating element above document flow",
+  overlay: "Backdrop modal or drawer overlaying screen",
+  fixed: "Strict fixed viewport position",
+  fullscreen: "Expands across the entire viewport",
+  autoplay: "Automatically loops / plays media or slider",
+  parallax: "Scroll-linked differential speed effect",
+  expandable: "Collapsible accordion or dropdown section",
+  draggable: "Supports pointer drag interactions",
+  "scroll-snap": "Snaps child containers into view on scroll"
+};
+function collectCanvasFeatures(roots) {
+  const widgetTypes = /* @__PURE__ */ new Set();
+  const behaviors = /* @__PURE__ */ new Set();
+  const styles = {
+    hasWidth: false,
+    hasAlign: false,
+    hasDist: false,
+    hasRel: false,
+    hasNote: false
+  };
+  const visit = (node) => {
+    if (node.widgetType) {
+      widgetTypes.add(node.widgetType);
+    }
+    const nodeBehaviors = node.textProps?.behaviors || node.style?.behaviors;
+    if (Array.isArray(nodeBehaviors)) {
+      for (const b of nodeBehaviors) {
+        behaviors.add(b);
+      }
+    }
+    if (node.style) {
+      if (node.style.widthToken || typeof node.style.widthPct === "number") {
+        styles.hasWidth = true;
+      }
+      if (node.style.align || node.style.alignY) {
+        styles.hasAlign = true;
+      }
+      if (node.style.dist) {
+        styles.hasDist = true;
+      }
+      if (node.style.rel) {
+        styles.hasRel = true;
+      }
+      if (node.style.note || typeof node.textProps?.note === "string" && node.textProps.note.trim() !== "") {
+        styles.hasNote = true;
+      }
+    }
+    for (const child of node.children) {
+      visit(child);
+    }
+  };
+  for (const root of roots) {
+    visit(root);
+  }
+  return { widgetTypes, behaviors, styles };
+}
+function generateAnnotationLegend(roots, options) {
+  const profile = getPlatformProfile(options?.platform);
+  const units = [];
+  const rolesUsed = /* @__PURE__ */ new Set();
+  const visit = (node) => {
+    if (node.isUnit && node.unitName) {
+      units.push(node);
+    } else if (node.role) {
+      rolesUsed.add(node.role);
+    }
+    for (const c of node.children) {
+      visit(c);
+    }
+  };
+  for (const r of roots) {
+    visit(r);
+  }
+  const lines = [];
+  lines.push("### MarkDraw Canvas Legend\n");
+  if (units.length > 0) {
+    lines.push("#### Custom Units");
+    lines.push("| Notation | Meaning | Composition |");
+    lines.push("| :--- | :--- | :--- |");
+    const seenUnitNames = /* @__PURE__ */ new Set();
+    for (const u of units) {
+      if (seenUnitNames.has(u.unitName)) continue;
+      seenUnitNames.add(u.unitName);
+      const composition = u.children.map((c) => c.role).join(" + ") || "\u2014";
+      const meaning = capitalize(u.role);
+      lines.push(`| [${u.unitName}] | ${meaning} | ${composition} |`);
+    }
+    lines.push("");
+  }
+  lines.push("#### Standard Roles");
+  lines.push("| Notation | Meaning | Example |");
+  lines.push("| :--- | :--- | :--- |");
+  const sortedRoles = Array.from(rolesUsed).sort();
+  for (const role of sortedRoles) {
+    const entry = ROLE_LEGEND_MAP[role] || {
+      notation: `[${role}]`,
+      meaning: `${capitalize(role)} component`,
+      example: `[${role}]`
+    };
+    let notation = entry.notation;
+    if (profile.roleAliases && profile.roleAliases[role]) {
+      const alias = profile.roleAliases[role];
+      notation = notation.replace(`[${role}`, `[${alias}`);
+    }
+    lines.push(`| ${notation} | ${entry.meaning} | ${entry.example} |`);
+  }
+  return lines.join("\n");
+}
+function generateCanvasLegend(roots, options) {
+  if (!roots || roots.length === 0) {
+    return "";
+  }
+  if (roots.some((r) => r.isAnnotationNode)) {
+    return generateAnnotationLegend(roots, options);
+  }
+  const { widgetTypes, behaviors, styles } = collectCanvasFeatures(roots);
+  const lines = [];
+  lines.push("### MarkDraw Canvas Legend");
+  lines.push("_Auto-generated contract legend for widgets and styles present on this canvas._\n");
+  lines.push("| Notation | Meaning | Example |");
+  lines.push("| :--- | :--- | :--- |");
+  lines.push("| `[Text Placeholder]` | placeholder content should be filled with dummy data | \u2014 |");
+  const sortedTypes = Array.from(widgetTypes).sort();
+  for (const type of sortedTypes) {
+    const entry = WIDGET_LEGEND_MAP[type] || {
+      notation: `[${type}]`,
+      meaning: `${type} widget`,
+      example: `[${type}]`
+    };
+    lines.push(`| \`${entry.notation}\` | ${entry.meaning} | \`${entry.example}\` |`);
+  }
+  const styleRows = [];
+  if (styles.hasWidth) {
+    styleRows.push("| `width:50%` / `full-width` / `overflow` | measured span relative to parent | `width:50%` |");
+  }
+  if (styles.hasAlign) {
+    styleRows.push("| `align:left\\|center\\|right`, `align-y` | position within parent (default: stretch/left) | `align:center` |");
+  }
+  if (styles.hasDist) {
+    styleRows.push("| `dist:grid\\|wrap` | distribution arrangement along layout flow | `dist:grid cols:2 rows:2` |");
+  }
+  if (styles.hasRel) {
+    styleRows.push("| `rel:overflow\\|overlap\\|inset` | spatial relationship to parent or sibling boundary | `rel:overflow` |");
+  }
+  if (styles.hasNote) {
+    styleRows.push('| `note:"..."` | free-text styling or state hint (non-binding) | `note:"sticky header"` |');
+  }
+  const sortedBehaviors = Array.from(behaviors).sort();
+  for (const b of sortedBehaviors) {
+    const desc = BEHAVIOR_DESCRIPTIONS[b] || "user-declared behavior flag; implement literally";
+    styleRows.push(`| \`${b}\` | ${desc} | \`[card ${b}]\` |`);
+  }
+  if (styleRows.length > 0) {
+    lines.push("");
+    lines.push("**Active Style & Behavior Semantics**");
+    lines.push("| Axis / Flag | Meaning | Example |");
+    lines.push("| :--- | :--- | :--- |");
+    lines.push(...styleRows);
+  }
+  return lines.join("\n");
+}
+
+// src/core/ascii.ts
+var AsciiSerializer = class {
+  static serialize(roots, rootWidth = 78) {
+    if (!roots || roots.length === 0) {
+      return "_Canvas is empty. Draw shapes or add UI components to generate the ASCII layout._";
+    }
+    const output = [];
+    output.push("```text");
+    for (const rawRoot of roots) {
+      const root = this.toIRNode(rawRoot);
+      const boxLines = this.renderNode(root, rootWidth);
+      output.push(boxLines.join("\n"));
+      output.push("");
+    }
+    output.push("```");
+    return output.join("\n");
+  }
+  static toIRNode(node) {
+    if ("bounds" in node && "textProps" in node) {
+      return node;
+    }
+    const ln = node;
+    return {
+      id: ln.id,
+      shortId: ln.id.slice(-4),
+      widgetType: ln.widgetType || (ln.role === "container" ? "section" : ln.role === "button" ? "button" : "heading"),
+      role: ln.role,
+      label: ln.label,
+      textProps: ln.widgetProps || { label: ln.shape?.text || ln.label },
+      bounds: ln.shape?.bounds || { x: 0, y: 0, w: 100, h: 40 },
+      children: (ln.children || []).map((c) => this.toIRNode(c)),
+      parent: ln.parent,
+      direction: ln.direction,
+      path: ln.path
+    };
+  }
+  static renderNode(node, targetWidth) {
+    const width = Math.max(20, Math.min(120, targetWidth));
+    const notation = formatSemanticNotation(node);
+    const flowTag = node.direction !== "Leaf" ? ` (${node.direction})` : "";
+    const title = ` ${notation}${flowTag} `;
+    const remainingDashes = Math.max(0, width - 3 - title.length);
+    const topLine = `\u250C\u2500${title}${"\u2500".repeat(remainingDashes)}\u2510`;
+    const botLine = `\u2514${"\u2500".repeat(Math.max(0, width - 2))}\u2518`;
+    if (node.children.length === 0) {
+      const p = node.textProps || {};
+      let detail = p.label || p.placeholder || node.label;
+      if (node.widgetType === "paragraph") {
+        detail = "\u2500\u2500\u2500 \u2500\u2500\u2500 \u2500\u2500\u2500";
+      }
+      const innerText = `  ${detail}  `;
+      const clampedText = innerText.slice(0, width - 4);
+      const padRight = Math.max(0, width - 2 - clampedText.length);
+      const midLine = `\u2502${clampedText}${" ".repeat(padRight)}\u2502`;
+      return [topLine, midLine, botLine];
+    }
+    const innerWidth = width - 6;
+    const bodyLines = [];
+    if (node.direction === "Row") {
+      const count = node.children.length;
+      const gap = 2;
+      const childWidth = Math.max(14, Math.floor((innerWidth - (count - 1) * gap) / count));
+      const childrenBlocks = node.children.map((child) => this.renderNode(child, childWidth));
+      const maxRows = Math.max(...childrenBlocks.map((b) => b.length));
+      const normalizedBlocks = childrenBlocks.map((b) => {
+        const padded = [...b];
+        while (padded.length < maxRows) {
+          padded.push(" ".repeat(childWidth));
+        }
+        return padded;
+      });
+      for (let r = 0; r < maxRows; r++) {
+        const rowStr = normalizedBlocks.map((b) => b[r]).join("  ");
+        const padRight = Math.max(0, width - 2 - 2 - rowStr.length);
+        bodyLines.push(`\u2502  ${rowStr}${" ".repeat(padRight)}\u2502`);
+      }
+    } else {
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
+        const childLines = this.renderNode(child, innerWidth);
+        for (const line of childLines) {
+          const padRight = Math.max(0, width - 2 - 2 - line.length);
+          bodyLines.push(`\u2502  ${line}${" ".repeat(padRight)}\u2502`);
+        }
+        if (i < node.children.length - 1) {
+          bodyLines.push(`\u2502${" ".repeat(width - 2)}\u2502`);
+        }
+      }
+    }
+    return [topLine, `\u2502${" ".repeat(width - 2)}\u2502`, ...bodyLines, `\u2502${" ".repeat(width - 2)}\u2502`, botLine];
+  }
+};
+
+// src/core/compiler.ts
+function capitalize2(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+function inferPlacement(node, parent) {
+  if (!parent) {
+    if (node.widgetType === "page" || node.role === "page") {
+      return "\u2014";
+    }
+    if (node.widgetType === "navbar" || node.widgetType === "header" || node.role === "navbar") {
+      return "header";
+    }
+    if (node.widgetType === "footer" || node.role === "footer") {
+      return "footer";
+    }
+    return "body";
+  }
+  if (node.widgetType === "navbar" || node.widgetType === "header" || node.role === "navbar") {
+    return "header";
+  }
+  if (node.widgetType === "footer" || node.role === "footer") {
+    return "footer";
+  }
+  if (parent.widgetType === "page" || parent.role === "page") {
+    if (node.isUnit) {
+      return "nested";
+    }
+    const pageBounds = parent.bounds;
+    const pageH = pageBounds.h;
+    const pageW = pageBounds.w;
+    const relTop = node.bounds.y - pageBounds.y;
+    const widthRatio = pageW > 0 ? node.bounds.w / pageW : 0;
+    const isWideEnough = widthRatio >= 0.7;
+    if (relTop <= 0.15 * pageH && isWideEnough) {
+      return "header";
+    }
+    const isBottom35 = node.bounds.y >= pageBounds.y + 0.65 * pageH;
+    if (isBottom35 && isWideEnough) {
+      const hasSiblingBelow = parent.children.some(
+        (sib) => sib.id !== node.id && sib.bounds.y > node.bounds.y + 20
+      );
+      if (!hasSiblingBelow) {
+        return "footer";
+      }
+    }
+    return "body";
+  }
+  return "nested";
+}
+var MarkDrawCompiler = class {
+  static compile(shapes, editor, options) {
+    const opts = {
+      containmentThreshold: options?.containmentThreshold ?? 0.85,
+      rowClusterThreshold: options?.rowClusterThreshold ?? 16,
+      gridBandThreshold: options?.gridBandThreshold ?? 32,
+      sizeBucketTolerance: options?.sizeBucketTolerance ?? 2,
+      alignTolerance: options?.alignTolerance ?? 3,
+      includeTimestamp: options?.includeTimestamp ?? false,
+      includeLegend: options?.includeLegend ?? false,
+      pageNote: options?.pageNote ?? "",
+      platform: options?.platform ?? (options?.platformId === "android-material" ? "android-material" : "web"),
+      platformId: options?.platformId ?? options?.platform ?? "web",
+      scope: options?.scope ?? null,
+      units: options?.units ?? [],
+      annotationMode: options?.annotationMode ?? false
+    };
+    const ir = buildIRTree(shapes, editor, opts.containmentThreshold, options);
+    let specBody = this.serializeSpecTable(ir.roots, opts);
+    if (ir.relations && ir.relations.length > 0) {
+      specBody += `
+
+${ir.relations.join("\n")}`;
+    }
+    const gridBody = this.serializeSpatialGrid(ir.roots, opts.gridBandThreshold);
+    const asciiBody = AsciiSerializer.serialize(ir.roots);
+    const jsonAst = serializeIRToJsonAst(ir.roots);
+    let directivePrefix = `${AI_DIRECTIVE_HEADER}
+
+`;
+    if (ir.scopedMeta) {
+      const uCount = ir.scopedMeta.unitCount;
+      const nCount = ir.scopedMeta.nodeCount;
+      const uStr = `${uCount} unit${uCount === 1 ? "" : "s"}`;
+      const nStr = `${nCount} node${nCount === 1 ? "" : "s"}`;
+      directivePrefix = `_Scoped compile: "${ir.scopedMeta.scopeName}" \u2014 ${uStr}, ${nStr} (of ${ir.scopedMeta.totalNodes} in "${ir.scopedMeta.rootName}")_
+
+`;
+    } else if (ir.roots.some((r) => r.isAnnotationNode)) {
+      const profile = getPlatformProfile(opts.platform);
+      const platLine = `Target platform: ${profile.displayName}. ${profile.directiveLines.join(" ")}`;
+      const hasRespPage = ir.roots.some(
+        (r) => r.role === "page" && (r.textProps?.isResponsive || r.textProps?.behaviors?.includes("responsive"))
+      );
+      const respLine = hasRespPage ? "\n> Responsive: this page must adapt to mobile widths; per-shape sm:* tokens are binding." : "";
+      directivePrefix = `${AI_DIRECTIVE_HEADER}
+> ${platLine}${respLine}
+
+`;
+    }
+    const legendPrefix = opts.includeLegend ? `${generateCanvasLegend(ir.roots, opts)}
+
+---
+
+` : "";
+    const warningSuffix = ir.skippedShapes && ir.skippedShapes > 0 ? `
+
+_Warning: ${ir.skippedShapes} shape(s) skipped due to processing errors._` : "";
+    return {
+      markdownSpec: `${directivePrefix}${legendPrefix}${specBody}${warningSuffix}`,
+      markdownGrid: `${legendPrefix}${gridBody}`,
+      markdownAscii: `${legendPrefix}${asciiBody}`,
+      jsonAst,
+      timestamp: opts.includeTimestamp ? (/* @__PURE__ */ new Date()).toISOString() : "",
+      elementCount: ir.elementCount,
+      lints: ir.lints || []
+    };
+  }
+  static normalize(shapes, editor) {
+    const results = [];
+    for (const s of shapes) {
+      const props = s.props || {};
+      const rawText = props.text || props.name || props.label || "";
+      const text = sanitizeMarkdown(rawText);
+      let x = s.x;
+      let y = s.y;
+      let w = typeof props.w === "number" ? props.w : 100;
+      let h = typeof props.h === "number" ? props.h : 100;
+      if (editor && typeof editor.getShapePageBounds === "function") {
+        const pageBounds = editor.getShapePageBounds(s);
+        if (pageBounds) {
+          x = pageBounds.x;
+          y = pageBounds.y;
+          w = pageBounds.w;
+          h = pageBounds.h;
+        }
+      }
+      if (w < 4 || h < 4) continue;
+      const bounds = { x, y, w, h };
+      const aabb = computeAABB(bounds);
+      const widgetType = props.widgetType || void 0;
+      const meta = getShapeMeta(s);
+      const role = meta?.role || (widgetType ? V3_WIDGET_TO_V4_ROLE_MAP[widgetType]?.targetRole || widgetType : "unknown");
+      results.push({
+        id: s.id,
+        type: s.type,
+        bounds,
+        aabb,
+        color: props.color || "black",
+        isDashed: props.dash === "dashed",
+        text,
+        role,
+        widgetType,
+        widgetProps: props
+      });
+    }
+    return results;
+  }
+  static formatProps(node, parent) {
+    const p = node.textProps || node.widgetProps;
+    const style = node.style;
+    if (!p && !style) return "\u2014";
+    const type = node.widgetType || node.role || "";
+    const defaults = getRoleDefaultProps(type);
+    const propsPairs = [];
+    if (node.isUnit && node.unitName) {
+      propsPairs.push(`unit:"${node.unitName}"`);
+    }
+    const isPage = node.role === "page" || node.widgetType === "page";
+    if (isPage && (p?.isResponsive || style?.isResponsive)) {
+      propsPairs.push("responsive");
+    }
+    if (p) {
+      if (p.variant && p.variant !== defaults.variant && p.variant !== "default" && p.variant !== "solid" && type !== "grid_gallery" && type !== "data_table" && type !== "table") {
+        propsPairs.push(`variant="${p.variant}"`);
+      }
+      if (p.placeholder && p.placeholder !== defaults.placeholder) {
+        propsPairs.push(`placeholder="${p.placeholder}"`);
+      }
+      if (typeof p.checked === "boolean" && p.checked === true && p.checked !== defaults.checked) {
+        propsPairs.push(`checked=${p.checked}`);
+      }
+      if (p.options && p.options !== defaults.options && type !== "tabs") {
+        propsPairs.push(`options=[${p.options}]`);
+      }
+      if (typeof p.value === "number" && p.value > 0 && p.value !== defaults.value && type !== "list" && type !== "avatar_group" && type !== "steps" && type !== "pagination") {
+        propsPairs.push(`value=${p.value}`);
+      }
+      if (p.iconName && p.iconName !== defaults.iconName) {
+        propsPairs.push(`icon="${p.iconName}"`);
+      }
+      if (p.subtext && p.subtext !== defaults.subtext) {
+        propsPairs.push(`subtext="${p.subtext}"`);
+      }
+      if (p.altText && p.altText !== defaults.altText) {
+        propsPairs.push(`alt="${p.altText}"`);
+      }
+      if (typeof p.showText === "boolean" && p.showText === true && p.showText !== defaults.showText) {
+        propsPairs.push(`showText=${p.showText}`);
+      }
+    }
+    if (type === "avatar_group") {
+      const count = typeof p?.value === "number" && p.value > 0 ? p.value : 3;
+      propsPairs.push(`count:${count}`);
+    } else if (type === "list") {
+      const count = typeof p?.value === "number" && p.value > 0 ? p.value : 5;
+      propsPairs.push(`count:${count}`);
+    } else if (type === "steps") {
+      let count = 4;
+      if (typeof p?.value === "number" && p.value > 0) {
+        count = p.value;
+      } else if (p?.variant) {
+        const m = p.variant.match(/\d+-(\d+)/);
+        if (m) count = parseInt(m[1], 10);
+      }
+      propsPairs.push(`count:${count}`);
+    } else if (type === "pagination") {
+      let count = 5;
+      if (typeof p?.value === "number" && p.value > 0) {
+        count = p.value;
+      } else if (p?.variant) {
+        const m = p.variant.match(/\d+\/(\d+)/);
+        if (m) count = parseInt(m[1], 10);
+      }
+      propsPairs.push(`count:${count}`);
+    } else if (type === "tabs") {
+      let count = 3;
+      if (typeof p?.value === "number" && p.value > 0) {
+        count = p.value;
+      } else if (p?.options) {
+        const opts = p.options.split(/[|,]/).filter(Boolean);
+        if (opts.length > 0) count = opts.length;
+      }
+      propsPairs.push(`count:${count}`);
+    }
+    if (typeof node.patternCount === "number" && node.patternCount >= 2) {
+      propsPairs.push(`count:${node.patternCount}`);
+    }
+    if (type === "grid_gallery" || type === "data_table" || type === "table" || node.role === "table" || p?.variant && /^\d+x\d+$/.test(p.variant)) {
+      const v = p?.variant || (type === "grid_gallery" ? "3x2" : "4x3");
+      const m = v.match(/^(\d+)x(\d+)$/);
+      if (m) {
+        propsPairs.push(`${m[1]} cols \xD7 ${m[2]} rows`);
+      }
+    }
+    const columns = p?.columns ?? style?.columns;
+    if (typeof columns === "number" && columns > 1) {
+      const split = p?.columnSplit ?? style?.columnSplit;
+      propsPairs.push(`cols:${columns}${split && split !== "equal" ? ` (${split})` : ""}`);
+    }
+    const isResponsive = !isPage && (p?.isResponsive ?? style?.isResponsive);
+    if (isResponsive) {
+      const mobileStack = p?.mobileStack ?? style?.mobileStack ?? "stack";
+      propsPairs.push(`responsive:${mobileStack}`);
+      const tabletLayout = p?.tabletLayout ?? style?.tabletLayout;
+      if (tabletLayout && tabletLayout !== "maintain") {
+        propsPairs.push(`tablet:${tabletLayout}`);
+      }
+    }
+    const styleTokens = [];
+    if (style) {
+      if (style.widthToken) {
+        const parentProps = parent ? parent.textProps || parent.widgetProps : null;
+        const parentResponsive = parentProps?.isResponsive ?? parent?.style?.isResponsive;
+        if (parentResponsive && style.widthToken !== "full-width" && !style.widthToken.includes("sm:")) {
+          styleTokens.push(`${style.widthToken} (sm:full)`);
+        } else {
+          styleTokens.push(style.widthToken);
+        }
+      }
+      if (style.heightToken) {
+        styleTokens.push(`height:${style.heightToken}`);
+      }
+      if (style.align) {
+        styleTokens.push(`align:${style.align}`);
+      }
+      if (style.alignY) {
+        styleTokens.push(`align-y:${style.alignY}`);
+      }
+      if (style.dist) {
+        styleTokens.push(style.dist);
+      }
+      if (style.rel) {
+        styleTokens.push(`rel:${style.rel}`);
+      }
+      if (Array.isArray(style.behaviors) && style.behaviors.length > 0) {
+        for (const b of style.behaviors) {
+          if (b === "responsive" && isPage) continue;
+          if (!propsPairs.includes(b) && !styleTokens.includes(b)) {
+            styleTokens.push(b);
+          }
+        }
+      }
+      if (style.note) {
+        styleTokens.push(`note:"${style.note}"`);
+      }
+    } else if (p) {
+      if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
+        for (const b of p.behaviors) {
+          if (b === "responsive" && isPage) continue;
+          if (!propsPairs.includes(b) && !styleTokens.includes(b)) {
+            styleTokens.push(b);
+          }
+        }
+      }
+      if (typeof p.note === "string" && p.note.trim() !== "") {
+        styleTokens.push(`note:"${p.note.trim()}"`);
+      }
+    }
+    const mobileOrder = typeof p?.mobileOrder === "number" ? p.mobileOrder : style?.mobileOrder;
+    if (typeof mobileOrder === "number") {
+      styleTokens.push(`sm:order-${mobileOrder}`);
+    }
+    const hideOnMobile = p?.hideOnMobile ?? style?.hideOnMobile;
+    if (hideOnMobile) {
+      styleTokens.push("sm:hidden");
+    }
+    const inUnit = Boolean(
+      node.isUnit || node.unitId || parent?.isUnit || parent?.unitId
+    );
+    if (inUnit) {
+      return propsPairs.join(", ");
+    }
+    const propsStr = propsPairs.join(", ");
+    const styleStr = styleTokens.join(" ");
+    if (propsStr && styleStr) {
+      return `${propsStr} ${styleStr}`;
+    }
+    if (propsStr) return propsStr;
+    if (styleStr) return styleStr;
+    return "\u2014";
+  }
+  static toIRNode(node) {
+    if ("bounds" in node && "textProps" in node) {
+      return node;
+    }
+    const ln = node;
+    return {
+      id: ln.id,
+      shortId: ln.id.slice(-4),
+      widgetType: ln.widgetType || (ln.role === "container" ? "section" : ln.role === "button" ? "button" : "heading"),
+      role: ln.role,
+      label: ln.label,
+      textProps: ln.widgetProps || {
+        label: ln.shape?.text || ln.label
+      },
+      bounds: ln.shape?.bounds || { x: 0, y: 0, w: 100, h: 40 },
+      children: (ln.children || []).map((c) => this.toIRNode(c)),
+      parent: ln.parent,
+      direction: ln.direction,
+      path: ln.path,
+      style: ln.style
+    };
+  }
+  static serializeSpecTable(roots, options) {
+    if (!roots || roots.length === 0) {
+      return "_Canvas is empty. Draw shapes or drop UI components to generate the specification._";
+    }
+    const irRoots = roots.map((r) => this.toIRNode(r));
+    const rows = [];
+    rows.push("### MarkDraw UI Specification");
+    if (options?.includeTimestamp) {
+      rows.push(`**Generated:** ${(/* @__PURE__ */ new Date()).toISOString()}  `);
+    }
+    const rootPage = irRoots.find((r) => r.role === "page" || r.widgetType === "page");
+    const effectivePageNote = options?.pageNote || rootPage?.textProps?.note || rootPage?.style?.note;
+    if (effectivePageNote) {
+      rows.push(`**Page note:** ${effectivePageNote}  `);
+    }
+    rows.push(`**Roots Detected:** ${irRoots.length} view(s)
+`);
+    rows.push("#### Semantic Hierarchy Table");
+    rows.push(
+      "| Path | Component | Semantics | Placement | Layout Flow | Props & Attributes | Children / Content |"
+    );
+    rows.push(
+      "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |"
+    );
+    const walk = (node, parent) => {
+      const notation = formatSemanticNotation(node);
+      let childBadges = "\u2014";
+      if (node.isUnit && node.children.length > 0) {
+        childBadges = node.children.map((c) => {
+          const raw = c.textProps?.label || c.label;
+          const hasLit = !isUntouchedRoleLabel(c.role, raw);
+          if (c.role === "button" && hasLit) {
+            return `"${raw}"`;
+          }
+          return c.role;
+        }).join(", ");
+      } else if (node.children.length === 1 && node.children[0].isUnit) {
+        childBadges = `1 \xD7 [${node.children[0].unitName || node.children[0].label}]`;
+      } else if (node.children.length > 0) {
+        childBadges = detectSiblingPatterns(node.children);
+      } else {
+        const rawLabel = node.textProps?.label || node.label;
+        const isUntouched = isUntouchedRoleLabel(node.role, rawLabel);
+        if (isUntouched) {
+          childBadges = '"content: [Text Placeholder]"';
+        } else if (rawLabel) {
+          childBadges = `"${rawLabel}"`;
+        } else {
+          childBadges = "\u2014";
+        }
+      }
+      const semanticsBadge = `<${capitalize2(node.role)}>`;
+      const placement = inferPlacement(node, parent);
+      const layoutFlow = node.children.length > 0 ? node.direction === "Leaf" ? "Column" : node.direction : "\u2014";
+      const propsStr = this.formatProps(node, parent);
+      const propsCol = propsStr ? ` ${propsStr} ` : " ";
+      rows.push(
+        `| \`${node.path}\` | **${notation}** | ${semanticsBadge} | ${placement} | ${layoutFlow} |${propsCol}| ${childBadges} |`
+      );
+      for (const child of node.children) {
+        walk(child, node);
+      }
+    };
+    for (const root of irRoots) {
+      walk(root, null);
+    }
+    return rows.join("\n");
+  }
+  static serializeSpatialGrid(roots, gridBandThreshold = 32) {
+    if (!roots || roots.length === 0) return "_Canvas is empty._";
+    const irRoots = roots.map((r) => this.toIRNode(r));
+    const lines = [];
+    lines.push("### Spatial Grid Layout Table\n");
+    const rowClustered = [];
+    const sortedRoots = [...irRoots].sort((a, b) => a.bounds.y - b.bounds.y);
+    for (const node of sortedRoots) {
+      let placed = false;
+      for (const cluster of rowClustered) {
+        const clusterY = cluster[0].bounds.y;
+        if (Math.abs(node.bounds.y - clusterY) <= gridBandThreshold) {
+          cluster.push(node);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        rowClustered.push([node]);
+      }
+    }
+    let maxCols = 0;
+    for (const cluster of rowClustered) {
+      cluster.sort((a, b) => a.bounds.x - b.bounds.x);
+      maxCols = Math.max(maxCols, cluster.length);
+    }
+    if (maxCols === 0) return "_No spatial cells formed._";
+    const headers = Array.from({ length: maxCols }, (_, i) => `Col ${i + 1}`);
+    lines.push(`| ${headers.join(" | ")} |`);
+    lines.push(`| ${headers.map(() => ":---").join(" | ")} |`);
+    for (const cluster of rowClustered) {
+      const cellValues = cluster.map((n) => formatSemanticNotation(n));
+      while (cellValues.length < maxCols) {
+        cellValues.push("\u2014");
+      }
+      lines.push(`| ${cellValues.join(" | ")} |`);
+    }
+    return lines.join("\n");
+  }
+};
+
+// src/cli/compile.ts
+function canvasShapesToCompilerShapes(canvasShapes) {
+  return canvasShapes.map((s) => ({
+    id: s.id,
+    type: s.kind === "frame" ? "frame" : s.kind === "group" ? "group" : "geo",
+    x: s.bounds.x,
+    y: s.bounds.y,
+    rotation: s.bounds.rotation || 0,
+    parentId: s.parentId,
+    props: {
+      geo: s.kind === "ellipse" ? "ellipse" : s.kind === "diamond" ? "diamond" : "rectangle",
+      w: s.bounds.w,
+      h: s.bounds.h,
+      text: s.text,
+      name: s.name
+    },
+    meta: s.meta
+  }));
+}
+function compileStoredDocument(doc, options = {}) {
+  const compilerShapes = canvasShapesToCompilerShapes(doc.shapes);
+  let scopeConfig = null;
+  if (options.root) {
+    const targetRoot = doc.shapes.find(
+      (s) => s.id === options.root || s.name === options.root || s.text === options.root || s.meta?.markdraw?.props?.label === options.root
+    );
+    if (!targetRoot) {
+      throw new Error(`Root shape not found matching "${options.root}"`);
+    }
+    const label = targetRoot.name || targetRoot.meta?.markdraw?.props?.label || targetRoot.id;
+    scopeConfig = {
+      shapeIds: [targetRoot.id],
+      scopeName: label
+    };
+  } else if (options.scope && options.scope !== "all") {
+    scopeConfig = {
+      shapeIds: [options.scope]
+    };
+  }
+  const compileOpts = {
+    units: doc.units || [],
+    platformId: options.platform || "web",
+    scope: scopeConfig
+  };
+  const result = MarkDrawCompiler.compile(compilerShapes, null, compileOpts);
+  return options.json ? result.jsonAst : result.markdownSpec;
+}
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  let command;
+  let filePath;
+  const options = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "compile") {
+      command = "compile";
+    } else if (arg === "--root" && i + 1 < args.length) {
+      options.root = args[++i];
+    } else if (arg === "--platform" && i + 1 < args.length) {
+      options.platform = args[++i];
+    } else if (arg === "--scope" && i + 1 < args.length) {
+      options.scope = args[++i];
+    } else if (arg === "--json") {
+      options.json = true;
+    } else if (arg === "--help" || arg === "-h") {
+      command = "help";
+    } else if (arg === "--version" || arg === "-v") {
+      command = "version";
+    } else if (!arg.startsWith("-") && !filePath) {
+      filePath = arg;
+    }
+  }
+  return { command: command || (filePath ? "compile" : "help"), filePath, options };
+}
+function runCli(argv = process.argv) {
+  const { command, filePath, options } = parseArgs(argv);
+  if (command === "help") {
+    console.log(`
+MarkDraw v5 CLI \u2014 Headless Compiler
+
+Usage:
+  markdraw compile <file.md.json> [options]
+
+Options:
+  --root <id|name>               Root frame or container to compile
+  --platform <web|android-material>  Target platform profile (default: web)
+  --scope <all|id>               Scope compilation to all or specific shape
+  --json                         Emit JSON AST instead of Markdown contract
+  --help, -h                     Show this help message
+  --version, -v                  Show version
+`);
+    process.exit(0);
+  }
+  if (command === "version") {
+    console.log("markdraw v5.0.0");
+    process.exit(0);
+  }
+  if (command === "compile") {
+    if (!filePath) {
+      console.error("Error: Please specify an input document file path.");
+      process.exit(1);
+    }
+    const resolvedPath = path.resolve(process.cwd(), filePath);
+    if (!fs.existsSync(resolvedPath)) {
+      console.error(`Error: File not found: ${resolvedPath}`);
+      process.exit(1);
+    }
+    try {
+      const raw = fs.readFileSync(resolvedPath, "utf-8");
+      const doc = JSON.parse(raw);
+      const output = compileStoredDocument(doc, options);
+      process.stdout.write(output + (output.endsWith("\n") ? "" : "\n"));
+      process.exit(0);
+    } catch (err) {
+      console.error(`Compilation Error: ${err.message || err}`);
+      process.exit(1);
+    }
+  }
+}
+if (process.argv[1] && (process.argv[1].endsWith("compile.ts") || process.argv[1].endsWith("markdraw"))) {
+  runCli();
+}
+export {
+  canvasShapesToCompilerShapes,
+  compileStoredDocument,
+  parseArgs,
+  runCli
+};

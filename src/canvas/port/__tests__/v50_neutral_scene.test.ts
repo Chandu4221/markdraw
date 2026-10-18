@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tldrawSceneToStoredDocument } from '../../tldraw/v5-export.tldraw';
+import { tldrawSceneToStoredDocument } from '../../migration/v5-export.tldraw';
 import {
   excalidrawSceneToStoredDocument,
   storedDocumentToExcalidrawElements

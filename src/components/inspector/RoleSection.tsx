@@ -16,7 +16,7 @@ import {
 } from '../../annotation/roles';
 import { getShapeMeta, updateShapeMeta, suggestRoleForShape } from '../../annotation/shapeMeta';
 import { RoleResponsive } from '../../annotation/types';
-import { Editor, TLShape } from '../../canvas/tldraw';
+import { Editor, TLShape } from '../../core/types';
 import { Input } from '@/components/ui/input';
 
 interface RoleSectionProps {
@@ -45,7 +45,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
   const potentialParents = useMemo(() => {
     const all = editor.getCurrentPageShapes();
     const selectedIds = new Set(selectedShapes.map((s) => s.id));
-    return all.filter((s) => !selectedIds.has(s.id));
+    return all.filter((s: TLShape) => !selectedIds.has(s.id));
   }, [editor, selectedShapes]);
 
   const suggestedRole = useMemo(() => {
@@ -288,7 +288,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               className="w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2.5 text-xs text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
             >
               <option value="">Auto (Infer from AABB bounds)</option>
-              {potentialParents.map((p) => {
+              {potentialParents.map((p: TLShape) => {
                 const meta = getShapeMeta(p);
                 const role = meta?.role || p.type;
                 const label = (p.props as any)?.name || meta?.props?.label || p.id.slice(-6);

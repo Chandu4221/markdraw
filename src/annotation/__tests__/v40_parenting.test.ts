@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TLShape, createShapeId } from '@tldraw/tldraw';
+import { TLShape, createShapeId } from '../../core/types';
 import { MarkDrawCompiler } from '../../core/compiler';
 
 describe('MarkDraw v4 Hierarchy & Parenting (§6.3)', () => {

@@ -1,4 +1,23 @@
-import { TLBaseShape } from '@tldraw/tldraw';
+export interface TLBaseShape<Type extends string = string, Props = any> {
+  id: string;
+  type: Type;
+  x: number;
+  y: number;
+  rotation?: number;
+  parentId?: string | null;
+  props: Props;
+  meta?: Record<string, unknown>;
+}
+
+export type TLShape = TLBaseShape<string, any>;
+export type Editor = any;
+
+export function createShapeId(id?: string): string {
+  if (id) {
+    return id.startsWith('shape:') ? id : `shape:${id}`;
+  }
+  return `shape:${Math.random().toString(36).slice(2, 9)}`;
+}
 
 export type UIWidgetCategory =
   | 'layout'

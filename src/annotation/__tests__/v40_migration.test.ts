@@ -1,6 +1,6 @@
 // src/annotation/__tests__/v40_migration.test.ts
 import { describe, it, expect } from 'vitest';
-import { TLShape, createShapeId } from '@tldraw/tldraw';
+import { TLShape, createShapeId } from '../../core/types';
 import {
   migrateShapes,
   isV3Widget,

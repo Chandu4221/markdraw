@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildIRTree, serializeIRToJsonAst } from '../ir';
-import { TLShape } from '@tldraw/tldraw';
+import { TLShape } from '../types';
 
 function makeWidget(id: string, widgetType: string, x: number, y: number, w: number, h: number, props: any = {}): TLShape {
   return {

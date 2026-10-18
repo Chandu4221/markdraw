@@ -1,9 +1,10 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
 import { CanvasDriver } from '../port/CanvasDriver';
 import { ExcalidrawDriver } from './ExcalidrawDriver';
+import { RoleChipsOverlay } from '../../annotation/RoleChipsOverlay';
 
 export interface ExcalidrawCanvasProps {
   persistenceKey: string;
@@ -19,9 +20,14 @@ export interface ExcalidrawCanvasProps {
 export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
   onDriverReady,
   onEditorMount,
+  showRoleChips = true,
+  showUntaggedChips = false,
+  onChipClick,
+  onCopyContract,
   theme = 'dark'
 }) => {
   const driverRef = useRef<ExcalidrawDriver | null>(null);
+  const [driverState, setDriverState] = useState<CanvasDriver | null>(null);
   const cleanupRef = useRef<(() => void) | void>(undefined);
 
   const handleApiReady = useCallback(
@@ -34,6 +40,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         }
         const driver = new ExcalidrawDriver(api);
         driverRef.current = driver;
+        setDriverState(driver);
         onDriverReady(driver, api);
 
         if (onEditorMount) {
@@ -75,6 +82,13 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
             saveAsImage: false
           }
         }}
+      />
+      <RoleChipsOverlay
+        driver={driverState}
+        showChips={showRoleChips}
+        showUntagged={showUntaggedChips}
+        onChipClick={onChipClick}
+        onCopyContract={onCopyContract}
       />
     </div>
   );

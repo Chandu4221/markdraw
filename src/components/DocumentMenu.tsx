@@ -8,9 +8,11 @@ import {
   Download,
   Upload,
   Check,
-  FileText
+  FileText,
+  Sparkles
 } from 'lucide-react';
 import { MarkDrawDocMeta } from '../core/documents';
+import { STARTER_TEMPLATES, StarterTemplate } from '../canvas/templates/starterTemplates';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -31,6 +33,7 @@ interface DocumentMenuProps {
   onDeleteDoc: (docId: string) => void;
   onExportFile: () => void;
   onImportFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectTemplate?: (template: StarterTemplate) => void;
 }
 
 export const DocumentMenu: React.FC<DocumentMenuProps> = ({
@@ -42,7 +45,8 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
   onRenameDoc,
   onDeleteDoc,
   onExportFile,
-  onImportFile
+  onImportFile,
+  onSelectTemplate
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -186,6 +190,31 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
             <Upload size={13} />
             <span>Import File (.markdraw.json)</span>
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuLabel>
+            Starter Templates (§11)
+          </DropdownMenuLabel>
+
+          {STARTER_TEMPLATES.map((tpl) => (
+            <DropdownMenuItem
+              key={tpl.id}
+              className="flex flex-col items-start gap-0.5 cursor-pointer"
+              onClick={() => {
+                setIsOpen(false);
+                onSelectTemplate?.(tpl);
+              }}
+            >
+              <div className="flex items-center gap-2 font-medium text-xs">
+                <Sparkles size={12} className="text-[var(--color-accent)]" />
+                <span>{tpl.name}</span>
+              </div>
+              <span className="text-[10px] text-[var(--color-ink-muted)]">
+                {tpl.description}
+              </span>
+            </DropdownMenuItem>
+          ))}
 
           <DropdownMenuSeparator />
 

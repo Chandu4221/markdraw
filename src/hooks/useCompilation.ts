@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Editor } from '../canvas/tldraw';
+import { Editor } from '../core/types';
 import { CanvasDriver } from '../canvas/port/CanvasDriver';
 import { CanvasShape } from '../canvas/port/CanvasShape';
 import { MarkDrawCompiler } from '../core/compiler';
@@ -64,6 +64,7 @@ export function useCompilation({
   const [compileDuration, setCompileDuration] = useState<number | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [copiedFull, setCopiedFull] = useState<boolean>(false);
+  const [coverage, setCoverage] = useState<{ tagged: number; total: number }>({ tagged: 0, total: 0 });
 
   const debounceTimerRef = useRef<number | null>(null);
   const compileIdRef = useRef<number>(0);
@@ -79,10 +80,18 @@ export function useCompilation({
         shapes = canvasShapesToCompilerShapes(canvasShapes);
       } else if (editorRef?.current) {
         shapes = editorRef.current.getCurrentPageShapes();
-        selectedIds = editorRef.current.getSelectedShapeIds().map((id) => id as string);
+        selectedIds = editorRef.current.getSelectedShapeIds().map((id: any) => id as string);
       } else {
         return;
       }
+
+      // Coverage calculation (§11)
+      const total = shapes.length;
+      const tagged = shapes.filter((s) => {
+        const m = s.meta?.markdraw as any;
+        return m && m.role && m.role !== 'none' && m.role !== 'untagged';
+      }).length;
+      setCoverage({ tagged, total });
 
       compileIdRef.current += 1;
 
@@ -109,6 +118,27 @@ export function useCompilation({
       showToast('Compile error — showing last valid output');
     }
   }, [options, platformId, compileScopeMode, showToast, editorRef, driverRef]);
+
+  const handleLintClick = useCallback(async (lint: string) => {
+    if (driverRef?.current) {
+      const canvasShapes = await driverRef.current.listShapes();
+      const shortMatch = lint.match(/#([a-zA-Z0-9_-]+)/);
+      if (shortMatch) {
+        const frag = shortMatch[1];
+        const match = canvasShapes.find(s => s.id.includes(frag) || s.id === frag);
+        if (match) {
+          await driverRef.current.panTo(match.id);
+          await driverRef.current.setSelection([match.id]);
+          return;
+        }
+      }
+      const direct = canvasShapes.find(s => lint.includes(s.id) || (s.name && lint.includes(s.name)));
+      if (direct) {
+        await driverRef.current.panTo(direct.id);
+        await driverRef.current.setSelection([direct.id]);
+      }
+    }
+  }, [driverRef]);
 
   const handleDriverReady = useCallback(
     (driver: CanvasDriver) => {
@@ -172,11 +202,11 @@ export function useCompilation({
             console.error('[MarkDraw] Failed to seed demo shapes:', err);
           }
         } else {
-          const hasV3Widgets = currentShapes.some((s) => isV3Widget(s));
+          const hasV3Widgets = currentShapes.some((s: any) => isV3Widget(s));
           if (hasV3Widgets) {
             backupDocumentBeforeMigration(activeDoc.id, currentShapes);
             const { shapes: migrated } = migrateShapes(currentShapes);
-            mountedEditor.deleteShapes(currentShapes.map((s) => s.id));
+            mountedEditor.deleteShapes(currentShapes.map((s: any) => s.id));
             mountedEditor.createShapes(migrated);
             showToast('Migrated v3 document to v4 semantic annotation layer.');
           }
@@ -290,6 +320,8 @@ export function useCompilation({
     getActiveContent,
     handleCopy,
     handleCopyFullContract,
-    handleDownload
+    handleDownload,
+    coverage,
+    handleLintClick
   };
 }

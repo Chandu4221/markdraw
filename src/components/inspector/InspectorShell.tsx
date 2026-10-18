@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import {
-  useEditor,
-  TLShape,
-  useRelevantStyles,
-  TLUiStylePanelProps,
-  usePassThroughWheelEvents
-} from '../../canvas/tldraw';
+import { TLShape, Editor } from '../../core/types';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { getShapeMeta } from '../../annotation/shapeMeta';
 import { MarkDrawCompiler } from '../../core/compiler';
@@ -25,11 +19,14 @@ import { CompilerSettingsSection } from './CompilerSettingsSection';
 import { UnitSection } from './UnitSection';
 import { CanvasOverviewSection } from './CanvasOverviewSection';
 
-export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiStylePanelProps) {
-  const editor = useEditor();
-  const styles = useRelevantStyles();
+export interface TLUiStylePanelProps {
+  isMobile?: boolean;
+}
+
+export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiStylePanelProps = {}) {
+  const editor: Editor = null;
+  const styles: any = null;
   const panelRef = useRef<HTMLDivElement>(null);
-  usePassThroughWheelEvents(panelRef as any);
 
   const compilationCtx = useCompilationOptions();
   const options = compilationCtx?.options;

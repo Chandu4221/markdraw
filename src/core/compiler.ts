@@ -1,4 +1,4 @@
-import { TLShape, Editor } from '@tldraw/tldraw';
+import { TLShape, Editor } from './types';
 import {
   CompilationResult,
   CompilationOptions,

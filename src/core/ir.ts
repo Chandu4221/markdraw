@@ -1,4 +1,4 @@
-import { TLShape, Editor } from '@tldraw/tldraw';
+import { TLShape, Editor } from './types';
 import { computeAABB, getEnclosureRatio, sanitizeMarkdown } from './geometry';
 import { CompilationOptions } from './types';
 import { InferredStyle, inferNodeStyle } from './style';

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CanvasDriver, ShapesDiff } from '../CanvasDriver';
 import { CanvasShape } from '../CanvasShape';
-import { tldrawSceneToStoredDocument } from '../../tldraw/v5-export.tldraw';
-import { tlShapeToCanvasShape } from '../../tldraw/shapeMapping';
+import { tldrawSceneToStoredDocument } from '../../migration/v5-export.tldraw';
+import { tlShapeToCanvasShape } from '../../migration/shapeMapping';
 
 class MockDriver implements CanvasDriver {
   shapes: Map<string, CanvasShape> = new Map();

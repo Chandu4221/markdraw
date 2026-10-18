@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Editor } from '../canvas/tldraw';
+import { Editor } from '../core/types';
 import {
   getDocRegistry,
   createDocument,
@@ -44,7 +44,7 @@ export function useDocumentManagement({ editorRef, showToast }: UseDocumentManag
   const handleDuplicateDoc = () => {
     const currentShapes = editorRef.current?.getCurrentPageShapes() || [];
     const { registry, newDoc } = duplicateDocumentMeta(activeDoc.id);
-    pendingShapesRef.current = currentShapes.map((s) => ({
+    pendingShapesRef.current = currentShapes.map((s: any) => ({
       type: s.type,
       x: s.x,
       y: s.y,

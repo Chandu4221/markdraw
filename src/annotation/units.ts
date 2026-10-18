@@ -1,5 +1,5 @@
 // src/annotation/units.ts
-import { TLShape, Editor, createShapeId } from '@tldraw/tldraw';
+import { TLShape, Editor, createShapeId } from '../core/types';
 import { generateShortId } from '../core/ids';
 import { getShapeMeta } from './shapeMeta';
 import { ROLE_SCHEMA_VERSION, MarkDrawMeta } from './types';

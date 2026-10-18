@@ -1,6 +1,5 @@
 import React from 'react';
 import { Palette, ChevronDown, ChevronRight } from 'lucide-react';
-import { DefaultStylePanelContent } from '../../canvas/tldraw';
 
 interface StyleSectionProps {
   isOpen: boolean;
@@ -11,7 +10,7 @@ interface StyleSectionProps {
 export const StyleSection: React.FC<StyleSectionProps> = ({
   isOpen,
   onToggle,
-  styles
+  styles: _styles
 }) => {
   return (
     <div className="border-t border-[var(--md-line-subtle)]">
@@ -31,8 +30,8 @@ export const StyleSection: React.FC<StyleSectionProps> = ({
       </button>
 
       {isOpen && (
-        <div className="p-2 border-t border-[var(--md-line-subtle)] bg-[var(--md-surface-1)]">
-          <DefaultStylePanelContent styles={styles} />
+        <div className="p-2 border-t border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] text-xs text-[var(--color-ink-muted)]">
+          <span>Styles managed via canvas tool settings</span>
         </div>
       )}
     </div>

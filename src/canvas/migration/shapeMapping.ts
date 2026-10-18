@@ -1,4 +1,4 @@
-import { TLShape, Editor } from '@tldraw/tldraw';
+import { TLShape, Editor } from '../../core/types';
 import { CanvasShape, ShapeKind } from '../port/CanvasShape';
 
 export function mapTlShapeTypeToKind(shape: TLShape): ShapeKind {
@@ -68,6 +68,6 @@ export function tlShapeToCanvasShape(shape: TLShape, editor?: Editor): CanvasSha
     name,
     text,
     arrowEndpoints,
-    meta: (shape.meta as Record<string, unknown>) ?? {}
+    meta: (shape.meta as Record<string, unknown>) || {}
   };
 }

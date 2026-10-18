@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MarkDrawCompiler } from '../compiler';
-import { TLShape } from '@tldraw/tldraw';
+import { TLShape } from '../types';
 
 function createShape(
   id: string,

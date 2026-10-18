@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Editor } from '@tldraw/tldraw';
 import { Copy, Check } from 'lucide-react';
+import { CanvasDriver } from '../canvas/port/CanvasDriver';
+import { CanvasShape } from '../canvas/port/CanvasShape';
 import { getShapeMeta } from './shapeMeta';
 import { MarkDrawCompiler } from '../core/compiler';
+import { canvasShapesToCompilerShapes } from '../hooks/useCompilation';
 
 interface RoleChipsOverlayProps {
-  editor: Editor | null;
+  driver?: CanvasDriver | null;
+  editor?: any | null;
   showChips?: boolean;
   showUntagged?: boolean;
   onChipClick?: (shapeId: string) => void;
@@ -28,6 +31,7 @@ interface ChipItem {
 }
 
 export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
+  driver,
   editor,
   showChips = true,
   showUntagged = false,
@@ -36,95 +40,150 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
 }) => {
   const [, setTick] = useState(0);
   const [copiedRootId, setCopiedRootId] = useState<string | null>(null);
+  const [driverShapes, setDriverShapes] = useState<CanvasShape[]>([]);
+  const [driverSelection, setDriverSelection] = useState<string[]>([]);
+  const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
 
   useEffect(() => {
-    if (!editor) return;
+    if (driver) {
+      const updateFromDriver = async () => {
+        try {
+          const shapes = await driver.listShapes();
+          const vp = driver.getViewport();
+          setDriverShapes(shapes);
+          setViewport(vp);
+        } catch {
+          // ignore
+        }
+      };
+      updateFromDriver();
 
-    // Listen to camera movements, zooms, and shape changes
-    const unlisten = editor.store.listen(() => {
-      setTick((t) => (t + 1) % 1000000);
-    });
+      const unlistenShapes = driver.onShapesChanged(() => {
+        updateFromDriver();
+        setTick((t) => (t + 1) % 1000000);
+      });
 
-    return () => {
-      unlisten();
-    };
-  }, [editor]);
+      const unlistenSel = driver.onSelectionChanged((sel) => {
+        setDriverSelection(sel);
+      });
 
-  if (!editor || !showChips) return null;
+      return () => {
+        unlistenShapes();
+        unlistenSel();
+      };
+    } else if (editor) {
+      const unlisten = editor.store.listen(() => {
+        setTick((t) => (t + 1) % 1000000);
+      });
+      return () => {
+        unlisten();
+      };
+    }
+  }, [driver, editor]);
 
-  const shapes = editor.getCurrentPageShapes();
-  const zoom = editor.getZoomLevel();
+  if ((!driver && !editor) || !showChips) return null;
 
-  // If zoomed out too far (< 0.25), hide chips for readability
+  const zoom = driver ? viewport.zoom : editor.getZoomLevel();
   if (zoom < 0.25) return null;
 
-  const selectedShapeIds = new Set(editor.getSelectedShapeIds() as string[]);
+  const selectedShapeIds = new Set(
+    driver ? driverSelection : (editor.getSelectedShapeIds() as string[])
+  );
   const chips: ChipItem[] = [];
 
-  for (const shape of shapes) {
-    if (shape.type === 'arrow' || shape.type === 'line') continue;
+  if (driver) {
+    for (const shape of driverShapes) {
+      if (shape.kind === 'arrow' || shape.kind === 'line') continue;
+      const meta = shape.meta?.markdraw as any;
+      const hasRole = Boolean(meta && meta.role);
+      if (!hasRole && !showUntagged) continue;
 
-    const meta = getShapeMeta(shape);
-    const hasRole = Boolean(meta && meta.role);
+      const screenX = (shape.bounds.x + viewport.x) * zoom;
+      const screenY = (shape.bounds.y + viewport.y) * zoom;
+      const screenW = shape.bounds.w * zoom;
+      const screenH = shape.bounds.h * zoom;
 
-    if (!hasRole && !showUntagged) continue;
-
-    const bounds = editor.getShapePageBounds(shape);
-    if (!bounds || bounds.w < 10 || bounds.h < 10) continue;
-
-    // Convert page coordinates to viewport pixel coordinates
-    const screenPoint = editor.pageToViewport({ x: bounds.x, y: bounds.y });
-
-    // Check if flush with parent frame top
-    let isFlushWithParentTop = false;
-    const parentId = shape.parentId || meta?.parentId;
-    if (parentId && parentId !== editor.getCurrentPageId()) {
-      const parentShape = editor.getShape(parentId as any);
-      if (parentShape) {
-        const parentBounds = editor.getShapePageBounds(parentShape);
-        if (parentBounds && Math.abs(bounds.y - parentBounds.y) < 14) {
+      let isFlushWithParentTop = false;
+      if (shape.parentId) {
+        const parentShape = driverShapes.find((s) => s.id === shape.parentId);
+        if (parentShape && Math.abs(shape.bounds.y - parentShape.bounds.y) < 14) {
           isFlushWithParentTop = true;
         }
       }
+
+      chips.push({
+        shapeId: shape.id,
+        label: meta?.props?.label || meta?.role || shape.name || 'untagged',
+        isUnit: Boolean(meta?.unitId),
+        isUntagged: !hasRole,
+        isRoot: shape.kind === 'frame' || meta?.role === 'page',
+        isSelected: selectedShapeIds.has(shape.id),
+        isFlushWithParentTop,
+        x: screenX,
+        y: screenY,
+        w: screenW,
+        h: screenH,
+        zoom
+      });
     }
+  } else if (editor) {
+    const shapes = editor.getCurrentPageShapes();
+    for (const shape of shapes) {
+      if (shape.type === 'arrow' || shape.type === 'line') continue;
 
-    chips.push({
-      shapeId: shape.id,
-      label: meta?.props?.label || meta?.role || 'untagged',
-      isUnit: Boolean(meta?.unitId),
-      isUntagged: !hasRole,
-      isRoot: shape.type === 'frame' || meta?.role === 'page',
-      isSelected: selectedShapeIds.has(shape.id),
-      isFlushWithParentTop,
-      x: screenPoint.x,
-      y: screenPoint.y,
-      w: bounds.w * zoom,
-      h: bounds.h * zoom,
-      zoom
-    });
-  }
+      const meta = getShapeMeta(shape);
+      const hasRole = Boolean(meta && meta.role);
 
-  const handleCopyContract = (e: React.MouseEvent, shapeId: string) => {
-    e.stopPropagation();
-    if (!editor) return;
-    const all = editor.getCurrentPageShapes();
-    const descendants: string[] = [];
-    const findChildren = (pid: string) => {
-      for (const s of all) {
-        if (s.parentId === pid || getShapeMeta(s)?.parentId === pid) {
-          descendants.push(s.id);
-          findChildren(s.id);
+      if (!hasRole && !showUntagged) continue;
+
+      const bounds = editor.getShapePageBounds(shape);
+      if (!bounds || bounds.w < 10 || bounds.h < 10) continue;
+
+      const screenPoint = editor.pageToViewport({ x: bounds.x, y: bounds.y });
+
+      let isFlushWithParentTop = false;
+      const parentId = shape.parentId || meta?.parentId;
+      if (parentId && parentId !== editor.getCurrentPageId()) {
+        const parentShape = editor.getShape(parentId as any);
+        if (parentShape) {
+          const parentBounds = editor.getShapePageBounds(parentShape);
+          if (parentBounds && Math.abs(bounds.y - parentBounds.y) < 14) {
+            isFlushWithParentTop = true;
+          }
         }
       }
-    };
-    findChildren(shapeId);
-    const scopeIds = [shapeId, ...descendants];
-    const res = MarkDrawCompiler.compile(all, editor, {
+
+      chips.push({
+        shapeId: shape.id,
+        label: meta?.props?.label || meta?.role || 'untagged',
+        isUnit: Boolean(meta?.unitId),
+        isUntagged: !hasRole,
+        isRoot: shape.type === 'frame' || meta?.role === 'page',
+        isSelected: selectedShapeIds.has(shape.id),
+        isFlushWithParentTop,
+        x: screenPoint.x,
+        y: screenPoint.y,
+        w: bounds.w * zoom,
+        h: bounds.h * zoom,
+        zoom
+      });
+    }
+  }
+
+  const handleCopyContract = async (e: React.MouseEvent, shapeId: string) => {
+    e.stopPropagation();
+    let compilerShapes: any[] = [];
+    if (driver) {
+      compilerShapes = canvasShapesToCompilerShapes(driverShapes);
+    } else if (editor) {
+      compilerShapes = editor.getCurrentPageShapes();
+    }
+    const res = MarkDrawCompiler.compile(compilerShapes, null, {
       annotationMode: true,
-      scope: { shapeIds: scopeIds }
+      scope: { shapeIds: [shapeId] }
     });
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(res.markdownSpec);
+      await navigator.clipboard.writeText(res.markdownSpec);
     }
     setCopiedRootId(shapeId);
     setTimeout(() => setCopiedRootId(null), 2000);
@@ -172,9 +231,13 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
             >
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  editor.setSelectedShapes([chip.shapeId as any]);
+                  if (driver) {
+                    await driver.setSelection([chip.shapeId]);
+                  } else if (editor) {
+                    editor.setSelectedShapes([chip.shapeId as any]);
+                  }
                   onChipClick?.(chip.shapeId);
                 }}
                 className={`px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[3px] border shadow-xs transition-all cursor-pointer ${

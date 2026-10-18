@@ -1,6 +1,6 @@
 // src/annotation/__tests__/v40_golden_follow_card.test.ts
 import { describe, it, expect } from 'vitest';
-import { TLShape } from '@tldraw/tldraw';
+import { TLShape } from '../../core/types';
 import { MarkDrawCompiler } from '../../core/compiler';
 import { UnitDefinition } from '../units';
 

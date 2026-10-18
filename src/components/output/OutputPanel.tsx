@@ -36,6 +36,8 @@ export interface OutputPanelProps {
   onCopy: () => void;
   onCopyFullContract: () => void;
   onDownload: () => void;
+  coverage?: { tagged: number; total: number };
+  onLintClick?: (lint: string) => void;
 }
 
 export const OutputPanel: React.FC<OutputPanelProps> = ({
@@ -56,7 +58,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   copiedFull,
   onCopy,
   onCopyFullContract,
-  onDownload
+  onDownload,
+  coverage,
+  onLintClick
 }) => {
   return (
     <aside
@@ -232,6 +236,20 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   Selection
                 </button>
               </div>
+
+              {/* Coverage Indicator (§11) */}
+              {coverage && coverage.total > 0 && (
+                <div
+                  className={`text-[11px] px-2 py-0.5 rounded transition-colors ${
+                    coverage.tagged === coverage.total
+                      ? 'text-[var(--color-accent)] font-semibold bg-[var(--color-accent)]/10'
+                      : 'text-[var(--color-ink-muted)] font-normal'
+                  }`}
+                  title={`${coverage.tagged} of ${coverage.total} shapes have semantic annotations`}
+                >
+                  Tagged {coverage.tagged}/{coverage.total} shapes
+                </div>
+              )}
             </div>
 
             {/* Actions */}
@@ -290,14 +308,20 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
           </div>
         </div>
 
-        {/* Informational Lints Banner */}
+        {/* Informational Lints Banner (§11: Clickable Lints) */}
         {compilation.lints && compilation.lints.length > 0 && (
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 space-y-1">
             {compilation.lints.map((lint, idx) => (
-              <div key={idx} className="flex items-center gap-1.5">
+              <button
+                key={idx}
+                type="button"
+                onClick={() => onLintClick?.(lint)}
+                className="w-full text-left flex items-center gap-1.5 hover:underline cursor-pointer focus-visible:outline-none"
+                title="Click to locate and select shape on canvas"
+              >
                 <AlertCircle size={13} className="shrink-0 text-amber-500" />
-                <span>{lint}</span>
-              </div>
+                <span className="truncate">{lint}</span>
+              </button>
             ))}
           </div>
         )}

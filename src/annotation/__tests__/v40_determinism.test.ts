@@ -1,6 +1,6 @@
 // src/annotation/__tests__/v40_determinism.test.ts
 import { describe, it, expect } from 'vitest';
-import { TLShape, createShapeId } from '@tldraw/tldraw';
+import { TLShape, createShapeId } from '../../core/types';
 import { MarkDrawCompiler } from '../../core/compiler';
 
 describe('MarkDraw v4 Determinism and Invariance (§14)', () => {

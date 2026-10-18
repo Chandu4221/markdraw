@@ -1,5 +1,5 @@
 // src/annotation/migrate.ts
-import { TLShape, createShapeId } from '@tldraw/tldraw';
+import { TLShape, createShapeId } from '../core/types';
 import { ROLE_DEFINITIONS, RoleName } from './roles';
 import { MarkDrawMeta, ROLE_SCHEMA_VERSION, RoleProps, RoleResponsive } from './types';
 

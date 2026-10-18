@@ -69,93 +69,35 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   public render() {
     if (this.state.hasError) {
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100vw',
-            height: '100vh',
-            background: 'var(--md-bg, #0d0f12)',
-            color: 'var(--md-text, #e2e8f0)',
-            fontFamily: "var(--md-font-sans, 'Google Sans', sans-serif)",
-            padding: 24,
-            boxSizing: 'border-box'
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 560,
-              width: '100%',
-              background: 'var(--md-surface, #161b22)',
-              border: '1.5px solid var(--md-border-strong, #30363d)',
-              borderRadius: 'var(--md-radius-lg, 8px)',
-              padding: 28,
-              boxShadow: 'var(--md-shadow-panel, 4px 4px 0px rgba(0,0,0,0.4))',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 20
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div
-                style={{
-                  background: 'var(--md-text-bold, #fff)',
-                  color: 'var(--md-bg, #000)',
-                  fontWeight: 800,
-                  fontSize: 12,
-                  padding: '3px 8px',
-                  borderRadius: 4
-                }}
-              >
+        <div className="flex flex-col items-center justify-center w-screen h-screen bg-[var(--color-surface-0)] text-[var(--color-ink-primary)] p-6 box-border font-sans">
+          <div className="max-w-[560px] w-full bg-[var(--color-surface-1)] border border-[var(--color-line-strong)] rounded-lg p-7 shadow-xl flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-[var(--color-ink-primary)] text-[var(--color-surface-0)] font-extrabold text-xs px-2 py-0.5 rounded">
                 MD
               </div>
-              <h2
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: 'var(--md-text-bold, #fff)',
-                  margin: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}
-              >
-                <AlertCircle size={20} />
+              <h2 className="text-lg font-bold text-[var(--color-ink-primary)] m-0 flex items-center gap-2">
+                <AlertCircle size={20} className="text-[var(--color-danger)]" />
                 <span>MarkDraw Recoverable Crash</span>
               </h2>
             </div>
 
-            <p style={{ fontSize: 13, lineHeight: 1.5, margin: 0, color: 'var(--md-text, #94a3b8)' }}>
+            <p className="text-[13px] leading-relaxed m-0 text-[var(--color-ink-secondary)]">
               A component or renderer encountered an unexpected error. Your documents remain safely stored in local persistence. You can reload the workspace or export a recovery snapshot.
             </p>
 
             {this.state.error && (
-              <pre
-                style={{
-                  background: 'var(--md-bg, #0d0f12)',
-                  border: '1.5px solid var(--md-border, #21262d)',
-                  borderRadius: 6,
-                  padding: 12,
-                  fontSize: 12,
-                  fontFamily: 'var(--md-font-mono, monospace)',
-                  color: 'var(--md-text-bold, #fff)',
-                  overflowX: 'auto',
-                  maxHeight: 140
-                }}
-              >
+              <pre className="bg-[var(--color-surface-0)] border border-[var(--color-line-subtle)] rounded p-3 text-xs font-mono text-[var(--color-ink-primary)] overflow-x-auto max-h-[140px]">
                 {this.state.error.message}
                 {'\n'}
                 {this.state.error.stack?.split('\n').slice(1, 4).join('\n')}
               </pre>
             )}
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+            <div className="flex gap-3 mt-2">
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--md-text-bold,#fff)] text-[var(--md-bg,#000)] border-[1.5px] border-[var(--md-border-strong,#fff)] text-[13px] font-bold cursor-pointer shadow-[var(--md-shadow-interactive,2px_2px_0px_#000)] hover:bg-[var(--md-accent,#3b82f6)] hover:text-white hover:border-[var(--md-accent,#3b82f6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring,#3b82f6)] focus-visible:ring-offset-2 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-accent)] text-white text-[13px] font-bold cursor-pointer hover:bg-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] transition-colors"
               >
                 <RefreshCw size={14} />
                 <span>Reload Application</span>
@@ -164,7 +106,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <button
                 type="button"
                 onClick={this.handleExportRecovery}
-                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--md-surface-raised,#21262d)] text-[var(--md-text-bold,#fff)] border-[1.5px] border-[var(--md-border-strong,#30363d)] text-[13px] font-semibold cursor-pointer shadow-[var(--md-shadow-interactive,2px_2px_0px_#000)] hover:bg-[var(--md-surface-hover,#30363d)] hover:border-[var(--md-border-strong,#484f58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring,#3b82f6)] focus-visible:ring-offset-2 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-surface-2)] text-[var(--color-ink-primary)] border border-[var(--color-line-strong)] text-[13px] font-semibold cursor-pointer hover:bg-[var(--color-surface-3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] transition-colors"
               >
                 <Download size={14} />
                 <span>Export Recovery File</span>

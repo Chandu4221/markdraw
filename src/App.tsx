@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { TldrawCanvas, Editor } from './canvas/tldraw';
 import { ExcalidrawCanvas } from './canvas/excalidraw';
 import { CanvasDriver } from './canvas/port';
-import { CompilationOptions } from './core/types';
+import { CompilationOptions, Editor } from './core/types';
 import { LegendModal } from './components/LegendModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
@@ -11,6 +10,8 @@ import { CompilationOptionsContext } from './core/CompilationOptionsContext';
 import { ALL_ROLES } from './annotation/roles';
 import { AlertCircle } from 'lucide-react';
 import { AppHeader } from './components/layout';
+import { OnboardingModal } from './components/modals/OnboardingModal';
+import { StarterTemplate } from './canvas/templates/starterTemplates';
 import { OutputPanel, OutputTab, OutputDisplayMode } from './components/output';
 import {
   useDocumentManagement,
@@ -56,7 +57,6 @@ export const App: React.FC = () => {
     }
   };
 
-  const [canvasEngine, setCanvasEngine] = useState<'excalidraw' | 'tldraw'>('excalidraw');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -106,6 +106,27 @@ export const App: React.FC = () => {
     showToast
   });
 
+  // Onboarding Modal State (§11)
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
+    return localStorage.getItem('markdraw_v5_onboarded') !== 'true';
+  });
+
+  const handleSelectTemplate = useCallback(
+    async (template: StarterTemplate) => {
+      if (driverRef.current) {
+        const existing = await driverRef.current.listShapes();
+        for (const s of existing) {
+          await driverRef.current.deleteShape(s.id);
+        }
+        for (const s of template.shapes) {
+          await driverRef.current.createShape(s);
+        }
+        showToast(`Loaded "${template.name}" template`);
+      }
+    },
+    [showToast]
+  );
+
   // Canvas Role Chips Toggle
   const [showRoleChips] = useState<boolean>(() => {
     const saved = localStorage.getItem('markdraw_show_role_chips');
@@ -126,15 +147,6 @@ export const App: React.FC = () => {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  const toggleEngine = () => {
-    setCanvasEngine((prev) => (prev === 'excalidraw' ? 'tldraw' : 'excalidraw'));
-    showToast(
-      canvasEngine === 'excalidraw'
-        ? 'Switched to tldraw canvas engine'
-        : 'Switched to Excalidraw (MIT) canvas engine'
-    );
   };
 
   // Settings Management
@@ -179,12 +191,13 @@ export const App: React.FC = () => {
     compileDuration,
     copied,
     copiedFull,
-    handleEditorMount,
     handleDriverReady,
     getActiveContent,
     handleCopy,
     handleCopyFullContract,
-    handleDownload
+    handleDownload,
+    coverage,
+    handleLintClick
   } = useCompilation({
     options,
     platformId,
@@ -237,8 +250,8 @@ export const App: React.FC = () => {
             onOpenSettings={() => setIsSettingsOpen(true)}
             theme={theme}
             toggleTheme={toggleTheme}
-            canvasEngine={canvasEngine}
-            onToggleEngine={toggleEngine}
+            onSelectTemplate={handleSelectTemplate}
+            onOpenOnboarding={() => setIsOnboardingOpen(true)}
           />
 
           {/* Main Workspace */}
@@ -254,33 +267,17 @@ export const App: React.FC = () => {
                   window.dispatchEvent(new Event('resize'));
                 }}
               >
-                {canvasEngine === 'excalidraw' ? (
-                  <ExcalidrawCanvas
-                    key={`excal_${activeDoc.id}`}
-                    persistenceKey={activeDoc.persistenceKey}
-                    onDriverReady={(driver) => {
-                      driverRef.current = driver;
-                      handleDriverReady(driver);
-                    }}
-                    theme={theme}
-                    showRoleChips={showRoleChips}
-                    onCopyContract={() => showToast('Copied contract to clipboard')}
-                  />
-                ) : (
-                  <TldrawCanvas
-                    key={`tl_${activeDoc.id}`}
-                    persistenceKey={activeDoc.persistenceKey}
-                    onDriverReady={(driver, rawEditor) => {
-                      driverRef.current = driver;
-                      setEditor(rawEditor);
-                      editorRef.current = rawEditor;
-                      handleDriverReady(driver);
-                    }}
-                    onEditorMount={handleEditorMount}
-                    showRoleChips={showRoleChips}
-                    onCopyContract={() => showToast('Copied contract to clipboard')}
-                  />
-                )}
+                <ExcalidrawCanvas
+                  key={`excal_${activeDoc.id}`}
+                  persistenceKey={activeDoc.persistenceKey}
+                  onDriverReady={(driver) => {
+                    driverRef.current = driver;
+                    handleDriverReady(driver);
+                  }}
+                  theme={theme}
+                  showRoleChips={showRoleChips}
+                  onCopyContract={() => showToast('Copied contract to clipboard')}
+                />
 
                 {/* Toast Message */}
                 {toastMessage && (
@@ -329,6 +326,8 @@ export const App: React.FC = () => {
                 onCopy={handleCopy}
                 onCopyFullContract={handleCopyFullContract}
                 onDownload={handleDownload}
+                coverage={coverage}
+                onLintClick={handleLintClick}
               />
             </div>
           </div>
@@ -342,6 +341,7 @@ export const App: React.FC = () => {
             onChange={handleOptionsChange}
           />
           <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+          <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
         </div>
       </CompilationOptionsContext.Provider>
     </ErrorBoundary>

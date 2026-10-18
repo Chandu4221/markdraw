@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Editor } from '../canvas/tldraw';
+import { Editor } from '../core/types';
 
 export interface UseGlobalShortcutsProps {
   editorRef: React.MutableRefObject<Editor | null>;
@@ -62,7 +62,7 @@ export function useGlobalShortcuts({
           else if (e.key === 'ArrowRight') dx = step;
 
           current.updateShapes(
-            selected.map((s) => ({
+            selected.map((s: any) => ({
               id: s.id,
               type: s.type,
               x: s.x + dx,
