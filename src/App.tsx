@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { RolePanel } from './components/RolePanel';
 import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from './annotation/migrate';
+import { LegacyWidgetShapeUtil } from './annotation/legacyShapeUtil';
 import { ALL_ROLES } from './annotation/roles';
 import {
   getDocRegistry,
@@ -61,6 +62,8 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   units: [],
   annotationMode: true
 };
+
+const TRANSITIONAL_SHAPE_UTILS = [LegacyWidgetShapeUtil];
 
 export const App: React.FC = () => {
   const [outputTab, setOutputTab] = useState<'spec' | 'grid' | 'ascii' | 'json'>('spec');
@@ -720,7 +723,7 @@ export const App: React.FC = () => {
               <Tldraw
                 key={activeDoc.id}
                 persistenceKey={activeDoc.persistenceKey}
-                shapeUtils={[]}
+                shapeUtils={TRANSITIONAL_SHAPE_UTILS}
                 components={undefined}
                 onMount={handleEditorMount}
               />
