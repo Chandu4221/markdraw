@@ -1,7 +1,7 @@
 // src/annotation/migrate.ts
 import { TLShape, createShapeId } from '@tldraw/tldraw';
 import { ROLE_DEFINITIONS, RoleName } from './roles';
-import { MarkDrawMeta, ROLE_SCHEMA_VERSION, RoleProps } from './types';
+import { MarkDrawMeta, ROLE_SCHEMA_VERSION, RoleProps, RoleResponsive } from './types';
 
 export interface MigrationRule {
   targetRole: RoleName;
@@ -93,6 +93,41 @@ export function migrateShapes(shapes: TLShape[]): MigrationResult {
   const lints: string[] = [];
   const migratedShapes: TLShape[] = [];
 
+  const helperBounds = (s: TLShape) => {
+    const p = (s.props || {}) as Record<string, unknown>;
+    return {
+      x: s.x || 0,
+      y: s.y || 0,
+      w: (typeof p.w === 'number' && p.w) || 100,
+      h: (typeof p.h === 'number' && p.h) || 50
+    };
+  };
+
+  const promotedContainerIds = new Set<string>();
+  for (const s of shapes) {
+    const b = helperBounds(s);
+    let count = 0;
+    for (const other of shapes) {
+      if (other.id === s.id) continue;
+      const ob = helperBounds(other);
+      if (b.w >= ob.w && b.h >= ob.h) {
+        const ix1 = Math.max(b.x, ob.x);
+        const iy1 = Math.max(b.y, ob.y);
+        const ix2 = Math.min(b.x + b.w, ob.x + ob.w);
+        const iy2 = Math.min(b.y + b.h, ob.y + ob.h);
+        if (ix2 > ix1 && iy2 > iy1) {
+          const intersect = (ix2 - ix1) * (iy2 - iy1);
+          if (intersect / (ob.w * ob.h) >= 0.5) {
+            count++;
+          }
+        }
+      }
+    }
+    if (count >= 2) {
+      promotedContainerIds.add(s.id);
+    }
+  }
+
   for (const shape of shapes) {
     if (!isV3Widget(shape)) {
       migratedShapes.push(shape);
@@ -102,7 +137,10 @@ export function migrateShapes(shapes: TLShape[]): MigrationResult {
     const rawProps = (shape.props || {}) as Record<string, unknown>;
     const widgetType = typeof rawProps.widgetType === 'string' ? rawProps.widgetType : 'card';
     const rule = V3_WIDGET_TO_V4_ROLE_MAP[widgetType] || { targetRole: 'card' as RoleName };
-    const targetRole = rule.targetRole;
+    let targetRole = rule.targetRole;
+    if (promotedContainerIds.has(shape.id) && targetRole !== 'page' && targetRole !== 'section') {
+      targetRole = 'card';
+    }
     const roleDef = ROLE_DEFINITIONS[targetRole];
     const allowedFlags = new Set(roleDef ? roleDef.flags : []);
 
@@ -132,23 +170,96 @@ export function migrateShapes(shapes: TLShape[]): MigrationResult {
     // 3. Assemble RoleProps
     const props: RoleProps = {};
     if (label) props.label = label;
-    if (rule.variant) {
-      props.variant = rule.variant;
-    } else if (typeof rawProps.variant === 'string') {
+    if (typeof rawProps.variant === 'string' && rawProps.variant !== 'default' && rawProps.variant !== 'solid') {
       props.variant = rawProps.variant;
+    } else if (rule.variant) {
+      props.variant = rule.variant;
     }
     if (typeof rawProps.placeholder === 'string') props.placeholder = rawProps.placeholder;
     if (typeof rawProps.options === 'string') props.options = rawProps.options;
     if (typeof rawProps.count === 'number') props.count = rawProps.count;
     if (typeof rawProps.note === 'string') props.note = rawProps.note;
+    if (typeof rawProps.value === 'number') (props as any).value = rawProps.value;
+    if (typeof rawProps.columns === 'number') (props as any).columns = rawProps.columns;
+    if (typeof rawProps.columnSplit === 'string') (props as any).columnSplit = rawProps.columnSplit;
+    if (typeof rawProps.isResponsive === 'boolean') (props as any).isResponsive = rawProps.isResponsive;
+    if (typeof rawProps.mobileStack === 'string') (props as any).mobileStack = rawProps.mobileStack;
+    if (typeof rawProps.tabletLayout === 'string') (props as any).tabletLayout = rawProps.tabletLayout;
+    if (typeof rawProps.mobileOrder === 'number') (props as any).mobileOrder = rawProps.mobileOrder;
+    if (typeof rawProps.hideOnMobile === 'boolean') (props as any).hideOnMobile = rawProps.hideOnMobile;
     if (validBehaviors.length > 0) props.behaviors = validBehaviors;
 
     // 4. Build meta.markdraw
-    const parentId =
+    let parentId =
       typeof rawProps.parentId === 'string'
         ? rawProps.parentId
         : shape.parentId && shape.parentId.startsWith('shape:')
         ? (shape.parentId as string)
+        : null;
+
+    if (!parentId && targetRole !== 'page') {
+      const candidates = shapes.filter((c) => {
+        if (c.id === shape.id) return false;
+        const cProps = (c.props || {}) as Record<string, unknown>;
+        const cType = typeof cProps.widgetType === 'string' ? cProps.widgetType : '';
+        const cRule = V3_WIDGET_TO_V4_ROLE_MAP[cType];
+        const cRole = promotedContainerIds.has(c.id)
+          ? 'card'
+          : cRule?.targetRole || (cProps.role as string);
+        return cRole === 'page' || cRole === 'section' || cRole === 'card' || cRole === 'dialog';
+      });
+
+      candidates.sort((a, b) => {
+        const aProps = (a.props || {}) as Record<string, unknown>;
+        const bProps = (b.props || {}) as Record<string, unknown>;
+        const aArea = ((aProps.w as number) || 100) * ((aProps.h as number) || 100);
+        const bArea = ((bProps.w as number) || 100) * ((bProps.h as number) || 100);
+        return aArea - bArea;
+      });
+
+      const sBounds = {
+        x: shape.x || 0,
+        y: shape.y || 0,
+        w: (typeof rawProps.w === 'number' && rawProps.w) || 100,
+        h: (typeof rawProps.h === 'number' && rawProps.h) || 50
+      };
+      const sAABB = { minX: sBounds.x, minY: sBounds.y, maxX: sBounds.x + sBounds.w, maxY: sBounds.y + sBounds.h };
+
+      for (const cand of candidates) {
+        const cProps = (cand.props || {}) as Record<string, unknown>;
+        const cBounds = {
+          x: cand.x || 0,
+          y: cand.y || 0,
+          w: (typeof cProps.w === 'number' && cProps.w) || 100,
+          h: (typeof cProps.h === 'number' && cProps.h) || 100
+        };
+        const cAABB = { minX: cBounds.x, minY: cBounds.y, maxX: cBounds.x + cBounds.w, maxY: cBounds.y + cBounds.h };
+        if (cBounds.w >= sBounds.w && cBounds.h >= sBounds.h) {
+          const ix1 = Math.max(sAABB.minX, cAABB.minX);
+          const iy1 = Math.max(sAABB.minY, cAABB.minY);
+          const ix2 = Math.min(sAABB.maxX, cAABB.maxX);
+          const iy2 = Math.min(sAABB.maxY, cAABB.maxY);
+          if (ix2 > ix1 && iy2 > iy1) {
+            const intersectArea = (ix2 - ix1) * (iy2 - iy1);
+            const childArea = sBounds.w * sBounds.h;
+            if (childArea > 0 && intersectArea / childArea >= 0.5) {
+              parentId = cand.id;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    const responsive: RoleResponsive | null =
+      rawProps.isResponsive || rawProps.hideOnMobile || typeof rawProps.mobileOrder === 'number'
+        ? {
+            order: typeof rawProps.mobileOrder === 'number' ? rawProps.mobileOrder : 'auto',
+            primary: false,
+            smVisible: rawProps.hideOnMobile ? 'hidden' : 'visible',
+            smFullWidth: false,
+            tablet: (rawProps.tabletLayout as any) || 'maintain'
+          }
         : null;
 
     const markdrawMeta: MarkDrawMeta = {
@@ -156,8 +267,9 @@ export function migrateShapes(shapes: TLShape[]): MigrationResult {
       role: targetRole,
       unitId: null,
       parentId,
-      responsive: null,
-      props
+      responsive,
+      props,
+      v3WidgetType: widgetType
     };
 
     // 5. Convert shape to native representation

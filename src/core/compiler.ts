@@ -10,8 +10,7 @@ import {
   IRNode,
   IRTree,
   buildIRTree,
-  serializeIRToJsonAst,
-  resolveWidgetRole
+  serializeIRToJsonAst
 } from './ir';
 import {
   formatSemanticNotation,
@@ -20,13 +19,14 @@ import {
 import { generateCanvasLegend } from './legend';
 import { AsciiSerializer } from './ascii';
 import { computeAABB, sanitizeMarkdown } from './geometry';
-import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
-import { isUntouchedRoleLabel } from '../annotation/roleDefaults';
+import { getRoleDefaultProps, isUntouchedRoleLabel } from '../annotation/roleDefaults';
+import { getShapeMeta } from '../annotation/shapeMeta';
+import { V3_WIDGET_TO_V4_ROLE_MAP } from '../annotation/migrate';
 import { detectSiblingPatterns } from './patterns';
 import { AI_DIRECTIVE_HEADER } from './directive';
 import { getPlatformProfile } from '../annotation/profiles';
 
-export const MARKDRAW_VERSION = '3.0.0';
+export const MARKDRAW_VERSION = '4.0.0';
 
 function capitalize(str: string): string {
   if (!str) return '';
@@ -62,13 +62,7 @@ export function inferPlacement(
 
   // If direct child of a [page] root, infer from geometry relative to the page box
   if (parent.widgetType === 'page' || parent.role === 'page') {
-    if (
-      node.isUnit ||
-      node.role === 'card' ||
-      node.role === 'avatar' ||
-      node.role === 'button' ||
-      node.role === 'heading'
-    ) {
+    if (node.isUnit) {
       return 'nested';
     }
 
@@ -203,7 +197,8 @@ export class MarkDrawCompiler {
       const bounds = { x, y, w, h };
       const aabb = computeAABB(bounds);
       const widgetType = (props.widgetType as string) || undefined;
-      const role = (widgetType ? resolveWidgetRole(widgetType) : 'unknown') as SemanticRole;
+      const meta = getShapeMeta(s);
+      const role = (meta?.role || (widgetType ? (V3_WIDGET_TO_V4_ROLE_MAP[widgetType]?.targetRole || widgetType) : 'unknown')) as SemanticRole;
 
       results.push({
         id: s.id,
@@ -226,64 +221,22 @@ export class MarkDrawCompiler {
     node: IRNode | LayoutNode,
     parent?: IRNode | LayoutNode | null
   ): string {
-    if ((node as IRNode).isAnnotationNode) {
-      const irNode = node as IRNode;
-      const p = irNode.textProps;
-      const pairs: string[] = [];
-
-      if (irNode.isUnit && irNode.unitName) {
-        pairs.push(`unit:"${irNode.unitName}"`);
-      }
-
-      if (irNode.role === 'page' && p?.isResponsive) {
-        pairs.push('responsive');
-      }
-
-      if (p) {
-        if (
-          p.variant &&
-          p.variant !== 'default' &&
-          p.variant !== 'solid' &&
-          p.variant !== 'outline'
-        ) {
-          pairs.push(`variant="${p.variant}"`);
-        }
-        if (p.placeholder) {
-          pairs.push(`placeholder="${p.placeholder}"`);
-        }
-        if (p.options) {
-          pairs.push(`options=[${p.options}]`);
-        }
-        if (typeof p.value === 'number' && p.value > 0) {
-          pairs.push(`value=${p.value}`);
-        }
-        if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
-          const otherFlags = p.behaviors.filter((f) => f !== 'responsive');
-          if (otherFlags.length > 0) {
-            pairs.push(...otherFlags);
-          }
-        }
-        if (p.note) {
-          pairs.push(`note:"${p.note}"`);
-        }
-        if (p.hideOnMobile) {
-          pairs.push('sm:hidden');
-        }
-        if (typeof p.mobileOrder === 'number') {
-          pairs.push(`sm:order-${p.mobileOrder}`);
-        }
-      }
-
-      return pairs.join(' ');
-    }
-
     const p = (node as IRNode).textProps || (node as LayoutNode).widgetProps;
     const style = node.style;
     if (!p && !style) return '—';
 
-    const type = node.widgetType || '';
-    const defaults = getCatalogDefaultProps(type);
+    const type = node.widgetType || (node as any).role || '';
+    const defaults = getRoleDefaultProps(type);
     const propsPairs: string[] = [];
+
+    if ((node as IRNode).isUnit && (node as IRNode).unitName) {
+      propsPairs.push(`unit:"${(node as IRNode).unitName}"`);
+    }
+
+    const isPage = (node as any).role === 'page' || node.widgetType === 'page';
+    if (isPage && (p?.isResponsive || style?.isResponsive)) {
+      propsPairs.push('responsive');
+    }
 
     if (p) {
       if (
@@ -384,7 +337,7 @@ export class MarkDrawCompiler {
     }
 
     // Grids: always spell out "4 cols × 3 rows"
-    if (type === 'grid_gallery' || type === 'data_table' || type === 'table') {
+    if (type === 'grid_gallery' || type === 'data_table' || type === 'table' || (node as any).role === 'table' || (p?.variant && /^\d+x\d+$/.test(p.variant))) {
       const v = p?.variant || (type === 'grid_gallery' ? '3x2' : '4x3');
       const m = v.match(/^(\d+)x(\d+)$/);
       if (m) {
@@ -399,7 +352,7 @@ export class MarkDrawCompiler {
       propsPairs.push(`cols:${columns}${split && split !== 'equal' ? ` (${split})` : ''}`);
     }
 
-    const isResponsive = p?.isResponsive ?? style?.isResponsive;
+    const isResponsive = !isPage && (p?.isResponsive ?? style?.isResponsive);
     if (isResponsive) {
       const mobileStack = p?.mobileStack ?? style?.mobileStack ?? 'stack';
       propsPairs.push(`responsive:${mobileStack}`);
@@ -443,14 +396,24 @@ export class MarkDrawCompiler {
         styleTokens.push(`rel:${style.rel}`);
       }
       if (Array.isArray(style.behaviors) && style.behaviors.length > 0) {
-        styleTokens.push(...style.behaviors);
+        for (const b of style.behaviors) {
+          if (b === 'responsive' && isPage) continue;
+          if (!propsPairs.includes(b) && !styleTokens.includes(b)) {
+            styleTokens.push(b);
+          }
+        }
       }
       if (style.note) {
         styleTokens.push(`note:"${style.note}"`);
       }
     } else if (p) {
       if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
-        styleTokens.push(...p.behaviors);
+        for (const b of p.behaviors) {
+          if (b === 'responsive' && isPage) continue;
+          if (!propsPairs.includes(b) && !styleTokens.includes(b)) {
+            styleTokens.push(b);
+          }
+        }
       }
       if (typeof p.note === 'string' && p.note.trim() !== '') {
         styleTokens.push(`note:"${p.note.trim()}"`);
@@ -466,6 +429,17 @@ export class MarkDrawCompiler {
     const hideOnMobile = p?.hideOnMobile ?? style?.hideOnMobile;
     if (hideOnMobile) {
       styleTokens.push('sm:hidden');
+    }
+
+    const inUnit = Boolean(
+      (node as IRNode).isUnit ||
+      (node as IRNode).unitId ||
+      (parent as IRNode)?.isUnit ||
+      (parent as IRNode)?.unitId
+    );
+
+    if (inUnit) {
+      return propsPairs.join(', ');
     }
 
     const propsStr = propsPairs.join(', ');
@@ -519,7 +493,7 @@ export class MarkDrawCompiler {
       rows.push(`**Generated:** ${new Date().toISOString()}  `);
     }
 
-    const rootPage = irRoots.find((r) => r.widgetType === 'page');
+    const rootPage = irRoots.find((r) => r.role === 'page' || r.widgetType === 'page');
     const effectivePageNote =
       options?.pageNote || rootPage?.textProps?.note || rootPage?.style?.note;
     if (effectivePageNote) {
@@ -556,9 +530,7 @@ export class MarkDrawCompiler {
         childBadges = detectSiblingPatterns(node.children);
       } else {
         const rawLabel = node.textProps?.label || node.label;
-        const isUntouched = (node as IRNode).isAnnotationNode
-          ? isUntouchedRoleLabel(node.role, rawLabel)
-          : isUntouchedLabel(node.widgetType, rawLabel);
+        const isUntouched = isUntouchedRoleLabel(node.role, rawLabel);
 
         if (isUntouched) {
           childBadges = '"content: [Text Placeholder]"';
@@ -569,9 +541,7 @@ export class MarkDrawCompiler {
         }
       }
 
-      const semanticsBadge = `<${capitalize(
-        node.isAnnotationNode ? node.role : node.widgetType || node.role
-      )}>`;
+      const semanticsBadge = `<${capitalize(node.role)}>`;
       const placement = inferPlacement(node, parent);
       const layoutFlow =
         node.children.length > 0

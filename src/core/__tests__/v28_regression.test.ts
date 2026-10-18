@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MarkDrawCompiler } from '../compiler';
-import { ALL_BEHAVIOR_FLAGS } from '../widgets/widgetCatalog';
-import { DYNAMIC_LEGEND_MARKDOWN } from '../notation';
+import { ALL_BEHAVIOR_FLAGS, DYNAMIC_LEGEND_MARKDOWN } from '../notation';
 
 describe('Part G — MarkDraw v2.8 Core & Fixture Regressions', () => {
   it('fixture regression: floating navbar (70% width, centered, top)', () => {
@@ -31,11 +30,11 @@ describe('Part G — MarkDraw v2.8 Core & Fixture Regressions', () => {
 
     const res = MarkDrawCompiler.compile([page, nav]);
     const lines = res.markdownSpec.split('\n');
-    const navLine = lines.find((l) => l.includes('**[nav "Home, About, Contact" floating]**'));
+    const navLine = lines.find((l) => l.includes('**[navbar "Home, About, Contact" floating]**'));
     expect(navLine).toBeDefined();
 
     // Assert exact spec strings and semantics
-    expect(navLine).toContain('**[nav "Home, About, Contact" floating]**');
+    expect(navLine).toContain('**[navbar "Home, About, Contact" floating]**');
     expect(navLine).toContain('| <Navbar> |');
     expect(navLine).toContain('| header |');
     expect(navLine).toContain('width:70%');
@@ -146,7 +145,7 @@ describe('Part G — MarkDraw v2.8 Core & Fixture Regressions', () => {
     const res = MarkDrawCompiler.compile([page, nav, footer]);
     const lines = res.markdownSpec.split('\n');
 
-    const navLine = lines.find((l) => l.includes('**[nav "Nav"]**'));
+    const navLine = lines.find((l) => l.includes('**[navbar "Nav"]**'));
     expect(navLine).toBeDefined();
     expect(navLine).toContain('| header |');
 

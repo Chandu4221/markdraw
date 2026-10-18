@@ -82,7 +82,8 @@ describe('Compiler Hierarchy & Serializers', () => {
     const child2 = createWidgetShape('shape:c2', 'button', 10, 80, 50, 50, 'B2');
 
     const tree = buildIRTree([box, child1, child2]);
-    expect(tree.roots[0].role).toBe('container');
+    expect(tree.roots[0].role).toBe('card');
+    expect(tree.roots[0].children.length).toBe(2);
   });
 
   it('serializes hierarchy table to valid Markdown', () => {
@@ -93,7 +94,7 @@ describe('Compiler Hierarchy & Serializers', () => {
     const md = MarkDrawCompiler.serializeSpecTable(tree.roots);
     expect(md).toContain('### MarkDraw UI Specification');
     expect(md).toContain('[section "MobileFrame"]');
-    expect(md).toContain('[btn "SaveButton"]');
+    expect(md).toContain('[button "SaveButton"]');
   });
 
   it('serializes spatial grid to tabular Markdown', () => {
@@ -157,19 +158,23 @@ describe('Compiler Hierarchy & Serializers', () => {
     expect(pageRow).toContain('| — |');
 
     // Hero gets placement 'header'
-    const heroRow = lines.find((l) => l.includes('**[hero "Hero Top"]**'));
+    const heroRow = lines.find((l) => l.includes('**[section "Hero Top"'));
+    expect(heroRow).toBeDefined();
     expect(heroRow).toContain('| header |');
 
     // Features Section gets placement 'body'
     const secRow = lines.find((l) => l.includes('**[section "Features"]**'));
+    expect(secRow).toBeDefined();
     expect(secRow).toContain('| body |');
 
     // Button inside section gets placement 'nested'
-    const btnRow = lines.find((l) => l.includes('**[btn "Learn More"]**'));
+    const btnRow = lines.find((l) => l.includes('**[button "Learn More"]**'));
+    expect(btnRow).toBeDefined();
     expect(btnRow).toContain('| nested |');
 
     // Footer nav gets placement 'footer'
-    const footRow = lines.find((l) => l.includes('**[footer_nav "Footer Links"]**'));
+    const footRow = lines.find((l) => l.includes('**[nav "Footer Links"]**'));
+    expect(footRow).toBeDefined();
     expect(footRow).toContain('| footer |');
   });
 
@@ -192,7 +197,7 @@ describe('Compiler Hierarchy & Serializers', () => {
     } as any;
 
     const res = MarkDrawCompiler.compile([btnUntouched]);
-    expect(res.markdownSpec).toContain('**[btn]**');
+    expect(res.markdownSpec).toContain('**[button]**');
     expect(res.markdownSpec).toContain('"content: [Text Placeholder]"');
     // Props & Attributes should be '—' since all props match catalog defaults
     expect(res.markdownSpec).toContain('| — | "content: [Text Placeholder]" |');

@@ -22,11 +22,10 @@ const SHORTCUT_GROUPS: { category: string; items: ShortcutItem[] }[] = [
   {
     category: 'Productivity & Editing',
     items: [
-      { keys: ['Ctrl', 'D'], description: 'Duplicate selection (offset +24px)' },
+      { keys: ['Ctrl', 'D'], description: 'Duplicate selection' },
       { keys: ['↑', '↓', '←', '→'], description: 'Nudge selection 1px' },
       { keys: ['Shift', 'Arrows'], description: 'Nudge selection 10px' },
-      { keys: ['Del', 'Backspace'], description: 'Delete selected widget(s)' },
-      { keys: ['/'], description: 'Focus quick-insert search (↑↓ navigate, Enter inserts)' }
+      { keys: ['Del', 'Backspace'], description: 'Delete selected element(s)' }
     ]
   },
   {
@@ -42,7 +41,6 @@ const SHORTCUT_GROUPS: { category: string; items: ShortcutItem[] }[] = [
   {
     category: 'Panels & Navigation',
     items: [
-      { keys: ['Ctrl', 'B'], description: 'Toggle Component Palette' },
       { keys: ['Ctrl', 'J'], description: 'Toggle Output Panel' },
       { keys: ['?'], description: 'Toggle this Shortcuts Cheat Sheet' }
     ]

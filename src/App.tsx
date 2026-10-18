@@ -1,26 +1,16 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Tldraw, Editor, TLUiComponents } from '@tldraw/tldraw';
+import { Tldraw, Editor } from '@tldraw/tldraw';
 import { MarkDrawCompiler, MARKDRAW_VERSION } from './core/compiler';
 import { CompilationResult, CompilationOptions } from './core/types';
-import { UIWidgetShapeUtil } from './core/widgets/UIWidgetShapeUtil';
-import { ComponentPalette } from './components/ComponentPalette';
-import { PropsPanel } from './components/PropsPanel';
-import { WidgetCatalogItem } from './core/widgets/types';
-import { WIDGET_CATALOG } from './core/widgets/widgetCatalog';
 import { LegendModal } from './components/LegendModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { DocumentMenu } from './components/DocumentMenu';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import CompileWorker from './core/compile.worker?worker';
-import { CompileWorkerResponse } from './core/compile.worker';
-import { useRenderMode, setRenderMode } from './core/renderMode';
-import { isAnnotationModeActive } from './annotation/config';
 import { RolePanel } from './components/RolePanel';
 import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from './annotation/migrate';
-
-export const ANNOTATION_MODE = isAnnotationModeActive();
+import { ALL_ROLES } from './annotation/roles';
 import {
   getDocRegistry,
   createDocument,
@@ -47,49 +37,14 @@ import {
   Sliders,
   Sun,
   Moon,
-  MousePointer,
-  Hand,
-  Undo2,
-  Redo2,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Trash2,
   AlertCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  Tag,
   Keyboard,
-  Eye,
-  Smartphone,
-  Monitor
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownPreview } from './components/MarkdownPreview';
-
-const customShapeUtils = [UIWidgetShapeUtil];
-
-// Lockdown default tldraw UI
-const tldrawComponents: TLUiComponents = {
-  Toolbar: null,
-  PageMenu: null,
-  MainMenu: null,
-  StylePanel: null,
-  NavigationPanel: null,
-  QuickActions: null,
-  HelperButtons: null,
-  ActionsMenu: null,
-  HelpMenu: null,
-  ZoomMenu: null,
-  Minimap: null,
-  DebugPanel: null,
-  DebugMenu: null,
-  MenuPanel: null,
-  TopPanel: null,
-  SharePanel: null
-};
 
 const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   containmentThreshold: 0.85,
@@ -104,7 +59,7 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   platformId: 'web',
   scope: null,
   units: [],
-  annotationMode: false
+  annotationMode: true
 };
 
 export const App: React.FC = () => {
@@ -130,26 +85,12 @@ export const App: React.FC = () => {
 
   const [copied, setCopied] = useState<boolean>(false);
   const [copiedFull, setCopiedFull] = useState<boolean>(false);
-  const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
-  const [paletteWidth, setPaletteWidth] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('markdraw_palette_width');
-      if (saved) {
-        const val = Number(saved);
-        if (!isNaN(val) && val >= 180 && val <= 600) return val;
-      }
-    } catch {
-      // fallback
-    }
-    return 260;
-  });
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [canvasPercent, setCanvasPercent] = useState<number>(55);
-  const [activeDrag, setActiveDrag] = useState<'left' | 'right' | null>(null);
-  const [activeTool, setActiveTool] = useState<string>('select');
+  const [activeDrag, setActiveDrag] = useState<'right' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [compileDuration, setCompileDuration] = useState<number | null>(null);
@@ -168,196 +109,13 @@ export const App: React.FC = () => {
     );
   }, [docsRegistry]);
 
-  // Canvas Render Mode (Task v2.10: Preview Fidelity)
-  const renderMode = useRenderMode();
-
-  // Canvas Labels Toggle (Task 5: Persisted in localStorage)
-  const [showLabels, setShowLabels] = useState<boolean>(() => {
-    const saved = localStorage.getItem('markdraw_show_labels');
-    return saved !== null ? saved === 'true' : true;
-  });
-
-  // Canvas Role Chips Toggle (v4 Annotation Mode: default on)
+  // Canvas Role Chips Toggle (v4: default on)
   const [showRoleChips] = useState<boolean>(() => {
     const saved = localStorage.getItem('markdraw_show_role_chips');
     return saved !== null ? saved === 'true' : true;
   });
 
-  const toggleLabels = () => {
-    setShowLabels((prev) => {
-      const next = !prev;
-      localStorage.setItem('markdraw_show_labels', String(next));
-      return next;
-    });
-  };
 
-  // Canvas Viewport Mode (Desktop vs Mobile Simulation)
-  const [canvasViewport, setCanvasViewport] = useState<'desktop' | 'mobile'>('desktop');
-  const desktopLayoutCacheRef = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
-
-  const handleSetCanvasViewport = useCallback((mode: 'desktop' | 'mobile') => {
-    if (!editor) return;
-    if (mode === canvasViewport) return;
-
-    if (mode === 'mobile') {
-      const shapes = editor.getCurrentPageShapes().filter((s) => s.type === 'ui-widget');
-      const cache = new Map<string, { x: number; y: number; w: number; h: number }>();
-      const updates: any[] = [];
-
-      // 1. Check for page shapes and resize to mobile (375px)
-      const pageShapes = shapes.filter((s) => (s.props as any)?.widgetType === 'page');
-      pageShapes.forEach((page) => {
-        cache.set(page.id, {
-          x: page.x,
-          y: page.y,
-          w: (page.props as any).w,
-          h: (page.props as any).h
-        });
-        updates.push({
-          id: page.id,
-          type: page.type,
-          props: {
-            ...page.props,
-            w: 375
-          }
-        });
-      });
-
-      // 2. Check for responsive containers
-      const responsiveContainers = shapes.filter((s) => {
-        const p = s.props as any;
-        return Boolean(p?.isResponsive);
-      });
-
-      responsiveContainers.forEach((container) => {
-        const cProps = (container.props as any) || {};
-        const cBounds = editor.getShapePageBounds(container);
-        if (!cBounds) return;
-
-        // Find child shapes bound to this container
-        const children = shapes.filter((s) => {
-          if (s.id === container.id) return false;
-          const p = s.props as any;
-          if (p?.parentId === container.id) return true;
-          const b = editor.getShapePageBounds(s);
-          return (
-            b &&
-            b.x >= cBounds.x &&
-            b.y >= cBounds.y &&
-            b.x + b.w <= cBounds.x + cBounds.w + 10 &&
-            b.y + b.h <= cBounds.y + cBounds.h + 10
-          );
-        });
-
-        if (children.length > 0) {
-          // Sort children by mobileOrder
-          const isReverse = cProps.mobileStack === 'reverse';
-          const sorted = [...children].sort((a, b) => {
-            const ordA = (a.props as any)?.mobileOrder ?? 999;
-            const ordB = (b.props as any)?.mobileOrder ?? 999;
-            if (ordA !== ordB) return ordA - ordB;
-            return a.x - b.x;
-          });
-
-          if (isReverse && !sorted.some((s) => (s.props as any)?.mobileOrder !== undefined)) {
-            sorted.reverse();
-          }
-
-          let curY = container.y + ((container.props as any).h > 60 ? 38 : 14);
-          const stackWidth = Math.max(100, Math.min(345, (container.props as any).w - 28));
-
-          sorted.forEach((child) => {
-            const chProps = (child.props as any) || {};
-            if (!cache.has(child.id)) {
-              cache.set(child.id, {
-                x: child.x,
-                y: child.y,
-                w: chProps.w,
-                h: chProps.h
-              });
-            }
-
-            updates.push({
-              id: child.id,
-              type: child.type,
-              x: container.x + 14,
-              y: curY,
-              props: {
-                ...chProps,
-                w: stackWidth
-              }
-            });
-
-            curY += (chProps.h || 120) + 12;
-          });
-
-          const neededHeight = curY - container.y + 16;
-          if (neededHeight > (container.props as any).h) {
-            if (!cache.has(container.id)) {
-              cache.set(container.id, {
-                x: container.x,
-                y: container.y,
-                w: (container.props as any).w,
-                h: (container.props as any).h
-              });
-            }
-            updates.push({
-              id: container.id,
-              type: container.type,
-              props: {
-                ...container.props,
-                h: neededHeight
-              }
-            });
-          }
-        }
-      });
-
-      desktopLayoutCacheRef.current = cache;
-      if (updates.length > 0) {
-        editor.updateShapes(updates);
-      }
-      setCanvasViewport('mobile');
-      setToastMessage('📱 Mobile viewport simulation active (stacked)');
-      setTimeout(() => setToastMessage(null), 2500);
-    } else {
-      // Restore desktop layout
-      const cache = desktopLayoutCacheRef.current;
-      const updates: any[] = [];
-      cache.forEach((bounds, shapeId) => {
-        const shape = editor.getShape(shapeId as any);
-        if (shape) {
-          updates.push({
-            id: shapeId,
-            type: shape.type,
-            x: bounds.x,
-            y: bounds.y,
-            props: {
-              ...shape.props,
-              w: bounds.w,
-              h: bounds.h
-            }
-          });
-        }
-      });
-
-      desktopLayoutCacheRef.current.clear();
-      if (updates.length > 0) {
-        editor.updateShapes(updates);
-      }
-      setCanvasViewport('desktop');
-      setToastMessage('🖥️ Desktop layout restored');
-      setTimeout(() => setToastMessage(null), 2500);
-    }
-  }, [editor, canvasViewport]);
-
-  const handleOpenMobilePreview = useCallback(() => {
-    setIsRightPanelOpen(true);
-    setOutputTab('spec');
-    setOutputDisplayMode('preview');
-    setToastMessage('📱 Switched to Live Mobile Preview');
-    setTimeout(() => setToastMessage(null), 2500);
-  }, []);
 
   // Theme Management (monochrome dark/light)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -407,8 +165,6 @@ export const App: React.FC = () => {
 
   const editorRef = useRef<Editor | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
-  const warnedRef = useRef<boolean>(false);
-  const workerRef = useRef<Worker | null>(null);
   const compileIdRef = useRef<number>(0);
 
   const showToast = useCallback((msg: string) => {
@@ -418,43 +174,14 @@ export const App: React.FC = () => {
     }, 3200);
   }, []);
 
-  // Web Worker for Background Compilation (Task 6)
-  useEffect(() => {
-    try {
-      const worker = new CompileWorker();
-      worker.onmessage = (e: MessageEvent<CompileWorkerResponse>) => {
-        const { compileId, result, durationMs } = e.data;
-        if (compileId === compileIdRef.current) {
-          if (result) {
-            setCompilation(result);
-            if (durationMs > 50) {
-              setCompileDuration(durationMs);
-            } else {
-              setCompileDuration(null);
-            }
-          }
-        }
-      };
-      workerRef.current = worker;
-    } catch (e) {
-      console.warn('[MarkDraw] Background worker not supported, falling back to main thread:', e);
-    }
-
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-
-  // Compile Trigger with Crash Recovery & Threshold-based Worker Offloading
+  // Compile Trigger with Crash Recovery
   const triggerCompile = useCallback(() => {
     const currentEditor = editorRef.current;
     if (!currentEditor) return;
 
     try {
       const shapes = currentEditor.getCurrentPageShapes();
-      const widgetShapes = shapes.filter((s) => s.type === 'ui-widget');
       compileIdRef.current += 1;
-      const currentCompileId = compileIdRef.current;
 
       const compileOpts: CompilationOptions = {
         ...options,
@@ -465,46 +192,14 @@ export const App: React.FC = () => {
             : null
       };
 
-      // Offload to Web Worker when > 300 shapes and not in annotation mode (worker handles legacy widget AST)
-      if (!ANNOTATION_MODE && widgetShapes.length > 300 && workerRef.current) {
-        const serialized = widgetShapes.map((s) => {
-          let x = s.x;
-          let y = s.y;
-          let w = (s.props as any)?.w || 100;
-          let h = (s.props as any)?.h || 100;
-          if (typeof (currentEditor as any).getShapePageBounds === 'function') {
-            const pb = (currentEditor as any).getShapePageBounds(s);
-            if (pb) {
-              x = pb.x;
-              y = pb.y;
-              w = pb.w;
-              h = pb.h;
-            }
-          }
-          return {
-            id: s.id,
-            type: s.type,
-            x,
-            y,
-            props: { ...s.props, w, h }
-          };
-        });
-
-        workerRef.current.postMessage({
-          compileId: currentCompileId,
-          shapes: serialized,
-          options: compileOpts
-        });
+      const start = performance.now();
+      const result = MarkDrawCompiler.compile(shapes, currentEditor, compileOpts);
+      const duration = Math.round(performance.now() - start);
+      setCompilation(result);
+      if (duration > 50) {
+        setCompileDuration(duration);
       } else {
-        const start = performance.now();
-        const result = MarkDrawCompiler.compile(shapes, currentEditor, compileOpts);
-        const duration = Math.round(performance.now() - start);
-        setCompilation(result);
-        if (duration > 50) {
-          setCompileDuration(duration);
-        } else {
-          setCompileDuration(null);
-        }
+        setCompileDuration(null);
       }
     } catch (err) {
       console.error('MarkDraw compilation error:', err);
@@ -518,9 +213,9 @@ export const App: React.FC = () => {
       setEditor(mountedEditor);
 
       try {
-        mountedEditor.updateInstanceState({ isToolLocked: !ANNOTATION_MODE, isGridMode: true });
+        mountedEditor.updateInstanceState({ isToolLocked: false, isGridMode: true });
       } catch (err) {
-        console.error('Lockdown configuration error:', err);
+        console.error('Editor configuration error:', err);
       }
 
       // Check if we have pending shapes to create (from duplicate or file import)
@@ -528,14 +223,10 @@ export const App: React.FC = () => {
         const toCreate = pendingShapesRef.current;
         pendingShapesRef.current = null;
         try {
-          if (ANNOTATION_MODE) {
-            const hasWidgets = toCreate.some((s: any) => isV3Widget(s));
-            if (hasWidgets) {
-              const migrated = migrateShapes(toCreate);
-              mountedEditor.createShapes(migrated.shapes);
-            } else {
-              mountedEditor.createShapes(toCreate);
-            }
+          const hasWidgets = toCreate.some((s: any) => isV3Widget(s));
+          if (hasWidgets) {
+            const migrated = migrateShapes(toCreate);
+            mountedEditor.createShapes(migrated.shapes);
           } else {
             mountedEditor.createShapes(toCreate);
           }
@@ -548,16 +239,11 @@ export const App: React.FC = () => {
         if (currentShapes.length === 0) {
           try {
             const demo = getDemoCanvasShapes();
-            if (ANNOTATION_MODE) {
-              const migrated = migrateShapes(demo as any);
-              mountedEditor.createShapes(migrated.shapes);
-            } else {
-              mountedEditor.createShapes(demo);
-            }
+            mountedEditor.createShapes(demo);
           } catch (err) {
             console.error('[MarkDraw] Failed to seed demo shapes:', err);
           }
-        } else if (ANNOTATION_MODE) {
+        } else {
           // Check if existing shapes have v3 widgets to migrate on load (§12)
           const hasV3Widgets = currentShapes.some((s) => isV3Widget(s));
           if (hasV3Widgets) {
@@ -570,27 +256,11 @@ export const App: React.FC = () => {
         }
       }
 
-      // Enforce wireframe widget only
-      const enforceWidgetOnly = () => {
-        if (ANNOTATION_MODE) return;
-        const shapes = mountedEditor.getCurrentPageShapes();
-        const invalidShapes = shapes.filter((s) => s.type !== 'ui-widget');
-        if (invalidShapes.length > 0) {
-          if (!warnedRef.current) {
-            warnedRef.current = true;
-            showToast('MarkDraw supports wireframe components only.');
-          }
-          mountedEditor.deleteShapes(invalidShapes.map((s) => s.id));
-        }
-      };
-
       // Initial compile
       triggerCompile();
 
       // Listen to store updates
       const dispose = mountedEditor.store.listen(() => {
-        enforceWidgetOnly();
-        setActiveTool(mountedEditor.getCurrentToolId());
         touchDocument(activeDoc.id);
 
         if (debounceTimerRef.current) {
@@ -623,11 +293,8 @@ export const App: React.FC = () => {
         activeEl?.tagName === 'TEXTAREA' ||
         (activeEl as HTMLElement)?.isContentEditable;
 
-      // Panel toggles
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
-        e.preventDefault();
-        setIsPaletteOpen((prev) => !prev);
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+      // Panel toggle
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
         e.preventDefault();
         setIsRightPanelOpen((prev) => !prev);
       }
@@ -636,21 +303,15 @@ export const App: React.FC = () => {
         e.preventDefault();
         setIsShortcutsOpen((prev) => !prev);
       }
-      // Duplicate: Ctrl/Cmd+D offset (+24, +24)
+      // Duplicate: Ctrl/Cmd+D
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && !isInput) {
         e.preventDefault();
         const current = editorRef.current;
         if (!current) return;
-        const selected = current.getSelectedShapes().filter((s) => s.type === 'ui-widget');
-        if (selected.length > 0) {
-          const duplicated = selected.map((s) => ({
-            type: 'ui-widget' as const,
-            x: s.x + 24,
-            y: s.y + 24,
-            props: { ...s.props }
-          }));
-          current.createShapes(duplicated);
-          showToast(`Duplicated ${selected.length} widget(s)`);
+        const selectedIds = current.getSelectedShapeIds();
+        if (selectedIds.length > 0) {
+          current.duplicateShapes(selectedIds);
+          showToast(`Duplicated ${selectedIds.length} element(s)`);
         }
       }
       // Nudge: Arrow keys 1px (Shift: 10px)
@@ -772,11 +433,6 @@ export const App: React.FC = () => {
   };
 
   // Accurate Panel Resizing Logic
-  const startResizingLeft = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveDrag('left');
-  }, []);
-
   const startResizingRight = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setActiveDrag('right');
@@ -786,18 +442,7 @@ export const App: React.FC = () => {
     if (!activeDrag) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (activeDrag === 'left') {
-        const workspaceLeft = workspaceRef.current ? workspaceRef.current.getBoundingClientRect().left : 0;
-        const newWidth = e.clientX - workspaceLeft;
-        const maxW = Math.min(500, Math.round(window.innerWidth * 0.45));
-        const clamped = Math.min(maxW, Math.max(200, newWidth));
-        setPaletteWidth(clamped);
-        try {
-          localStorage.setItem('markdraw_palette_width', String(clamped));
-        } catch {
-          // ignore
-        }
-      } else if (activeDrag === 'right') {
+      if (activeDrag === 'right') {
         if (!splitAreaRef.current) return;
         const rect = splitAreaRef.current.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -822,47 +467,6 @@ export const App: React.FC = () => {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [activeDrag]);
-
-  const handleInsertWidget = (item: WidgetCatalogItem) => {
-    const currentEditor = editorRef.current;
-    if (!currentEditor) return;
-
-    try {
-      const bounds = currentEditor.getViewportPageBounds();
-      const centerX = (bounds as any).center?.x ?? bounds.x + bounds.w / 2;
-      const centerY = (bounds as any).center?.y ?? bounds.y + bounds.h / 2;
-
-      currentEditor.createShape({
-        type: 'ui-widget',
-        x: centerX - item.defaultWidth / 2,
-        y: centerY - item.defaultHeight / 2,
-        props: {
-          w: item.defaultWidth,
-          h: item.defaultHeight,
-          widgetType: item.type,
-          label: item.defaultProps.label || item.name,
-          variant: item.defaultProps.variant || '',
-          placeholder: item.defaultProps.placeholder || '',
-          checked: item.defaultProps.checked ?? false,
-          options: item.defaultProps.options || '',
-          iconName: item.defaultProps.iconName || '',
-          subtext: item.defaultProps.subtext || '',
-          value: item.defaultProps.value ?? 0,
-          showText: item.defaultProps.showText ?? false,
-          altText: item.defaultProps.altText || ''
-        }
-      });
-    } catch (err) {
-      console.error('Failed to insert widget:', err);
-    }
-  };
-
-  const handleSelectTool = (toolId: string) => {
-    const current = editorRef.current;
-    if (!current) return;
-    current.setCurrentTool(toolId);
-    setActiveTool(toolId);
-  };
 
   const getActiveContent = (): string => {
     switch (outputTab) {
@@ -947,16 +551,6 @@ export const App: React.FC = () => {
         {/* Top Application Header */}
         <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
           <div className="flex items-center gap-2">
-            <Button
-              variant={isPaletteOpen ? 'accent' : 'ghost'}
-              size="icon"
-              onClick={() => setIsPaletteOpen((prev) => !prev)}
-              title={isPaletteOpen ? 'Collapse Components (Ctrl+B)' : 'Open Components (Ctrl+B)'}
-              aria-label={isPaletteOpen ? 'Collapse Components (Ctrl+B)' : 'Open Components (Ctrl+B)'}
-            >
-              {isPaletteOpen ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
-            </Button>
-
             <div className="w-6 h-6 rounded-[5px] bg-[var(--md-text-bold)] text-[var(--md-bg)] text-xs font-bold flex items-center justify-center">
               MD
             </div>
@@ -1055,7 +649,7 @@ export const App: React.FC = () => {
                 </>
               )}
               <span className="text-[var(--md-border)]">|</span>
-              <span>Catalog: <strong className="text-[var(--md-text-bold)] font-mono">{WIDGET_CATALOG.length}</strong></span>
+              <span>Roles: <strong className="text-[var(--md-text-bold)] font-mono">{ALL_ROLES.length}</strong></span>
             </div>
 
             <Button
@@ -1114,47 +708,11 @@ export const App: React.FC = () => {
         <div className="flex-1 flex overflow-hidden relative" ref={workspaceRef}>
           {activeDrag !== null && <div className="fixed inset-0 z-50 cursor-col-resize select-none" />}
 
-          {/* Left Component Palette Rail */}
-          {!ANNOTATION_MODE && (
-            <>
-              <ComponentPalette
-                isOpen={isPaletteOpen}
-                width={paletteWidth}
-                isDragging={activeDrag === 'left'}
-                onInsertWidget={handleInsertWidget}
-              />
-
-              {/* Left Resizer Divider */}
-              <div
-                role="separator"
-                aria-orientation="vertical"
-                aria-label="Resize component palette"
-                tabIndex={isPaletteOpen ? 0 : -1}
-                className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
-                  isPaletteOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
-                } ${
-                  activeDrag === 'left' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
-                }`}
-                onMouseDown={isPaletteOpen ? startResizingLeft : undefined}
-                onDoubleClick={() => {
-                  setPaletteWidth(260);
-                  try {
-                    localStorage.setItem('markdraw_palette_width', '260');
-                  } catch {}
-                }}
-                title="Drag to resize (Double-click to reset 260px)"
-              >
-                <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
-              </div>
-            </>
-          )}
-
           {/* Split Area: Canvas + Resizer + Output */}
           <div className="flex-1 flex h-full overflow-hidden relative" ref={splitAreaRef}>
             {/* Canvas Container */}
             <div
               className="h-full relative overflow-hidden bg-[var(--md-bg)] flex-1 min-w-0"
-              data-show-labels={showLabels}
               onTransitionEnd={() => {
                 window.dispatchEvent(new Event('resize'));
               }}
@@ -1162,220 +720,18 @@ export const App: React.FC = () => {
               <Tldraw
                 key={activeDoc.id}
                 persistenceKey={activeDoc.persistenceKey}
-                shapeUtils={ANNOTATION_MODE ? [] : customShapeUtils}
-                components={ANNOTATION_MODE ? undefined : tldrawComponents}
+                shapeUtils={[]}
+                components={undefined}
                 onMount={handleEditorMount}
               />
 
-              {/* Properties / Role Panel & Role Chips */}
-              {ANNOTATION_MODE ? (
-                <>
-                  <RoleChipsOverlay
-                    editor={editor}
-                    showChips={showRoleChips}
-                    onCopyContract={() => showToast('Copied contract to clipboard')}
-                  />
-                  <RolePanel editor={editor} />
-                </>
-              ) : (
-                <PropsPanel editor={editor} onOpenMobilePreview={handleOpenMobilePreview} />
-              )}
-
-              {/* Floating Canvas Controls Bar */}
-              {!ANNOTATION_MODE && (
-              <div
-                role="toolbar"
-                aria-label="Canvas Actions"
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] select-none"
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className={`p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer ${
-                    activeTool === 'select' ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]' : ''
-                  }`}
-                  onClick={() => handleSelectTool('select')}
-                  title="Select Tool (V)"
-                  aria-label="Select Tool (V)"
-                >
-                  <MousePointer size={14} />
-                </button>
-                <button
-                  className={`p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer ${
-                    activeTool === 'hand' ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]' : ''
-                  }`}
-                  onClick={() => handleSelectTool('hand')}
-                  title="Hand / Pan Tool (H)"
-                  aria-label="Hand / Pan Tool (H)"
-                >
-                  <Hand size={14} />
-                </button>
-
-                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
-
-                <button
-                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-                  onClick={() => editorRef.current?.undo()}
-                  title="Undo (Ctrl+Z)"
-                  aria-label="Undo (Ctrl+Z)"
-                >
-                  <Undo2 size={14} />
-                </button>
-                <button
-                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-                  onClick={() => editorRef.current?.redo()}
-                  title="Redo (Ctrl+Y)"
-                  aria-label="Redo (Ctrl+Y)"
-                >
-                  <Redo2 size={14} />
-                </button>
-
-                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
-
-                <button
-                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-                  onClick={() => editorRef.current?.zoomIn()}
-                  title="Zoom In"
-                  aria-label="Zoom In"
-                >
-                  <ZoomIn size={14} />
-                </button>
-                <button
-                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-                  onClick={() => editorRef.current?.zoomOut()}
-                  title="Zoom Out"
-                  aria-label="Zoom Out"
-                >
-                  <ZoomOut size={14} />
-                </button>
-                <button
-                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-                  onClick={() => editorRef.current?.zoomToFit()}
-                  title="Zoom to Fit"
-                  aria-label="Zoom to Fit"
-                >
-                  <Maximize size={14} />
-                </button>
-
-                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
-
-                <button
-                  className="p-1.5 rounded-[4px] text-[var(--md-text-muted)] hover:text-[var(--md-danger)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
-                  onClick={() => {
-                    const current = editorRef.current;
-                    if (!current) return;
-                    const selected = current.getSelectedShapeIds();
-                    if (selected.length > 0) {
-                      current.deleteShapes(selected);
-                    }
-                  }}
-                  title="Delete Selected"
-                  aria-label="Delete Selected"
-                >
-                  <Trash2 size={14} />
-                </button>
-
-                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
-
-                <button
-                  className={`flex items-center gap-1 px-2 py-1 rounded-[4px] text-xs font-semibold transition-colors cursor-pointer ${
-                    showLabels
-                      ? 'bg-[var(--md-accent-subtle)] text-[var(--md-accent)]'
-                      : 'text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)]'
-                  }`}
-                  onClick={toggleLabels}
-                  title={showLabels ? 'Hide Component Labels' : 'Show Component Labels'}
-                  aria-label={showLabels ? 'Hide Component Labels' : 'Show Component Labels'}
-                >
-                  <Tag size={13} />
-                  <span className="text-[11px]">Labels</span>
-                </button>
-
-                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
-
-                {/* Render Mode Segmented Control (v2.10) */}
-                <div
-                  role="group"
-                  aria-label="Canvas Render Mode"
-                  className="flex items-center gap-0.5 p-0.5 rounded-[4px] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0 select-none"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setRenderMode('skeleton')}
-                    title="Skeleton Mode: Clean glyphs & wireframe boxes"
-                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                      renderMode === 'skeleton'
-                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
-                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                    }`}
-                  >
-                    Skeleton
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRenderMode('annotated')}
-                    title="Annotated Mode: Ghost text & SVG patterns (Default)"
-                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                      renderMode === 'annotated'
-                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
-                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                    }`}
-                  >
-                    Annotated
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRenderMode('realistic')}
-                    title="Realistic Mode: Annotated + chrome, zebra stripes & motion hints"
-                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                      renderMode === 'realistic'
-                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
-                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                    }`}
-                  >
-                    Realistic
-                  </button>
-                </div>
-
-                <div className="w-[1px] h-4 bg-[var(--md-border)] mx-0.5" />
-
-                {/* Canvas Viewport Simulation Control */}
-                <div
-                  role="group"
-                  aria-label="Canvas Viewport Mode"
-                  className="flex items-center gap-0.5 p-0.5 rounded-[4px] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0 select-none"
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleSetCanvasViewport('desktop')}
-                    title="Desktop Viewport (1280px)"
-                    className={`flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                      canvasViewport === 'desktop'
-                        ? 'bg-[var(--md-surface-raised)] text-[var(--md-accent)] shadow-xs'
-                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                    }`}
-                  >
-                    <Monitor size={11} />
-                    <span>Desktop</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSetCanvasViewport('mobile')}
-                    title="Mobile Viewport Simulation (375px)"
-                    className={`flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                      canvasViewport === 'mobile'
-                        ? 'bg-purple-600 text-white shadow-xs'
-                        : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                    }`}
-                  >
-                    <Smartphone size={11} />
-                    <span>Mobile</span>
-                  </button>
-                </div>
-              </div>
-              )}
+              {/* Semantic Annotation Layer Overlays */}
+              <RoleChipsOverlay
+                editor={editor}
+                showChips={showRoleChips}
+                onCopyContract={() => showToast('Copied contract to clipboard')}
+              />
+              <RolePanel editor={editor} />
 
               {/* Toast Message */}
               {toastMessage && (
@@ -1532,50 +888,48 @@ export const App: React.FC = () => {
                       <div />
                     )}
 
-                    {/* Platform Selector & Scope Toggle (v4 Annotation Mode - §9.3) */}
-                    {ANNOTATION_MODE && (
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <select
-                          value={platformId}
-                          onChange={(e) => setPlatformId(e.target.value)}
-                          className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer"
-                          title="Target compilation platform profile (§10)"
+                    {/* Platform Selector & Scope Toggle (v4 - §9.3) */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <select
+                        value={platformId}
+                        onChange={(e) => setPlatformId(e.target.value)}
+                        className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer"
+                        title="Target compilation platform profile (§10)"
+                      >
+                        <option value="web">Web</option>
+                        <option value="android-material">Android (M3)</option>
+                      </select>
+                      <div
+                        role="group"
+                        aria-label="Compilation Scope"
+                        className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setCompileScopeMode('all')}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                            compileScopeMode === 'all'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          }`}
+                          title="Compile all roots on canvas"
                         >
-                          <option value="web">Web</option>
-                          <option value="android-material">Android (M3)</option>
-                        </select>
-                        <div
-                          role="group"
-                          aria-label="Compilation Scope"
-                          className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                          All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCompileScopeMode('selection')}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                            compileScopeMode === 'selection'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          }`}
+                          title="Compile selected subtree only"
                         >
-                          <button
-                            type="button"
-                            onClick={() => setCompileScopeMode('all')}
-                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
-                              compileScopeMode === 'all'
-                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                            }`}
-                            title="Compile all roots on canvas"
-                          >
-                            All
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCompileScopeMode('selection')}
-                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
-                              compileScopeMode === 'selection'
-                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                            }`}
-                            title="Compile selected subtree only"
-                          >
-                            Selection
-                          </button>
-                        </div>
+                          Selection
+                        </button>
                       </div>
-                    )}
+                    </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0 ml-auto">

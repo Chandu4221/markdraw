@@ -3,9 +3,9 @@ import { AI_DIRECTIVE_HEADER, AI_DIRECTIVE_VERSION } from '../directive';
 import { MarkDrawCompiler } from '../compiler';
 
 describe('Part D — AI Directive Compliance Header', () => {
-  it('defines version 2.9 and contains binding contract rules', () => {
-    expect(AI_DIRECTIVE_VERSION).toBe('2.9');
-    expect(AI_DIRECTIVE_HEADER).toContain('> This is a binding layout contract from MarkDraw v2.9');
+  it('defines version 4.0 and contains binding contract rules', () => {
+    expect(AI_DIRECTIVE_VERSION).toBe('4.0');
+    expect(AI_DIRECTIVE_HEADER).toContain('> This is a binding layout contract from MarkDraw v4.0');
     expect(AI_DIRECTIVE_HEADER).toContain('`[Text Placeholder]` means you MUST generate content');
     expect(AI_DIRECTIVE_HEADER).toContain('everything unspecified (colors, type, imagery) is your freedom');
     expect(AI_DIRECTIVE_HEADER).toContain('N × [pattern] and all counts are binding, not suggestions');
@@ -21,7 +21,7 @@ describe('Part D — AI Directive Compliance Header', () => {
     } as any;
 
     const res = MarkDrawCompiler.compile([s]);
-    expect(res.markdownSpec.startsWith('> This is a binding layout contract from MarkDraw v2.9')).toBe(true);
+    expect(res.markdownSpec.startsWith('> This is a binding layout contract from MarkDraw v4.0')).toBe(true);
     expect(res.markdownSpec).toContain('### MarkDraw UI Specification');
   });
 

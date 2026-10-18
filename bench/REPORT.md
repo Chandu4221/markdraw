@@ -1,6 +1,6 @@
 # MarkDraw v3.0.0 Benchmark Report: Lean Contract Fidelity vs. Baselines
 
-**Date:** 2026-10-18T05:28:09.133Z  
+**Date:** 2026-10-18T07:04:31.104Z  
 **Corpus Size:** 20 wireframes across 4 layout categories  
 **Decision Gate Status:** **PASSED (QUALIFIED FOR STAGE 4)**  
 **Net Win Delta:** **+79.5%** structural adherence over baseline (Gate requirement: $\ge +15.0\%$)
@@ -16,7 +16,7 @@ MarkDraw v3.0 establishes an automated, objective, deterministic benchmark to va
 - **ASCII / Vision Baseline Adherence:** **20.5%** average structural fidelity.
 - **Raw JSON AST Adherence:** **28.1%** average structural fidelity.
 - **Structural Win Margin:** **+79.5%** over baseline (exceeding the $+15.0\%$ threshold).
-- **Token Efficiency:** MarkDraw Lean Contract prompts consume **1157** tokens on average compared to **1321** for baseline prompts and **1534** for raw JSON ASTs.
+- **Token Efficiency:** MarkDraw Lean Contract prompts consume **989** tokens on average compared to **1136** for baseline prompts and **1579** for raw JSON ASTs.
 
 ---
 
@@ -24,9 +24,9 @@ MarkDraw v3.0 establishes an automated, objective, deterministic benchmark to va
 
 | Modality | Description | Avg Adherence | Perfect Runs | Avg Prompt Tokens | Avg Total Tokens |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **MarkDraw Lean Contract (`spec`)** | Path `#id`, dynamic legend, explicit container nesting, CSS flags | **100%** | **20 / 20** | **1157** | **1547** |
-| **ASCII / Vision Proxy (`baseline`)** | Spatial text diagrams mimicking vision bounding boxes | **20.5%** | **0 / 20** | **1321** | **1401** |
-| **JSON AST (`ast`)** | Raw bounding box coordinates and object trees | **28.1%** | **0 / 20** | **1534** | **1610** |
+| **MarkDraw Lean Contract (`spec`)** | Path `#id`, dynamic legend, explicit container nesting, CSS flags | **100%** | **20 / 20** | **989** | **1379** |
+| **ASCII / Vision Proxy (`baseline`)** | Spatial text diagrams mimicking vision bounding boxes | **20.5%** | **0 / 20** | **1136** | **1216** |
+| **JSON AST (`ast`)** | Raw bounding box coordinates and object trees | **28.1%** | **0 / 20** | **1579** | **1656** |
 
 ---
 
@@ -45,26 +45,26 @@ MarkDraw v3.0 establishes an automated, objective, deterministic benchmark to va
 
 | Fixture ID | Category | Spec % | Base % | AST % | Delta | Spec Tokens | Base Tokens |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `01-landing-saas` | conventional | 100% | 9.1% | 72.7% | +90.9% | 2566 | 2050 |
-| `02-blog-article` | conventional | 100% | 0% | 87.5% | +100% | 1521 | 1714 |
-| `03-ecommerce-store` | conventional | 100% | 25% | 25% | +75% | 1542 | 1389 |
-| `04-docs-portal` | conventional | 100% | 14.3% | 14.3% | +85.7% | 1413 | 1015 |
-| `05-pricing-comparison` | conventional | 100% | 0% | 0% | +100% | 1443 | 1317 |
-| `06-floating-pill-nav` | unconventional | 100% | 33.3% | 33.3% | +66.7% | 1304 | 1246 |
-| `07-asymmetric-hero-split` | unconventional | 100% | 0% | 0% | +100% | 1509 | 1628 |
-| `08-horizontal-timeline` | unconventional | 100% | 20% | 20% | +80% | 1431 | 1443 |
-| `09-magazine-masonry` | unconventional | 100% | 42.9% | 42.9% | +57.1% | 1479 | 1225 |
-| `10-multi-overlay-modal` | unconventional | 100% | 0% | 0% | +100% | 1603 | 1648 |
-| `11-analytics-kpi-dashboard` | dashboard | 100% | 14.3% | 14.3% | +85.7% | 2006 | 1450 |
-| `12-multi-step-checkout` | dashboard | 100% | 14.3% | 14.3% | +85.7% | 1657 | 1059 |
-| `13-crm-pipeline-kanban` | dashboard | 100% | 14.3% | 14.3% | +85.7% | 1545 | 1184 |
-| `14-settings-preferences` | dashboard | 100% | 0% | 0% | +100% | 1557 | 1574 |
-| `15-data-grid-management` | dashboard | 100% | 42.9% | 42.9% | +57.1% | 1525 | 1366 |
-| `16-mobile-onboarding` | mobile | 100% | 66.7% | 66.7% | +33.3% | 1119 | 1005 |
-| `17-mobile-social-feed` | mobile | 100% | 0% | 0% | +100% | 1500 | 1521 |
-| `18-mobile-ecommerce-product` | mobile | 100% | 25% | 25% | +75% | 1442 | 1468 |
-| `19-mobile-profile-settings` | mobile | 100% | 60% | 60% | +40% | 1303 | 1331 |
-| `20-mobile-chat-thread` | mobile | 100% | 28.6% | 28.6% | +71.4% | 1479 | 1390 |
+| `01-landing-saas` | conventional | 100% | 9.1% | 72.7% | +90.9% | 2333 | 1771 |
+| `02-blog-article` | conventional | 100% | 0% | 87.5% | +100% | 1343 | 1539 |
+| `03-ecommerce-store` | conventional | 100% | 25% | 25% | +75% | 1383 | 1229 |
+| `04-docs-portal` | conventional | 100% | 14.3% | 14.3% | +85.7% | 1199 | 798 |
+| `05-pricing-comparison` | conventional | 100% | 0% | 0% | +100% | 1303 | 1150 |
+| `06-floating-pill-nav` | unconventional | 100% | 33.3% | 33.3% | +66.7% | 1104 | 1011 |
+| `07-asymmetric-hero-split` | unconventional | 100% | 0% | 0% | +100% | 1369 | 1455 |
+| `08-horizontal-timeline` | unconventional | 100% | 20% | 20% | +80% | 1296 | 1269 |
+| `09-magazine-masonry` | unconventional | 100% | 42.9% | 42.9% | +57.1% | 1319 | 1054 |
+| `10-multi-overlay-modal` | unconventional | 100% | 0% | 0% | +100% | 1406 | 1482 |
+| `11-analytics-kpi-dashboard` | dashboard | 100% | 14.3% | 14.3% | +85.7% | 1867 | 1246 |
+| `12-multi-step-checkout` | dashboard | 100% | 14.3% | 14.3% | +85.7% | 1518 | 912 |
+| `13-crm-pipeline-kanban` | dashboard | 100% | 14.3% | 14.3% | +85.7% | 1385 | 1021 |
+| `14-settings-preferences` | dashboard | 100% | 0% | 0% | +100% | 1392 | 1452 |
+| `15-data-grid-management` | dashboard | 100% | 42.9% | 42.9% | +57.1% | 1357 | 1157 |
+| `16-mobile-onboarding` | mobile | 100% | 66.7% | 66.7% | +33.3% | 979 | 833 |
+| `17-mobile-social-feed` | mobile | 100% | 0% | 0% | +100% | 1319 | 1307 |
+| `18-mobile-ecommerce-product` | mobile | 100% | 25% | 25% | +75% | 1285 | 1272 |
+| `19-mobile-profile-settings` | mobile | 100% | 60% | 60% | +40% | 1133 | 1149 |
+| `20-mobile-chat-thread` | mobile | 100% | 28.6% | 28.6% | +71.4% | 1291 | 1216 |
 
 ---
 

@@ -1,47 +1,53 @@
-# MarkDraw v3.0 📐
+# MarkDraw v4.0 📐
 
-> **Canvas-to-Markdown Spatial Compiler for Large Language Models**  
-> 100% Client-Side SPA · Lo-Fi Wireframe Renderer · Clean IR AST · Double-Click Editing · Built with React 19, TypeScript, and `@tldraw/tldraw`.
+> **MarkDraw — the semantic layer between human visual intent and AI generation.**  
+> 100% Client-Side SPA · Native tldraw Freehand Drawing · 31 Semantic Roles · Custom Units Lifecycle · Platform Profiles · Built with React 19, TypeScript, and `@tldraw/tldraw`.
 
 ---
 
 ## What is MarkDraw?
 
-Feeding visual wireframes and UI mockups to multimodal LLMs introduces **vision drift**: hallucinated paddings, missed nested components, misplaced flex directions, high API token costs, and slow inference.
+Feeding visual wireframes and freehand sketches to multimodal LLMs introduces **vision drift**: hallucinated paddings, missed nested components, misplaced flex directions, ambiguous hierarchy, high API token costs, and slow inference.
 
-**MarkDraw** completely eliminates this bottleneck. It runs an in-browser deterministic spatial compiler that parses lo-fi wireframe canvas layouts into clean, structured GitHub-Flavored Markdown (GFM) tables, ASCII wireframes, and pure JSON Intermediate Representation (IR) trees in real time.
+**MarkDraw v4.0** eliminates this bottleneck. Instead of forcing rigid, pre-canned UI widget shapes, MarkDraw restores full freehand tldraw tools (pencil, geometric shapes, text, arrows, frames) and adds a lightweight **semantic annotation layer** (`shape.meta.markdraw`).
+
+Draw whatever you want, tag shapes with intuitive semantic roles, package reusable components into custom units, target your preferred platform profile, and export a compact, deterministic markdown contract.
 
 ---
 
-## Key Features in v2.5
+## Key Features in v4.0
 
-- 🖋️ **Authentic Lo-Fi Wireframe Renderer**:
-  - Thin 1.5px monochrome borders and clean surface fills.
-  - **Line Glyphs**: Paragraph and body text render as crisp horizontal rounded glyph bars (`───`). The real text is preserved in markdown output.
-  - **Diagonal ✕ Crosses**: Image, video, and map placeholders render as bordered boxes with diagonal crosses.
-  - **Line-Art Avatars**: Circle outlines with minimal head-shoulder arcs.
-- ✏️ **Direct Inline Editing**:
-  - **Double-click** any widget on canvas to instantly focus an inline cursor and edit its primary text label or placeholder.
-  - Press `Enter` to commit, `Esc` to cancel, or click outside.
-- 🎛️ **Floating Properties Mini-Panel**:
-  - Selecting a single widget reveals a compact, collapsible property inspector for live tweaking of labels, placeholders, variants, icons, toggle states, options, values, and line-glyph display toggles.
-- 🌲 **Clean Intermediate Representation (IR)**:
-  - Strict **Shapes → IR → Serializers** pipeline.
-  - **Zero tldraw internals** in the JSON AST export. Only pure semantic fields (`id`, `widgetType`, `role`, `label`, `textProps`, `bounds`, `children`, `parent`, `direction`, `path`) formatted with deterministic alphabetical key ordering.
-- 🏷️ **Bracket-Tag Semantic Notation**:
-  - Concise notation contract designed specifically for AI consumers:
-    `[btn "Send"]`, `[card "Profile" elevated]`, `[input "Email..."]`, `[check "Remember me" on]`, `[para]`, `[nav "Home, About"]`.
-- 🔒 **Canvas Lockdown**:
-  - Default tldraw draw/shape tools and heavy toolbars are disabled. The canvas is locked strictly to MarkDraw UI widgets.
-  - Sleek monochrome floating canvas control bar (Select, Pan, Undo, Redo, Zoom, Delete).
-- 🧩 **54+ Typed Semantic UI Widgets**:
-  - Categorized across Layout, Forms, Navigation, Content, Feedback, and Media.
-- 🔲 **4 Live Output Formats**:
-  1. **Spec Table**: Semantic bracket notation, hierarchy paths, layout flow (`Row` vs. `Column`), props, and child contents.
-  2. **Spatial Grid**: 2D coordinate-clustered pipe table representing visual positioning.
-  3. **ASCII Layout**: Unicode box-drawing character wireframe (`┌ ─ ┐ │ └ ┘`).
-  4. **AST (JSON)**: Clean, deterministic Intermediate Representation tree.
-- 💾 **Local-First & Offline**: State persists locally in IndexedDB (`persistenceKey="markdraw"`).
+- ✏️ **Unconstrained Freehand & Native tldraw Canvas**:
+  - Full native tldraw drawing experience restored (`pencil`, `geo`, `text`, `arrow`, `frame`, `note`).
+  - Zero custom shape utilities or rigid widget constraints. Draw wireframes, pamphlets, mobile screens, or diagrams freely.
+- 🏷️ **The Annotation Layer (31 Semantic Roles)**:
+  - Non-destructive metadata stored on standard tldraw shapes (`shape.meta.markdraw`).
+  - 31 precise semantic roles across 6 categories:
+    - **Structure**: `page`, `section`, `card`, `footer`, `separator`
+    - **Content**: `heading`, `para`, `img`, `video`, `table`, `carousel`, `stat`
+    - **Interaction**: `button`, `input`, `textarea`, `select`, `checkbox`, `radio`, `switch`, `slider`, `stepper`
+    - **Navigation**: `navbar`, `sidebar`, `tabs`, `steps`, `nav`
+    - **Feedback**: `avatar`, `badge`, `banner`, `dialog`
+    - **Utility**: `group`
+- 🎨 **Canvas Role Badges & Contextual Floating Role Panel**:
+  - Visual role indicator badges on annotated canvas shapes.
+  - Floating Role Panel offering instant role selection, alias search (e.g. `cta` → `button`, `appbar` → `navbar`), responsive settings, variants, and behavior flags.
+- 📦 **Custom Units Lifecycle**:
+  - Save any annotated group or container as a reusable **Custom Unit** (e.g., `Follow Card`, `Pricing Tier`, `User Avatar`).
+  - Stamp units anywhere across the canvas; compiled specs reference them cleanly by unit name.
+- 📱 **Platform Profiles**:
+  - **Web**: Standard semantic HTML & CSS conventions.
+  - **Android (Material 3)**: Targets Scaffold, TopAppBar, NavigationBar, BottomSheet, and Material 3 guidelines.
+- 🔍 **Selection-Scoped Compile & Per-Root Copy**:
+  - Hover any root frame or card to copy its lean contract directly to clipboard.
+  - Selection-scoped compile allows compiling just the selected subtree, complete with header metadata:
+    `_Scoped compile: "Follow Card" — 1 unit, 3 nodes (of 4 in "Feed Page")_`
+- 🛡️ **Comprehensive §13 Lint Engine**:
+  - Real-time compile lints identify untagged shapes, loose shapes outside frames, responsive hierarchy mismatches, invalid flags, and repetitive sibling labels without blocking compilation.
+- 🔄 **Lossless v3 Document Migration**:
+  - Automatically migrates legacy v3 `ui-widget` documents to v4 native geometric shapes with `shape.meta.markdraw` annotations.
+- ⚡ **20/20 Benchmark-Proven Fidelity**:
+  - Achieves 100% PASS on the MarkDraw benchmark suite across 20 wireframe fixtures with +79.5% structural fidelity improvement over visual-only baseline.
 
 ---
 
@@ -49,23 +55,18 @@ Feeding visual wireframes and UI mockups to multimodal LLMs introduces **vision 
 
 | Notation | Meaning | Example |
 | :--- | :--- | :--- |
-| `[btn "Text" variant]` | Button (solid, ghost, dashed) | `[btn "Send" ghost]` |
-| `[header "Title" h1]` | Heading typography (h1, h2, h3) | `[header "About Us" h1]` |
-| `[para]` | Body paragraph (line glyphs on canvas) | `[para]` |
-| `[input "Placeholder"]` | Text / form input field | `[input "Email..."]` |
-| `[search "Query"]` | Search input with caret glyph | `[search "Search..."]` |
-| `[check "Label" on/off]` | Checkbox with state | `[check "Remember me" on]` |
-| `[radio "Label" on/off]` | Radio button with state | `[radio "Option" off]` |
-| `[toggle on/off]` | Switch toggle with state | `[toggle on]` |
-| `[select "A\|B\|C"]` | Dropdown select choices | `[select "Option 1\|Option 2"]` |
-| `[slider N]` | Range slider value | `[slider 50]` |
-| `[nav "A, B, C"]` | Navbar navigation items | `[nav "Home, About, Docs"]` |
-| `[tabs "A\|B\|C"]` | Tab selection group | `[tabs "Overview\|Specs"]` |
-| `[section "Title"]` | Structural container band | `[section "Our Portfolio"]` |
+| `[page "Title"]` | Viewport or screen root frame | `[page "Feed Page"]` |
+| `[button "Text" variant]` | Actionable button (solid, ghost, outline) | `[button "Follow" outline]` |
+| `[heading "Title" h1-h6]` | Typography heading | `[heading "Alex" h3]` |
+| `[para]` | Body text / paragraph | `[para]` |
+| `[navbar "Items" flags]` | Top navigation bar | `[navbar "Home, About" sticky]` |
 | `[card "Title" variant]` | Content card container | `[card "Profile" elevated]` |
-| `[img "Alt"]` | Image placeholder with ✕ cross | `[img "hero-banner"]` |
-| `[icon "Name"]` | Graphical icon | `[icon "settings"]` |
-| `[divider]` | Horizontal separator line | `[divider]` |
+| `[avatar]` | Person profile avatar | `[avatar]` |
+| `[input "Placeholder"]` | Form input field | `[input "Email..."]` |
+| `[switch on/off]` | Toggle switch control | `[switch on]` |
+| `[check "Label" on/off]` | Checkbox control | `[check "Remember me" on]` |
+| `[stat "Value" variant]` | Metric / KPI display | `[stat "98%" progress]` |
+| `[dialog "Title"]` | Modal / popup dialog | `[dialog "Confirm Action"]` |
 
 ---
 
@@ -92,11 +93,11 @@ npm run dev
 npm run test
 ```
 
-### Run Benchmark Harness (v3.0 Decision Gate)
+### Run Benchmark Harness (Fidelity Decision Gate)
 ```bash
 npm run bench
 ```
-Evaluates the automated structural fidelity scoring engine across 20 wireframe fixtures across 4 categories (`conventional`, `unconventional`, `dashboard`, `mobile`), testing MarkDraw's Lean Contract against ASCII visual proxies and raw ASTs, and logs findings to `bench/REPORT.md`.
+Evaluates the automated structural fidelity scoring engine across 20 wireframe fixtures across 4 categories (`conventional`, `unconventional`, `dashboard`, `mobile`), testing MarkDraw's Lean Contract against ASCII visual proxies and raw ASTs, logging detailed output to `bench/REPORT.md`.
 
 ### Production Build
 ```bash

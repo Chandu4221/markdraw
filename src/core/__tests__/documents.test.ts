@@ -97,14 +97,13 @@ describe('Document Management & Registry', () => {
     expect(registry.activeDocId).toBe(newDoc.id);
   });
 
-  it('generates demo canvas shapes with valid ui-widget types and no invalid id prefix', () => {
+  it('generates demo canvas shapes with valid native annotation types and roles', () => {
     const demoShapes = getDemoCanvasShapes();
     expect(demoShapes.length).toBeGreaterThan(0);
     for (const shape of demoShapes) {
-      expect(shape.type).toBe('ui-widget');
+      expect(['frame', 'geo'].includes(shape.type)).toBe(true);
       expect(shape.props).toBeDefined();
-      expect(shape.props.widgetType).toBeDefined();
-      // Either id is omitted (so tldraw generates valid shape ID) or it must start with "shape:"
+      expect(shape.meta?.markdraw?.role).toBeDefined();
       if (shape.id !== undefined) {
         expect(shape.id.startsWith('shape:')).toBe(true);
       }
@@ -115,12 +114,12 @@ describe('Document Management & Registry', () => {
 describe('File Export & Import Serialization', () => {
   it('serializes document to .markdraw.json format', () => {
     const shapes = [
-      { id: '1', type: 'ui-widget', props: { widgetType: 'button' } }
+      { id: '1', type: 'geo', props: { text: 'button' }, meta: { markdraw: { schema: 1, role: 'button' } } }
     ];
     const file = serializeDocToFile('My Project', shapes);
 
     expect(file.formatVersion).toBe(1);
-    expect(file.markdrawVersion).toBe('3.0.0');
+    expect(file.markdrawVersion).toBe('4.0.0');
     expect(file.doc.name).toBe('My Project');
     expect(file.doc.shapes.length).toBe(1);
   });
@@ -150,11 +149,11 @@ describe('File Export & Import Serialization', () => {
     expect(res.error).toContain('Unsupported format version');
   });
 
-  it('rejects files containing non-widget shapes', () => {
+  it('accepts files containing native shapes', () => {
     const json = JSON.stringify({
       formatVersion: 1,
       doc: {
-        name: 'Bad Doc',
+        name: 'Native Doc',
         shapes: [
           { id: 'geo1', type: 'geo', props: {} }
         ]
@@ -162,7 +161,8 @@ describe('File Export & Import Serialization', () => {
     });
 
     const res = validateImportFile(json);
-    expect(res.isValid).toBe(false);
-    expect(res.error).toContain('non-wireframe shape');
+    expect(res.isValid).toBe(true);
+    expect(res.docName).toBe('Native Doc');
+    expect(res.shapes?.length).toBe(1);
   });
 });

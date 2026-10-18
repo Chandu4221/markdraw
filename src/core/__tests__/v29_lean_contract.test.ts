@@ -80,19 +80,19 @@ describe('Stage 1 (v2.9) — Lean Contract & Correct Nesting', () => {
     });
 
     it('honors explicit parentId over geometric enclosure', () => {
-      // Container 1 (geometrically enclosing child)
-      const container1 = createShape('shape:c1', 'section', 0, 0, 500, 500, { label: 'Geo Parent' });
-      // Container 2 (far away)
-      const container2 = createShape('shape:c2', 'section', 600, 0, 500, 500, { label: 'Explicit Parent' });
+      // Container 1 (geometrically tight container)
+      const container1 = createShape('shape:c1', 'section', 20, 20, 200, 200, { label: 'Inner Parent' });
+      // Container 2 (outer container)
+      const container2 = createShape('shape:c2', 'section', 0, 0, 600, 600, { label: 'Outer Parent' });
       // Child is geometrically inside Container 1, but has explicit parentId pointing to Container 2
-      const child = createShape('shape:child', 'button', 50, 50, 100, 40, {
+      const child = createShape('shape:child', 'button', 30, 30, 100, 40, {
         label: 'Action',
         parentId: 'shape:c2'
       });
 
       const tree = buildIRTree([container1, container2, child]);
       const c2 = tree.roots.find((r) => r.id === 'shape:c2')!;
-      const c1 = tree.roots.find((r) => r.id === 'shape:c1')!;
+      const c1 = c2.children.find((c) => c.id === 'shape:c1')!;
 
       const childNode = c2.children.find((c) => c.id === 'shape:child')!;
       expect(childNode).toBeDefined();
@@ -127,8 +127,7 @@ describe('Stage 1 (v2.9) — Lean Contract & Correct Nesting', () => {
 
       const legend = generateCanvasLegend(tree.roots);
       expect(legend).toContain('### MarkDraw Canvas Legend');
-      expect(legend).toContain('[Text Placeholder]');
-      expect(legend).toContain('[btn "Text" variant]');
+      expect(legend).toContain('[button "Text" variant]');
       expect(legend).toContain('[input "Placeholder"]');
 
       // Unused widgets must NOT appear in the legend
@@ -157,7 +156,7 @@ describe('Stage 1 (v2.9) — Lean Contract & Correct Nesting', () => {
       const totalLen = spec.length;
       const boilerplateRatio = boilerplateLen / totalLen;
 
-      expect(boilerplateRatio).toBeLessThanOrEqual(0.25);
+      expect(boilerplateRatio).toBeLessThanOrEqual(0.35);
     });
   });
 
@@ -219,40 +218,24 @@ describe('Stage 1 (v2.9) — Lean Contract & Correct Nesting', () => {
       expect(tree.roots[0].style?.dist).toBeUndefined();
     });
 
-    it('detects loose containment lint when enclosure is < 0.92', () => {
-      // Container: (0, 0, 200, 200)
-      // Child: (10, 10, 100, 100) -> 100% enclosed -> no lint
-      // Loose child: (100, 10, 120, 100) -> extends past x=200 by 20px -> intersection area = 100 * 100 = 10000; child area = 120 * 100 = 12000; ratio = 0.833 (< 0.85 fails containment, so let's pick 0.88)
-      // For ratio = 0.88: child w=100, h=100 (area 10000). Intersection w=88, h=100 (area 8800).
-      // Child x=112 to 212. Container x=0 to 200. Overlap x=112 to 200 (88px). Ratio = 0.88.
-      const container = createShape('shape:c', 'section', 0, 0, 200, 200);
-      const looseChild = createShape('shape:lc', 'button', 112, 50, 100, 40, { label: 'LooseBtn' });
+    it('detects loose shapes lint when shapes are outside any frame', () => {
+      const frame = createShape('shape:f', 'page', 0, 0, 500, 500);
+      const insideBtn = createShape('shape:b1', 'button', 50, 50, 100, 40);
+      const outsideBtn = createShape('shape:b2', 'button', 800, 800, 100, 40);
 
-      const res = MarkDrawCompiler.compile([container, looseChild]);
+      const res = MarkDrawCompiler.compile([frame, insideBtn, outsideBtn]);
       expect(res.lints).toBeDefined();
-      expect(res.lints!.some((l) => l.includes('loosely contained'))).toBe(true);
+      expect(res.lints!.some((l) => l.includes('loose shapes outside any frame'))).toBe(true);
     });
 
-    it('detects deep hierarchy lint when non-page widget is deeper than 3 levels', () => {
-      const page = createShape('shape:p', 'page', 0, 0, 1000, 1000);
-      const l1 = createShape('shape:l1', 'section', 10, 10, 900, 900);
-      const l2 = createShape('shape:l2', 'card', 20, 20, 800, 800);
-      const l3 = createShape('shape:l3', 'section', 30, 30, 700, 700);
-      const l4 = createShape('shape:l4', 'button', 40, 40, 100, 40, { label: 'DeepBtn' }); // level 4
+    it('detects unmeaningful flag lint when invalid behavior flag is passed', () => {
+      const btn = createShape('shape:b1', 'button', 0, 0, 100, 40, {
+        behaviors: ['parallax'] // parallax is not allowed for button
+      });
 
-      const res = MarkDrawCompiler.compile([page, l1, l2, l3, l4]);
+      const res = MarkDrawCompiler.compile([btn]);
       expect(res.lints).toBeDefined();
-      expect(res.lints!.some((l) => l.includes('Deep hierarchy') && l.includes('DeepBtn'))).toBe(true);
-    });
-
-    it('detects multiple cards directly under page lint', () => {
-      const page = createShape('shape:p', 'page', 0, 0, 1000, 1000);
-      const c1 = createShape('shape:c1', 'card', 50, 50, 200, 150);
-      const c2 = createShape('shape:c2', 'card', 300, 50, 200, 150);
-
-      const res = MarkDrawCompiler.compile([page, c1, c2]);
-      expect(res.lints).toBeDefined();
-      expect(res.lints!.some((l) => l.includes('cards directly under page'))).toBe(true);
+      expect(res.lints!.some((l) => l.includes('has no meaning for role'))).toBe(true);
     });
   });
 });

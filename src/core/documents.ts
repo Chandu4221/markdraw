@@ -229,98 +229,163 @@ export function touchDocument(
 export function getDemoCanvasShapes(): any[] {
   return [
     {
-      type: 'ui-widget',
+      id: 'shape:demo_page',
+      type: 'frame',
       x: 80,
       y: 60,
       props: {
         w: 1280,
         h: 960,
-        widgetType: 'page',
-        label: 'Home Page',
-        variant: 'hd'
+        name: 'Home Page'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'page',
+          props: { variant: 'hd' }
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_header',
+      type: 'geo',
+      parentId: 'shape:demo_page',
       x: 80,
       y: 96,
       props: {
         w: 1280,
         h: 52,
-        widgetType: 'header',
-        label: 'MarkDraw SaaS',
-        subtext: 'Features · Docs · Pricing'
+        geo: 'rectangle',
+        text: 'MarkDraw SaaS'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'heading',
+          props: { subtext: 'Features · Docs · Pricing' }
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_hero',
+      type: 'geo',
+      parentId: 'shape:demo_page',
       x: 220,
       y: 180,
       props: {
         w: 1000,
         h: 220,
-        widgetType: 'hero',
-        label: 'Design in Markdown, Ship with Confidence',
-        subtext: 'Deterministic wireframes compiled into structured AI context.'
+        geo: 'rectangle',
+        text: 'Design in Markdown, Ship with Confidence'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'section',
+          props: {
+            variant: 'hero',
+            subtext: 'Deterministic wireframes compiled into structured AI context.'
+          }
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_section',
+      type: 'geo',
+      parentId: 'shape:demo_page',
       x: 220,
       y: 430,
       props: {
         w: 1000,
         h: 280,
-        widgetType: 'section',
-        label: 'Key Capabilities'
+        geo: 'rectangle',
+        text: 'Key Capabilities'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'section'
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_card1',
+      type: 'geo',
+      parentId: 'shape:demo_section',
       x: 250,
       y: 480,
       props: {
         w: 290,
         h: 200,
-        widgetType: 'card',
-        label: 'Output Hygiene',
-        variant: 'outline'
+        geo: 'rectangle',
+        text: 'Output Hygiene'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'card',
+          props: { variant: 'outline' }
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_card2',
+      type: 'geo',
+      parentId: 'shape:demo_section',
       x: 575,
       y: 480,
       props: {
         w: 290,
         h: 200,
-        widgetType: 'card',
-        label: 'Placement Semantics',
-        variant: 'outline'
+        geo: 'rectangle',
+        text: 'Placement Semantics'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'card',
+          props: { variant: 'outline' }
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_card3',
+      type: 'geo',
+      parentId: 'shape:demo_section',
       x: 900,
       y: 480,
       props: {
         w: 290,
         h: 200,
-        widgetType: 'card',
-        label: 'Multi-Document',
-        variant: 'outline'
+        geo: 'rectangle',
+        text: 'Multi-Document'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'card',
+          props: { variant: 'outline' }
+        }
       }
     },
     {
-      type: 'ui-widget',
+      id: 'shape:demo_footer',
+      type: 'geo',
+      parentId: 'shape:demo_page',
       x: 80,
       y: 972,
       props: {
         w: 1280,
         h: 48,
-        widgetType: 'footer',
-        label: '© 2026 MarkDraw Inc.',
-        subtext: 'All rights reserved.'
+        geo: 'rectangle',
+        text: '© 2026 MarkDraw Inc.'
+      },
+      meta: {
+        markdraw: {
+          schema: 1,
+          role: 'footer',
+          props: { subtext: 'All rights reserved.' }
+        }
       }
     }
   ];
@@ -342,7 +407,7 @@ export function serializeDocToFile(docName: string, shapes: any[]): MarkDrawFile
 
 /**
  * Validates an imported `.markdraw.json` file.
- * Requires formatVersion === 1 and ensures all shapes are of type 'ui-widget'.
+ * Requires formatVersion === 1 and ensures all shapes have a valid type.
  */
 export function validateImportFile(fileContent: string): {
   isValid: boolean;
@@ -375,12 +440,12 @@ export function validateImportFile(fileContent: string): {
       return { isValid: false, error: '"doc.shapes" must be an array.' };
     }
 
-    // Strict validation: every shape must be a ui-widget
-    const invalidShapes = shapes.filter((s: any) => !s || s.type !== 'ui-widget');
+    // Validation: every shape must have a valid type string
+    const invalidShapes = shapes.filter((s: any) => !s || typeof s !== 'object' || typeof s.type !== 'string');
     if (invalidShapes.length > 0) {
       return {
         isValid: false,
-        error: `File contains ${invalidShapes.length} non-wireframe shape(s). MarkDraw only supports ui-widget shapes.`
+        error: `File contains ${invalidShapes.length} invalid shape(s). Every shape must have a valid type string.`
       };
     }
 

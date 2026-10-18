@@ -35,6 +35,7 @@ export const ROLE_NAMES = Object.freeze([
 ] as const);
 
 export type RoleName = (typeof ROLE_NAMES)[number];
+export const ALL_ROLES = ROLE_NAMES;
 
 export type RoleCategory =
   | 'structure'

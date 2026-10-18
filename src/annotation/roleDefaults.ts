@@ -39,6 +39,14 @@ export function getRoleDefaultProps(role: string): Record<string, unknown> {
   return (ROLE_DEFAULT_PROPS as Record<string, Record<string, unknown>>)[role] || {};
 }
 
+const COMMON_UNTOUCHED_LABELS = new Set([
+  'save changes',
+  'click me',
+  'enter text...',
+  'enter multiline text...',
+  'lorem ipsum dolor sit amet'
+]);
+
 export function isUntouchedRoleLabel(role: string, label?: string): boolean {
   if (!label || label.trim() === '') return true;
   const clean = label.trim().toLowerCase();
@@ -46,5 +54,9 @@ export function isUntouchedRoleLabel(role: string, label?: string): boolean {
   if (clean === cleanRole || clean === cleanRole.replace(/\s+/g, '')) {
     return true;
   }
+  if (COMMON_UNTOUCHED_LABELS.has(clean)) {
+    return true;
+  }
   return false;
 }
+

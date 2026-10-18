@@ -48,7 +48,7 @@ describe('Clean Intermediate Representation (IR)', () => {
     // Check IRNode fields
     expect(root.id).toBe('card-1');
     expect(root.widgetType).toBe('card');
-    expect(root.role).toBe('container');
+    expect(root.role).toBe('card');
     expect((root as any).typeName).toBeUndefined();
     expect((root as any).meta).toBeUndefined();
     expect((root as any).dash).toBeUndefined();

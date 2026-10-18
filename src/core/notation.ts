@@ -1,6 +1,20 @@
 import { IRNode } from './ir';
-import { isUntouchedLabel, getCatalogDefaultProps } from './widgets/widgetCatalog';
-import { isUntouchedRoleLabel } from '../annotation/roleDefaults';
+import { isUntouchedRoleLabel, getRoleDefaultProps } from '../annotation/roleDefaults';
+
+export const ALL_BEHAVIOR_FLAGS = [
+  'sticky',
+  'floating',
+  'overlay',
+  'fixed',
+  'fullscreen',
+  'autoplay',
+  'parallax',
+  'expandable',
+  'draggable',
+  'scroll-snap'
+] as const;
+
+export type BehaviorFlag = typeof ALL_BEHAVIOR_FLAGS[number];
 
 function escapeNotation(str: string): string {
   if (!str) return '';
@@ -13,7 +27,7 @@ function escapeNotation(str: string): string {
 }
 
 function getEffectiveLabel(type: string, label?: string): string {
-  if (isUntouchedLabel(type, label)) {
+  if (isUntouchedRoleLabel(type, label)) {
     return '';
   }
   return label || '';
@@ -21,7 +35,7 @@ function getEffectiveLabel(type: string, label?: string): string {
 
 function getEffectiveProp(type: string, key: string, val?: any): any {
   if (val === undefined || val === null || val === '') return '';
-  const defaults = getCatalogDefaultProps(type);
+  const defaults = getRoleDefaultProps(type);
   if (defaults[key] !== undefined && defaults[key] === val) {
     return '';
   }
@@ -106,6 +120,16 @@ export function formatSemanticNotation(node: IRNode): string {
       }
       case 'video': {
         tag = '[video]';
+        break;
+      }
+      case 'navbar': {
+        const v = p.variant;
+        const varSuffix = v && v !== 'default' ? ` ${v}` : '';
+        tag = primaryLabel
+          ? `[navbar "${escapeNotation(primaryLabel)}"${varSuffix}]`
+          : varSuffix
+          ? `[navbar${varSuffix}]`
+          : '[navbar]';
         break;
       }
       default: {
