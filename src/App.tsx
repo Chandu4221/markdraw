@@ -15,6 +15,9 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import CompileWorker from './core/compile.worker?worker';
 import { CompileWorkerResponse } from './core/compile.worker';
 import { useRenderMode, setRenderMode } from './core/renderMode';
+import { isAnnotationModeActive } from './annotation/config';
+
+export const ANNOTATION_MODE = isAnnotationModeActive();
 import {
   getDocRegistry,
   createDocument,
