@@ -59,10 +59,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
           <button
             type="button"
             aria-pressed={viewportMode === 'desktop'}
-            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
               viewportMode === 'desktop'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)]'
             }`}
             onClick={() => setViewportMode('desktop')}
           >
@@ -72,10 +72,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
           <button
             type="button"
             aria-pressed={viewportMode === 'mobile'}
-            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 ${
               viewportMode === 'mobile'
                 ? 'bg-purple-600 text-white shadow-xs'
-                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)]'
             }`}
             onClick={() => setViewportMode('mobile')}
           >

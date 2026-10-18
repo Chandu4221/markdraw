@@ -312,7 +312,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                             e.stopPropagation();
                             handleCopyFrameContract(f.id);
                           }}
-                          className="p-1 rounded hover:bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:text-blue-500 transition-colors cursor-pointer"
+                          className="p-1 rounded hover:bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:text-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-colors cursor-pointer"
                           title="Copy contract for this frame"
                         >
                           {copiedFrameId === f.id ? (
@@ -355,7 +355,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                       <button
                         type="button"
                         onClick={() => handleStampUnit(u)}
-                        className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                        className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-400 transition-colors cursor-pointer"
                         title="Stamp copy onto canvas"
                       >
                         Stamp
@@ -363,7 +363,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                       <button
                         type="button"
                         onClick={() => handleDeleteUnit(u.id)}
-                        className="p-1 text-[var(--md-text-subtle)] hover:text-red-500 cursor-pointer"
+                        className="p-1 rounded text-[var(--md-text-subtle)] hover:text-red-500 hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 transition-colors cursor-pointer"
                         title="Delete unit"
                       >
                         <Trash2 size={11} />
@@ -412,7 +412,8 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
           )}
         </div>
         <button
-          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer"
+          type="button"
+          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
           onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand Panel' : 'Collapse Panel'}
           aria-label={isCollapsed ? 'Expand Role Panel' : 'Collapse Role Panel'}
@@ -435,7 +436,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                 <button
                   type="button"
                   onClick={() => handleAssignRole(null)}
-                  className="text-[10px] text-red-500 hover:underline cursor-pointer"
+                  className="text-[10px] text-red-500 hover:text-red-400 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 rounded px-0.5 cursor-pointer"
                 >
                   Clear role
                 </button>
@@ -448,7 +449,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                 <button
                   type="button"
                   onClick={() => handleAssignRole(suggestedRole)}
-                  className="w-full flex items-center justify-between gap-1 px-2 py-1 text-[11px] font-medium rounded border border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors cursor-pointer shadow-xs"
+                  className="w-full flex items-center justify-between gap-1 px-2 py-1 text-[11px] font-medium rounded border border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer shadow-xs"
                 >
                   <span className="flex items-center gap-1">
                     <Sparkles size={11} />
@@ -464,7 +465,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
               <button
                 type="button"
                 onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
-                className="w-full h-8 px-2.5 flex items-center justify-between rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs font-medium text-[var(--md-text)] hover:border-[var(--md-border-strong)] transition-colors cursor-pointer"
+                className="w-full h-8 px-2.5 flex items-center justify-between rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs font-medium text-[var(--md-text)] hover:border-[var(--md-border-strong)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] transition-colors cursor-pointer"
               >
                 <span className="truncate">
                   {currentRole ? (
@@ -504,10 +505,10 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                               key={r.name}
                               type="button"
                               onClick={() => handleAssignRole(r.name)}
-                              className={`px-2 py-1 text-left text-xs rounded transition-colors cursor-pointer flex items-center justify-between ${
+                              className={`px-2 py-1 text-left text-xs rounded transition-colors cursor-pointer flex items-center justify-between focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
                                 currentRole === r.name
                                   ? 'bg-blue-600 text-white font-bold'
-                                  : 'hover:bg-[var(--md-surface-raised)] text-[var(--md-text)]'
+                                  : 'hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] text-[var(--md-text)]'
                               }`}
                               title={r.decisionRule}
                             >
@@ -591,10 +592,10 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                       key={flag}
                       type="button"
                       onClick={() => handleToggleFlag(flag)}
-                      className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer border ${
+                      className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
                         isActive
-                          ? 'bg-blue-600 text-white border-blue-700 font-bold'
-                          : 'bg-[var(--md-surface)] text-[var(--md-text-muted)] border-[var(--md-border)] hover:bg-[var(--md-surface-raised)]'
+                          ? 'bg-blue-600 text-white border-blue-700 font-bold hover:bg-blue-700'
+                          : 'bg-[var(--md-surface)] text-[var(--md-text-muted)] border-[var(--md-border)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] hover:border-[var(--md-border-strong)]'
                       }`}
                     >
                       {flag}
@@ -683,7 +684,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                   }
                   setShowSaveUnitDialog(true);
                 }}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-semibold rounded border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer shadow-xs"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-semibold rounded border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 transition-colors cursor-pointer shadow-xs"
               >
                 <Box size={13} />
                 <span>Save {count} shapes as Unit...</span>
@@ -706,7 +707,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                   <button
                     type="button"
                     onClick={() => setShowSaveUnitDialog(false)}
-                    className="text-xs text-[var(--md-text-muted)] hover:text-[var(--md-text)] cursor-pointer"
+                    className="p-1 rounded text-xs text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer transition-colors"
                   >
                     ✕
                   </button>
@@ -751,7 +752,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                   <button
                     type="button"
                     onClick={() => setShowSaveUnitDialog(false)}
-                    className="px-2.5 py-1 text-xs rounded border border-[var(--md-border)] hover:bg-[var(--md-surface-hover)] text-[var(--md-text)] cursor-pointer"
+                    className="px-2.5 py-1 text-xs rounded border border-[var(--md-border)] hover:bg-[var(--md-surface-hover)] hover:border-[var(--md-border-strong)] hover:text-[var(--md-text-bold)] text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
@@ -759,7 +760,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                     type="button"
                     disabled={!newUnitName.trim()}
                     onClick={handleSaveUnit}
-                    className="px-3 py-1 text-xs font-semibold rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="px-3 py-1 text-xs font-semibold rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 cursor-pointer transition-colors"
                   >
                     Save Unit
                   </button>

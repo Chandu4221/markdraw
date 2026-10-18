@@ -153,42 +153,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
               <button
+                type="button"
                 onClick={this.handleReload}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 16px',
-                  borderRadius: 6,
-                  background: 'var(--md-text-bold, #fff)',
-                  color: 'var(--md-bg, #000)',
-                  border: '1.5px solid var(--md-border-strong, #fff)',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: 'var(--md-shadow-interactive, 2px 2px 0px #000)'
-                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--md-text-bold,#fff)] text-[var(--md-bg,#000)] border-[1.5px] border-[var(--md-border-strong,#fff)] text-[13px] font-bold cursor-pointer shadow-[var(--md-shadow-interactive,2px_2px_0px_#000)] hover:bg-[var(--md-accent,#3b82f6)] hover:text-white hover:border-[var(--md-accent,#3b82f6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring,#3b82f6)] focus-visible:ring-offset-2 transition-colors"
               >
                 <RefreshCw size={14} />
                 <span>Reload Application</span>
               </button>
 
               <button
+                type="button"
                 onClick={this.handleExportRecovery}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 16px',
-                  borderRadius: 6,
-                  background: 'var(--md-surface-raised, #21262d)',
-                  color: 'var(--md-text-bold, #fff)',
-                  border: '1.5px solid var(--md-border-strong, #30363d)',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: 'var(--md-shadow-interactive, 2px 2px 0px #000)'
-                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--md-surface-raised,#21262d)] text-[var(--md-text-bold,#fff)] border-[1.5px] border-[var(--md-border-strong,#30363d)] text-[13px] font-semibold cursor-pointer shadow-[var(--md-shadow-interactive,2px_2px_0px_#000)] hover:bg-[var(--md-surface-hover,#30363d)] hover:border-[var(--md-border-strong,#484f58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring,#3b82f6)] focus-visible:ring-offset-2 transition-colors"
               >
                 <Download size={14} />
                 <span>Export Recovery File</span>

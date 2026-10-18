@@ -223,7 +223,8 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
                       <Check size={13} className="text-[var(--md-accent)]" />
                     ) : docs.length > 1 ? (
                       <button
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[var(--md-text-subtle)] hover:text-[var(--md-danger)] transition-opacity"
+                        type="button"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-[var(--md-text-subtle)] hover:text-[var(--md-danger)] hover:bg-[var(--md-surface-raised)] rounded focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-danger)] transition-all cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (confirm(`Delete "${doc.name}"? This cannot be undone.`)) {

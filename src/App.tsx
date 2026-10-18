@@ -585,7 +585,7 @@ export const App: React.FC = () => {
                 className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
                   !isRightPanelOpen
                     ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => setIsRightPanelOpen(false)}
                 title="Canvas Fullscreen Focus"
@@ -597,7 +597,7 @@ export const App: React.FC = () => {
                 className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
                   isRightPanelOpen && Math.round(canvasPercent) === 75
                     ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => {
                   setIsRightPanelOpen(true);
@@ -612,7 +612,7 @@ export const App: React.FC = () => {
                 className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
                   isRightPanelOpen && Math.round(canvasPercent) === 50
                     ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => {
                   setIsRightPanelOpen(true);
@@ -627,7 +627,7 @@ export const App: React.FC = () => {
                 className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
                   isRightPanelOpen && Math.round(canvasPercent) === 35
                     ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                    : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => {
                   setIsRightPanelOpen(true);
@@ -810,7 +810,7 @@ export const App: React.FC = () => {
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'grid'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                       }`}
                       onClick={() => setOutputTab('grid')}
                     >
@@ -824,7 +824,7 @@ export const App: React.FC = () => {
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'ascii'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                       }`}
                       onClick={() => setOutputTab('ascii')}
                     >
@@ -838,7 +838,7 @@ export const App: React.FC = () => {
                       className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                         outputTab === 'json'
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                          : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                       }`}
                       onClick={() => setOutputTab('json')}
                     >
@@ -862,7 +862,7 @@ export const App: React.FC = () => {
                           className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                             outputDisplayMode === 'preview'
                               ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
-                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                           }`}
                           onClick={() => handleOutputDisplayModeChange('preview')}
                           title="Formatted Markdown Preview"
@@ -877,7 +877,7 @@ export const App: React.FC = () => {
                           className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
                             outputDisplayMode === 'raw'
                               ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
-                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                           }`}
                           onClick={() => handleOutputDisplayModeChange('raw')}
                           title="Raw Markdown Syntax"
@@ -913,7 +913,7 @@ export const App: React.FC = () => {
                           className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
                             compileScopeMode === 'all'
                               ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                           }`}
                           title="Compile all roots on canvas"
                         >
@@ -925,7 +925,7 @@ export const App: React.FC = () => {
                           className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
                             compileScopeMode === 'selection'
                               ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                              : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                           }`}
                           title="Compile selected subtree only"
                         >

@@ -3,20 +3,20 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]',
+  'inline-flex items-center justify-center whitespace-nowrap text-xs font-medium cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--md-text-bold)] text-[var(--md-bg)] hover:opacity-90 shadow-sm',
+          'bg-[var(--md-text-bold)] text-[var(--md-bg)] hover:bg-[var(--md-neutral-7)] hover:text-[var(--md-neutral-0)] shadow-sm font-semibold',
         outline:
-          'border border-[var(--md-border)] bg-transparent text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)]',
+          'border border-[var(--md-border)] bg-transparent text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] hover:border-[var(--md-border-strong)]',
         secondary:
-          'bg-[var(--md-surface-raised)] text-[var(--md-text)] hover:bg-[var(--md-neutral-3)] hover:text-[var(--md-text-bold)] border border-[var(--md-border)]',
+          'bg-[var(--md-surface-raised)] text-[var(--md-text)] hover:bg-[var(--md-neutral-3)] hover:text-[var(--md-text-bold)] border border-[var(--md-border)] hover:border-[var(--md-border-strong)] font-medium',
         ghost:
           'text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)]',
         accent:
-          'bg-[var(--md-accent-subtle)] text-[var(--md-accent)] border border-[var(--md-accent)] font-semibold',
+          'bg-[var(--md-accent-subtle)] text-[var(--md-accent)] border border-[var(--md-accent)] font-semibold hover:bg-[var(--md-accent)] hover:text-white hover:border-[var(--md-accent)]',
         brand:
           'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/25 border border-blue-400/30 font-medium',
         primary:
@@ -24,7 +24,7 @@ const buttonVariants = cva(
         success:
           'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20 font-medium',
         danger:
-          'text-[var(--md-danger)] hover:bg-[var(--md-surface-raised)] hover:text-red-400'
+          'text-[var(--md-danger)] bg-transparent hover:bg-red-500/15 hover:text-red-500 border border-transparent hover:border-red-500/30'
       },
       size: {
         default: 'h-8 px-3 rounded-[6px]',

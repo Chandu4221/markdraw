@@ -86,3 +86,179 @@
 #actions-menu {
   display: none !important;
 }
+
+/* ------------------------------------------------------------- */
+/* Accessibility & High-Contrast Button States for tldraw & Modals */
+/* ------------------------------------------------------------- */
+
+/* Error Boundary Fallback Screen */
+.tl-error-boundary {
+  background: var(--md-bg) !important;
+}
+
+.tl-error-boundary__content {
+  background: var(--md-surface) !important;
+  color: var(--md-text) !important;
+  border: 1.5px solid var(--md-border-strong) !important;
+  border-radius: var(--md-radius-lg) !important;
+  box-shadow: var(--md-shadow-xl) !important;
+}
+
+.tl-error-boundary__content h2 {
+  color: var(--md-text-bold) !important;
+  font-weight: 700 !important;
+}
+
+.tl-error-boundary__content p {
+  color: var(--md-text) !important;
+  line-height: 1.5 !important;
+}
+
+.tl-error-boundary__content a {
+  color: var(--md-accent) !important;
+  text-decoration: underline !important;
+  font-weight: 600 !important;
+}
+
+.tl-error-boundary__content a:hover {
+  color: var(--md-accent-contrast, #ffffff) !important;
+  background: var(--md-accent) !important;
+  border-radius: 2px !important;
+}
+
+.tl-error-boundary__content h4 code {
+  background: var(--md-surface-raised) !important;
+  color: var(--md-danger, #ef4444) !important;
+  border: 1px solid var(--md-border) !important;
+  border-radius: var(--md-radius-sm) !important;
+  padding: 4px 8px !important;
+  display: inline-block !important;
+}
+
+.tl-error-boundary__content__error pre {
+  background: var(--md-bg) !important;
+  border: 1.5px solid var(--md-border-strong) !important;
+  color: var(--md-text) !important;
+  border-radius: var(--md-radius-md) !important;
+}
+
+.tl-error-boundary__content__error code {
+  color: var(--md-text-bold) !important;
+}
+
+/* Copy Button in Stack Trace Box */
+.tl-error-boundary__content__error button,
+.tl-error-boundary__content__error .tlui-button {
+  background-color: var(--md-surface-raised) !important;
+  color: var(--md-text-bold) !important;
+  border: 1.5px solid var(--md-border-strong) !important;
+  border-radius: var(--md-radius-sm) !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  padding: 5px 12px !important;
+  cursor: pointer !important;
+  box-shadow: var(--md-shadow-sm) !important;
+  transition: all 0.15s ease !important;
+}
+
+.tl-error-boundary__content__error button:hover,
+.tl-error-boundary__content__error .tlui-button:hover {
+  background-color: var(--md-accent) !important;
+  color: #ffffff !important;
+  border-color: var(--md-accent) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35) !important;
+}
+
+.tl-error-boundary__content__error button:focus-visible,
+.tl-error-boundary__content__error .tlui-button:focus-visible {
+  outline: 2px solid var(--md-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* Error Boundary Action Buttons */
+.tl-error-boundary__content .tlui-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: var(--md-font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: var(--md-radius-md) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+}
+
+/* Secondary Button: Hide / Show Details & Cancel */
+.tl-error-boundary__content .tl-error-boundary__content__actions > .tlui-button,
+.tl-error-boundary__content .tlui-button:not(.tl-error-boundary__reset):not(.tl-error-boundary__refresh) {
+  background-color: var(--md-surface-raised) !important;
+  color: var(--md-text-bold) !important;
+  border: 1.5px solid var(--md-border-strong) !important;
+}
+
+.tl-error-boundary__content .tl-error-boundary__content__actions > .tlui-button:hover,
+.tl-error-boundary__content .tlui-button:not(.tl-error-boundary__reset):not(.tl-error-boundary__refresh):hover {
+  background-color: var(--md-border-strong) !important;
+  color: var(--md-text-bold) !important;
+  border-color: var(--md-accent) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--md-shadow-sm) !important;
+}
+
+.tl-error-boundary__content .tl-error-boundary__content__actions > .tlui-button:focus-visible,
+.tl-error-boundary__content .tlui-button:not(.tl-error-boundary__reset):not(.tl-error-boundary__refresh):focus-visible {
+  outline: 2px solid var(--md-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* Danger Button: Reset Data */
+.tl-error-boundary__content .tlui-button.tl-error-boundary__reset {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #ef4444 !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.45) !important;
+}
+
+.tl-error-boundary__content .tlui-button.tl-error-boundary__reset:hover {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35) !important;
+}
+
+.tl-error-boundary__content .tlui-button.tl-error-boundary__reset:focus-visible {
+  outline: 2px solid #ef4444 !important;
+  outline-offset: 2px !important;
+}
+
+/* Primary High-Contrast Button: Refresh Page */
+.tl-error-boundary__content .tlui-button.tl-error-boundary__refresh {
+  background-color: var(--md-accent, #3b82f6) !important;
+  color: #ffffff !important;
+  border: 1.5px solid var(--md-accent, #3b82f6) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+.tl-error-boundary__content .tlui-button.tl-error-boundary__refresh:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+  opacity: 1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4) !important;
+}
+
+.tl-error-boundary__content .tlui-button.tl-error-boundary__refresh:focus-visible {
+  outline: 2px solid var(--md-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* General tldraw Button Focus Rings (WCAG 2.4.7 Focus Visible) */
+.tl-button:focus-visible,
+.tlui-button:focus-visible {
+  outline: 2px solid var(--md-accent) !important;
+  outline-offset: 2px !important;
+}
