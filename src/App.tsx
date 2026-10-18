@@ -7,7 +7,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { DocumentMenu } from './components/DocumentMenu';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { RolePanel } from './components/RolePanel';
+import { UnifiedInspectorPanel } from './components/UnifiedInspectorPanel';
 import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from './annotation/migrate';
 import { LegacyWidgetShapeUtil } from './annotation/legacyShapeUtil';
@@ -724,7 +724,9 @@ export const App: React.FC = () => {
                 key={activeDoc.id}
                 persistenceKey={activeDoc.persistenceKey}
                 shapeUtils={TRANSITIONAL_SHAPE_UTILS}
-                components={undefined}
+                components={{
+                  StylePanel: UnifiedInspectorPanel
+                }}
                 onMount={handleEditorMount}
               />
 
@@ -734,7 +736,6 @@ export const App: React.FC = () => {
                 showChips={showRoleChips}
                 onCopyContract={() => showToast('Copied contract to clipboard')}
               />
-              <RolePanel editor={editor} />
 
               {/* Toast Message */}
               {toastMessage && (

@@ -270,3 +270,26 @@
   border: 1px solid var(--md-border) !important;
 }
 
+/* ------------------------------------------------------------- */
+/* Unified Inspector (Merged RolePanel + StylePanel) */
+/* ------------------------------------------------------------- */
+.tlui-style-panel.markdraw-unified-inspector,
+.tlui-style-panel__wrapper:has(.markdraw-unified-inspector),
+.tlui-style-panel__wrapper.markdraw-unified-inspector {
+  width: 264px !important;
+  max-width: 264px !important;
+  background-color: var(--md-surface) !important;
+  border: 1px solid var(--md-border) !important;
+  border-radius: var(--md-radius-md) !important;
+  box-shadow: var(--md-shadow-lg) !important;
+}
+
+.markdraw-unified-inspector .tlui-style-panel__section {
+  width: 100% !important;
+}
+
+.markdraw-unified-inspector .tlui-buttons__grid {
+  justify-content: center;
+}
+
+
