@@ -21,6 +21,7 @@ import { generateCanvasLegend } from './legend';
 import { AsciiSerializer } from './ascii';
 import { computeAABB, sanitizeMarkdown } from './geometry';
 import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalog';
+import { isUntouchedRoleLabel } from '../annotation/roleDefaults';
 import { detectSiblingPatterns } from './patterns';
 import { AI_DIRECTIVE_HEADER } from './directive';
 
@@ -38,34 +39,44 @@ export function inferPlacement(
   parent: IRNode | null
 ): 'header' | 'body' | 'footer' | 'nested' | '—' {
   if (!parent) {
-    if (node.widgetType === 'page') {
+    if (node.widgetType === 'page' || node.role === 'page') {
       return '—';
     }
-    if (node.widgetType === 'navbar' || node.widgetType === 'header') {
+    if (node.widgetType === 'navbar' || node.widgetType === 'header' || node.role === 'navbar') {
       return 'header';
     }
-    if (node.widgetType === 'footer') {
+    if (node.widgetType === 'footer' || node.role === 'footer') {
       return 'footer';
     }
     return 'body';
   }
 
-  // Widget TYPE wins: footer/navbar widgets emit placement:type, never contradicted
-  if (node.widgetType === 'navbar' || node.widgetType === 'header') {
+  // Widget TYPE / ROLE wins: footer/navbar widgets emit placement:type, never contradicted
+  if (node.widgetType === 'navbar' || node.widgetType === 'header' || node.role === 'navbar') {
     return 'header';
   }
-  if (node.widgetType === 'footer') {
+  if (node.widgetType === 'footer' || node.role === 'footer') {
     return 'footer';
   }
 
   // If direct child of a [page] root, infer from geometry relative to the page box
-  if (parent.widgetType === 'page') {
+  if (parent.widgetType === 'page' || parent.role === 'page') {
+    if (
+      node.isUnit ||
+      node.role === 'card' ||
+      node.role === 'avatar' ||
+      node.role === 'button' ||
+      node.role === 'heading'
+    ) {
+      return 'nested';
+    }
+
     const pageBounds = parent.bounds;
     const pageH = pageBounds.h;
     const pageW = pageBounds.w;
 
     const relTop = node.bounds.y - pageBounds.y;
-    const widthRatio = node.bounds.w / pageW;
+    const widthRatio = pageW > 0 ? node.bounds.w / pageW : 0;
     const isWideEnough = widthRatio >= 0.70;
 
     // Top 15% band
@@ -105,18 +116,33 @@ export class MarkDrawCompiler {
       alignTolerance: options?.alignTolerance ?? 3,
       includeTimestamp: options?.includeTimestamp ?? false,
       includeLegend: options?.includeLegend ?? false,
-      pageNote: options?.pageNote ?? ''
+      pageNote: options?.pageNote ?? '',
+      platform: options?.platform ?? 'web',
+      scope: options?.scope ?? null,
+      units: options?.units ?? []
     };
 
     // All compilation flows strictly Shapes -> IR -> Serializers
-    const ir: IRTree = buildIRTree(shapes, editor, opts.containmentThreshold, opts);
+    const ir: IRTree = buildIRTree(shapes, editor, opts.containmentThreshold, options);
 
-    const specBody = this.serializeSpecTable(ir.roots, opts);
+    let specBody = this.serializeSpecTable(ir.roots, opts);
+    if (ir.relations && ir.relations.length > 0) {
+      specBody += `\n\n${ir.relations.join('\n')}`;
+    }
+
     const gridBody = this.serializeSpatialGrid(ir.roots, opts.gridBandThreshold);
     const asciiBody = AsciiSerializer.serialize(ir.roots);
     const jsonAst = serializeIRToJsonAst(ir.roots);
 
-    const directivePrefix = `${AI_DIRECTIVE_HEADER}\n\n`;
+    let directivePrefix = `${AI_DIRECTIVE_HEADER}\n\n`;
+    if (ir.scopedMeta) {
+      const uCount = ir.scopedMeta.unitCount;
+      const nCount = ir.scopedMeta.nodeCount;
+      const uStr = `${uCount} unit${uCount === 1 ? '' : 's'}`;
+      const nStr = `${nCount} node${nCount === 1 ? '' : 's'}`;
+      directivePrefix = `_Scoped compile: "${ir.scopedMeta.scopeName}" — ${uStr}, ${nStr} (of ${ir.scopedMeta.totalNodes} in "${ir.scopedMeta.rootName}")_\n\n`;
+    }
+
     const legendPrefix = opts.includeLegend ? `${generateCanvasLegend(ir.roots)}\n\n---\n\n` : '';
     const warningSuffix =
       ir.skippedShapes && ir.skippedShapes > 0
@@ -185,6 +211,57 @@ export class MarkDrawCompiler {
     node: IRNode | LayoutNode,
     parent?: IRNode | LayoutNode | null
   ): string {
+    if ((node as IRNode).isAnnotationNode) {
+      const irNode = node as IRNode;
+      const p = irNode.textProps;
+      const pairs: string[] = [];
+
+      if (irNode.isUnit && irNode.unitName) {
+        pairs.push(`unit:"${irNode.unitName}"`);
+      }
+
+      if (irNode.role === 'page' && p?.isResponsive) {
+        pairs.push('responsive');
+      }
+
+      if (p) {
+        if (
+          p.variant &&
+          p.variant !== 'default' &&
+          p.variant !== 'solid' &&
+          p.variant !== 'outline'
+        ) {
+          pairs.push(`variant="${p.variant}"`);
+        }
+        if (p.placeholder) {
+          pairs.push(`placeholder="${p.placeholder}"`);
+        }
+        if (p.options) {
+          pairs.push(`options=[${p.options}]`);
+        }
+        if (typeof p.value === 'number' && p.value > 0) {
+          pairs.push(`value=${p.value}`);
+        }
+        if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
+          const otherFlags = p.behaviors.filter((f) => f !== 'responsive');
+          if (otherFlags.length > 0) {
+            pairs.push(...otherFlags);
+          }
+        }
+        if (p.note) {
+          pairs.push(`note:"${p.note}"`);
+        }
+        if (p.hideOnMobile) {
+          pairs.push('sm:hidden');
+        }
+        if (typeof p.mobileOrder === 'number') {
+          pairs.push(`sm:order-${p.mobileOrder}`);
+        }
+      }
+
+      return pairs.join(' ');
+    }
+
     const p = (node as IRNode).textProps || (node as LayoutNode).widgetProps;
     const style = node.style;
     if (!p && !style) return '—';
@@ -447,11 +524,28 @@ export class MarkDrawCompiler {
       const notation = formatSemanticNotation(node);
 
       let childBadges = '—';
-      if (node.children.length > 0) {
+      if (node.isUnit && node.children.length > 0) {
+        childBadges = node.children
+          .map((c) => {
+            const raw = c.textProps?.label || c.label;
+            const hasLit = !isUntouchedRoleLabel(c.role, raw);
+            if (c.role === 'button' && hasLit) {
+              return `"${raw}"`;
+            }
+            return c.role;
+          })
+          .join(', ');
+      } else if (node.children.length === 1 && node.children[0].isUnit) {
+        childBadges = `1 × [${node.children[0].unitName || node.children[0].label}]`;
+      } else if (node.children.length > 0) {
         childBadges = detectSiblingPatterns(node.children);
       } else {
         const rawLabel = node.textProps?.label || node.label;
-        if (isUntouchedLabel(node.widgetType, rawLabel)) {
+        const isUntouched = (node as IRNode).isAnnotationNode
+          ? isUntouchedRoleLabel(node.role, rawLabel)
+          : isUntouchedLabel(node.widgetType, rawLabel);
+
+        if (isUntouched) {
           childBadges = '"content: [Text Placeholder]"';
         } else if (rawLabel) {
           childBadges = `"${rawLabel}"`;
@@ -460,7 +554,9 @@ export class MarkDrawCompiler {
         }
       }
 
-      const semanticsBadge = `<${capitalize(node.widgetType || node.role)}>`;
+      const semanticsBadge = `<${capitalize(
+        node.isAnnotationNode ? node.role : node.widgetType || node.role
+      )}>`;
       const placement = inferPlacement(node, parent);
       const layoutFlow =
         node.children.length > 0
@@ -469,9 +565,10 @@ export class MarkDrawCompiler {
             : node.direction
           : '—';
       const propsStr = this.formatProps(node, parent);
+      const propsCol = propsStr ? ` ${propsStr} ` : ' ';
 
       rows.push(
-        `| \`${node.path}\` | **${notation}** | ${semanticsBadge} | ${placement} | ${layoutFlow} | ${propsStr} | ${childBadges} |`
+        `| \`${node.path}\` | **${notation}** | ${semanticsBadge} | ${placement} | ${layoutFlow} |${propsCol}| ${childBadges} |`
       );
       for (const child of node.children) {
         walk(child, node);

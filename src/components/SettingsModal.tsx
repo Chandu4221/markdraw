@@ -38,7 +38,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       alignTolerance: 3,
       includeTimestamp: false,
       includeLegend: false,
-      pageNote: options.pageNote || ''
+      pageNote: options.pageNote || '',
+      platform: options.platform ?? 'web',
+      scope: options.scope ?? null,
+      units: options.units ?? []
     });
   };
 

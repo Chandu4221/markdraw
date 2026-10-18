@@ -1,5 +1,6 @@
 import { IRNode } from './ir';
 import { isUntouchedLabel, getCatalogDefaultProps } from './widgets/widgetCatalog';
+import { isUntouchedRoleLabel } from '../annotation/roleDefaults';
 
 function escapeNotation(str: string): string {
   if (!str) return '';
@@ -34,6 +35,100 @@ function getEffectiveProp(type: string, key: string, val?: any): any {
  * Behavior flags are emitted in-tag after variant: [navbar "Home, Menu" floating sticky]
  */
 export function formatSemanticNotation(node: IRNode): string {
+  if (node.isUnit && node.unitName) {
+    return `[${node.unitName}]`;
+  }
+
+  if (node.isAnnotationNode) {
+    const role = node.role;
+    const p = node.textProps || {};
+    const rawLabel = p.label || node.label;
+    const hasLiteral = !isUntouchedRoleLabel(role, rawLabel);
+    const primaryLabel = hasLiteral ? rawLabel : '';
+
+    let tag = '';
+    switch (role) {
+      case 'page': {
+        tag = primaryLabel ? `[page "${escapeNotation(primaryLabel)}"]` : '[page]';
+        break;
+      }
+      case 'heading': {
+        const v = p.variant;
+        const varSuffix = v && v !== 'default' ? ` ${v}` : '';
+        tag = primaryLabel
+          ? `[heading "${escapeNotation(primaryLabel)}"${varSuffix}]`
+          : varSuffix
+          ? `[heading${varSuffix}]`
+          : '[heading]';
+        break;
+      }
+      case 'button': {
+        const v = p.variant;
+        const varSuffix = v && v !== 'default' && v !== 'solid' ? ` ${v}` : '';
+        tag = primaryLabel
+          ? `[button "${escapeNotation(primaryLabel)}"${varSuffix}]`
+          : varSuffix
+          ? `[button${varSuffix}]`
+          : '[button]';
+        break;
+      }
+      case 'avatar': {
+        tag = '[avatar]';
+        break;
+      }
+      case 'card': {
+        const v = p.variant;
+        const varSuffix = v && v !== 'default' && v !== 'outline' ? ` ${v}` : '';
+        tag = primaryLabel
+          ? `[card "${escapeNotation(primaryLabel)}"${varSuffix}]`
+          : varSuffix
+          ? `[card${varSuffix}]`
+          : '[card]';
+        break;
+      }
+      case 'section': {
+        const v = p.variant;
+        const varSuffix = v && v !== 'default' ? ` ${v}` : '';
+        tag = primaryLabel
+          ? `[section "${escapeNotation(primaryLabel)}"${varSuffix}]`
+          : varSuffix
+          ? `[section${varSuffix}]`
+          : '[section]';
+        break;
+      }
+      case 'para': {
+        tag = '[para]';
+        break;
+      }
+      case 'img': {
+        tag = '[img]';
+        break;
+      }
+      case 'video': {
+        tag = '[video]';
+        break;
+      }
+      default: {
+        const v = p.variant;
+        const varSuffix = v && v !== 'default' ? ` ${v}` : '';
+        tag = primaryLabel
+          ? `[${role} "${escapeNotation(primaryLabel)}"${varSuffix}]`
+          : varSuffix
+          ? `[${role}${varSuffix}]`
+          : `[${role}]`;
+        break;
+      }
+    }
+
+    if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {
+      const nonRespFlags = p.behaviors.filter((f) => f !== 'responsive');
+      if (nonRespFlags.length > 0 && tag.endsWith(']')) {
+        return `${tag.slice(0, -1)} ${nonRespFlags.join(' ')}]`;
+      }
+    }
+    return tag;
+  }
+
   const baseTag = formatBaseNotation(node);
   const p = node.textProps || {};
   if (Array.isArray(p.behaviors) && p.behaviors.length > 0) {

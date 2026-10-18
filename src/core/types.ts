@@ -176,6 +176,9 @@ export interface CompilationOptions {
   includeTimestamp?: boolean;    // default false (for determinism)
   includeLegend?: boolean;       // default false
   pageNote?: string;             // page-level note in document header
+  platform?: 'web' | 'android-material';
+  scope?: { shapeIds: string[]; scopeName?: string } | null;
+  units?: import('../annotation/units').UnitDefinition[];
 }
 
 export interface CompilationResult {

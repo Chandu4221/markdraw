@@ -25,6 +25,7 @@ export interface RoleProps {
   options?: string;        // select/tabs: comma list
   note?: string;           // free-text hint to AI — NON-BINDING, always emitted as note:"..."
   variant?: string;        // role-specific variant (e.g. card: elevated|outline|ghost)
+  behaviors?: string[];    // role behavior flags (§4 allow-list)
 }
 
 export function createDefaultMarkDrawMeta(role: string | null = null): MarkDrawMeta {

@@ -16,6 +16,8 @@ import CompileWorker from './core/compile.worker?worker';
 import { CompileWorkerResponse } from './core/compile.worker';
 import { useRenderMode, setRenderMode } from './core/renderMode';
 import { isAnnotationModeActive } from './annotation/config';
+import { RolePanel } from './components/RolePanel';
+import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
 
 export const ANNOTATION_MODE = isAnnotationModeActive();
 import {
@@ -96,7 +98,10 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   alignTolerance: 3,
   includeTimestamp: false,
   includeLegend: false,
-  pageNote: ''
+  pageNote: '',
+  platform: 'web',
+  scope: null,
+  units: []
 };
 
 export const App: React.FC = () => {
@@ -166,6 +171,12 @@ export const App: React.FC = () => {
   // Canvas Labels Toggle (Task 5: Persisted in localStorage)
   const [showLabels, setShowLabels] = useState<boolean>(() => {
     const saved = localStorage.getItem('markdraw_show_labels');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  // Canvas Role Chips Toggle (v4 Annotation Mode: default on)
+  const [showRoleChips] = useState<boolean>(() => {
+    const saved = localStorage.getItem('markdraw_show_role_chips');
     return saved !== null ? saved === 'true' : true;
   });
 
@@ -1062,35 +1073,39 @@ export const App: React.FC = () => {
           {activeDrag !== null && <div className="fixed inset-0 z-50 cursor-col-resize select-none" />}
 
           {/* Left Component Palette Rail */}
-          <ComponentPalette
-            isOpen={isPaletteOpen}
-            width={paletteWidth}
-            isDragging={activeDrag === 'left'}
-            onInsertWidget={handleInsertWidget}
-          />
+          {!ANNOTATION_MODE && (
+            <>
+              <ComponentPalette
+                isOpen={isPaletteOpen}
+                width={paletteWidth}
+                isDragging={activeDrag === 'left'}
+                onInsertWidget={handleInsertWidget}
+              />
 
-          {/* Left Resizer Divider */}
-          <div
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="Resize component palette"
-            tabIndex={isPaletteOpen ? 0 : -1}
-            className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
-              isPaletteOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
-            } ${
-              activeDrag === 'left' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
-            }`}
-            onMouseDown={isPaletteOpen ? startResizingLeft : undefined}
-            onDoubleClick={() => {
-              setPaletteWidth(260);
-              try {
-                localStorage.setItem('markdraw_palette_width', '260');
-              } catch {}
-            }}
-            title="Drag to resize (Double-click to reset 260px)"
-          >
-            <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
-          </div>
+              {/* Left Resizer Divider */}
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize component palette"
+                tabIndex={isPaletteOpen ? 0 : -1}
+                className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
+                  isPaletteOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
+                } ${
+                  activeDrag === 'left' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
+                }`}
+                onMouseDown={isPaletteOpen ? startResizingLeft : undefined}
+                onDoubleClick={() => {
+                  setPaletteWidth(260);
+                  try {
+                    localStorage.setItem('markdraw_palette_width', '260');
+                  } catch {}
+                }}
+                title="Drag to resize (Double-click to reset 260px)"
+              >
+                <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
+              </div>
+            </>
+          )}
 
           {/* Split Area: Canvas + Resizer + Output */}
           <div className="flex-1 flex h-full overflow-hidden relative" ref={splitAreaRef}>
@@ -1105,15 +1120,23 @@ export const App: React.FC = () => {
               <Tldraw
                 key={activeDoc.id}
                 persistenceKey={activeDoc.persistenceKey}
-                shapeUtils={customShapeUtils}
-                components={tldrawComponents}
+                shapeUtils={ANNOTATION_MODE ? [] : customShapeUtils}
+                components={ANNOTATION_MODE ? undefined : tldrawComponents}
                 onMount={handleEditorMount}
               />
 
-              {/* Properties Panel */}
-              <PropsPanel editor={editor} onOpenMobilePreview={handleOpenMobilePreview} />
+              {/* Properties / Role Panel & Role Chips */}
+              {ANNOTATION_MODE ? (
+                <>
+                  <RoleChipsOverlay editor={editor} showChips={showRoleChips} />
+                  <RolePanel editor={editor} />
+                </>
+              ) : (
+                <PropsPanel editor={editor} onOpenMobilePreview={handleOpenMobilePreview} />
+              )}
 
               {/* Floating Canvas Controls Bar */}
+              {!ANNOTATION_MODE && (
               <div
                 role="toolbar"
                 aria-label="Canvas Actions"
@@ -1306,6 +1329,7 @@ export const App: React.FC = () => {
                   </button>
                 </div>
               </div>
+              )}
 
               {/* Toast Message */}
               {toastMessage && (

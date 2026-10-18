@@ -6,6 +6,8 @@ import { InferredStyle, inferNodeStyle } from './style';
 import { AI_DIRECTIVE_HEADER } from './directive';
 import { generateShortId } from './ids';
 import { annotateSiblingPatterns } from './patterns';
+import { getShapeMeta } from '../annotation/shapeMeta';
+import { isAllowedRoleFlag } from '../annotation/roles';
 
 export interface IRBounds {
   h: number;
@@ -48,6 +50,10 @@ export interface IRNode {
   parent: string | null;
   path: string;
   role: string;
+  unitId?: string;
+  unitName?: string;
+  isUnit?: boolean;
+  isAnnotationNode?: boolean;
   style?: InferredStyle;
   textProps: IRTextProps;
   widgetType: string;
@@ -59,6 +65,14 @@ export interface IRTree {
   roots: IRNode[];
   skippedShapes?: number;
   lints?: string[];
+  scopedMeta?: {
+    scopeName: string;
+    unitCount: number;
+    nodeCount: number;
+    totalNodes: number;
+    rootName: string;
+  };
+  relations?: string[];
 }
 
 export function resolveWidgetRole(widgetType: string): string {
@@ -185,7 +199,21 @@ export function buildIRTree(
   containmentThreshold: number = 0.85,
   options?: CompilationOptions
 ): IRTree {
-  // Only process ui-widget shapes; ignore everything else
+  // If legacy ui-widget shapes are present, use legacy widget tree builder
+  const hasWidgets = shapes.some((s) => s.type === 'ui-widget');
+  if (hasWidgets) {
+    return buildLegacyWidgetIRTree(shapes, editor, containmentThreshold, options);
+  }
+
+  return buildAnnotationIRTree(shapes, editor, containmentThreshold, options);
+}
+
+function buildLegacyWidgetIRTree(
+  shapes: TLShape[],
+  editor?: Editor | null,
+  containmentThreshold: number = 0.85,
+  options?: CompilationOptions
+): IRTree {
   const widgetShapes = shapes.filter((s) => s.type === 'ui-widget');
   if (widgetShapes.length === 0) {
     return { elementCount: 0, roots: [], lints: [] };
@@ -419,6 +447,496 @@ export function buildIRTree(
     roots,
     skippedShapes,
     lints
+  };
+}
+
+function countSubtree(node?: IRNode): number {
+  if (!node) return 0;
+  let count = 1;
+  for (const c of node.children) {
+    count += countSubtree(c);
+  }
+  return count;
+}
+
+function buildAnnotationIRTree(
+  shapes: TLShape[],
+  editor?: Editor | null,
+  _containmentThreshold: number = 0.85,
+  options?: CompilationOptions
+): IRTree {
+  if (shapes.length === 0) {
+    return { elementCount: 0, roots: [], lints: [] };
+  }
+
+  const usedShortIds = new Set<string>();
+  const rawLints: { text: string; shapeId?: string }[] = [];
+  const relations: string[] = [];
+
+  // Group shapes by category
+  const frames = shapes.filter((s) => s.type === 'frame');
+  const groups = shapes.filter((s) => s.type === 'group');
+  const arrows = shapes.filter((s) => s.type === 'arrow');
+  const otherShapes = shapes.filter(
+    (s) => s.type !== 'frame' && s.type !== 'group' && s.type !== 'arrow' && s.type !== 'line'
+  );
+
+  // Helper to extract bounds
+  const getBounds = (shape: TLShape): IRBounds => {
+    if (editor && typeof editor.getShapePageBounds === 'function') {
+      const b = editor.getShapePageBounds(shape);
+      if (b) return { x: b.x, y: b.y, w: b.w, h: b.h };
+    }
+    const p = (shape.props as Record<string, unknown>) || {};
+    const w = typeof p.w === 'number' ? p.w : 100;
+    const h = typeof p.h === 'number' ? p.h : 100;
+    const x = shape.x || 0;
+    const y = shape.y || 0;
+    return { x, y, w, h };
+  };
+
+  // Identify tagged shapes and untagged shapes
+  const taggedShapes: TLShape[] = [];
+  const untaggedShapes: TLShape[] = [];
+
+  for (const s of otherShapes) {
+    const meta = getShapeMeta(s);
+    if (meta && meta.role) {
+      taggedShapes.push(s);
+    } else {
+      untaggedShapes.push(s);
+    }
+  }
+
+  // Lint §13: Skipped {n} untagged shapes: {ids} — assign roles or delete.
+  if (untaggedShapes.length > 0) {
+    const ids = untaggedShapes.map((s) => `#${generateShortId(s.id, usedShortIds)}`);
+    rawLints.push({
+      text: `Skipped ${untaggedShapes.length} untagged shapes: ${ids.join(', ')} — assign roles or delete.`
+    });
+  }
+
+  // Build node lookup map
+  const nodeMap = new Map<string, IRNode>();
+  const allShapesMap = new Map<string, TLShape>();
+  for (const s of shapes) {
+    allShapesMap.set(s.id, s);
+  }
+
+  // Units lookup from options
+  const unitDefs = options?.units || [];
+
+  // 1. Process custom units / groups
+  for (const g of groups) {
+    const gMeta = getShapeMeta(g);
+    let unitId = gMeta?.unitId || null;
+
+    // Find children in tldraw group
+    const memberShapes = shapes.filter((s) => s.parentId === g.id);
+
+    if (!unitId) {
+      for (const m of memberShapes) {
+        const mMeta = getShapeMeta(m);
+        if (mMeta?.unitId) {
+          unitId = mMeta.unitId;
+          break;
+        }
+      }
+    }
+
+    const unitDef = unitId ? unitDefs.find((u) => u.id === unitId) : null;
+    const isUnit = Boolean(unitId || unitDef || (gMeta && gMeta.role === 'card'));
+
+    const baseRole = unitDef?.baseRole || gMeta?.role || (isUnit ? 'card' : 'group');
+    const unitName =
+      unitDef?.name ||
+      gMeta?.props?.label ||
+      ((g.props as Record<string, unknown>)?.name as string) ||
+      (isUnit ? 'Follow Card' : 'group');
+
+    let bounds = getBounds(g);
+    if (bounds.w <= 100 && bounds.h <= 100 && memberShapes.length > 0) {
+      const childBounds = memberShapes.map(getBounds);
+      const minX = Math.min(...childBounds.map((b) => b.x));
+      const minY = Math.min(...childBounds.map((b) => b.y));
+      const maxX = Math.max(...childBounds.map((b) => b.x + b.w));
+      const maxY = Math.max(...childBounds.map((b) => b.y + b.h));
+      bounds = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+
+    const shortId = generateShortId(g.id, usedShortIds);
+
+    const groupNode: IRNode = {
+      id: g.id,
+      shortId,
+      parentId: gMeta?.parentId || undefined,
+      label: unitName,
+      parent: null,
+      path: 'Root',
+      role: baseRole,
+      unitId: unitId || (isUnit ? 'u_unit' : undefined),
+      unitName: isUnit ? unitName : undefined,
+      isUnit,
+      bounds,
+      children: [],
+      direction: 'Leaf',
+      textProps: {
+        label: unitName
+      },
+      widgetType: baseRole,
+      isAnnotationNode: true
+    };
+
+    nodeMap.set(g.id, groupNode);
+  }
+
+  // 2. Process tagged shapes
+  for (const s of taggedShapes) {
+    const meta = getShapeMeta(s)!;
+    const role = meta.role!;
+    const rawLabel = meta.props?.label || ((s.props as Record<string, unknown>)?.text as string) || '';
+    const label = sanitizeMarkdown(rawLabel);
+    const shortId = generateShortId(s.id, usedShortIds);
+    const bounds = getBounds(s);
+
+    // Filter flags against allow-list (§4, §13)
+    const behaviors: string[] = [];
+    if (Array.isArray(meta.props?.behaviors)) {
+      for (const flag of meta.props.behaviors) {
+        if (isAllowedRoleFlag(role, flag)) {
+          behaviors.push(flag);
+        } else {
+          rawLints.push({
+            text: `Flag "${flag}" has no meaning for role "${role}" — dropped.`,
+            shapeId: s.id
+          });
+        }
+      }
+    }
+
+    const textProps: IRTextProps = {
+      label: rawLabel || undefined,
+      placeholder: meta.props?.placeholder,
+      variant: meta.props?.variant,
+      options: meta.props?.options,
+      note: meta.props?.note,
+      behaviors: behaviors.length > 0 ? behaviors : undefined
+    };
+
+    if (meta.responsive) {
+      if (meta.responsive.smVisible === 'hidden') textProps.hideOnMobile = true;
+      if (typeof meta.responsive.order === 'number') textProps.mobileOrder = meta.responsive.order;
+    }
+
+    const node: IRNode = {
+      id: s.id,
+      shortId,
+      parentId: meta.parentId || undefined,
+      label: label || role,
+      parent: null,
+      path: 'Root',
+      role,
+      bounds,
+      children: [],
+      direction: 'Leaf',
+      textProps,
+      widgetType: role,
+      isAnnotationNode: true
+    };
+
+    nodeMap.set(s.id, node);
+  }
+
+  // 3. Process frames
+  const frameNodes: IRNode[] = [];
+  for (const f of frames) {
+    const meta = getShapeMeta(f);
+    const role = meta?.role || 'page';
+    const rawName = meta?.props?.label || ((f.props as Record<string, unknown>)?.name as string) || 'Page';
+    const label = sanitizeMarkdown(rawName);
+    const shortId = generateShortId(f.id, usedShortIds);
+    const bounds = getBounds(f);
+
+    const isResp = Boolean(
+      meta?.responsive ||
+      meta?.props?.behaviors?.includes('responsive') ||
+      (f.props as Record<string, unknown>)?.isResponsive
+    );
+
+    const behaviors: string[] = [];
+    if (isResp) behaviors.push('responsive');
+
+    const frameNode: IRNode = {
+      id: f.id,
+      shortId,
+      label,
+      parent: null,
+      path: 'Root',
+      role,
+      bounds,
+      children: [],
+      direction: 'Leaf',
+      textProps: {
+        label: rawName,
+        isResponsive: isResp,
+        behaviors: behaviors.length > 0 ? behaviors : undefined
+      },
+      widgetType: role,
+      isAnnotationNode: true
+    };
+
+    nodeMap.set(f.id, frameNode);
+    frameNodes.push(frameNode);
+  }
+
+  // 4. Resolve Parentage Priority (§6.3)
+  const nonFrameNodes = [...groups, ...taggedShapes]
+    .map((s) => nodeMap.get(s.id))
+    .filter((n): n is IRNode => Boolean(n));
+
+  const looseShapes: IRNode[] = [];
+
+  for (const node of nonFrameNodes) {
+    const s = allShapesMap.get(node.id)!;
+    const meta = getShapeMeta(s);
+    let assignedParentId: string | null = null;
+
+    // 1) Explicit parentId check
+    if (meta?.parentId) {
+      const targetShape = allShapesMap.get(meta.parentId);
+      const targetNode = nodeMap.get(meta.parentId);
+      if (targetShape && targetNode && targetNode.id !== node.id) {
+        const nodeAABB = computeAABB(node.bounds);
+        const targetAABB = computeAABB(targetNode.bounds);
+        const ratio = getEnclosureRatio(nodeAABB, targetAABB);
+        if (ratio >= 0.5) {
+          assignedParentId = targetNode.id;
+        } else {
+          rawLints.push({
+            text: `#${node.shortId} has stale parentId "${meta.parentId}" — clear it or move the shape back inside.`,
+            shapeId: node.id
+          });
+        }
+      } else {
+        rawLints.push({
+          text: `#${node.shortId} has stale parentId "${meta.parentId}" — clear it or move the shape back inside.`,
+          shapeId: node.id
+        });
+      }
+    }
+
+    // 2) Enclosing native group check
+    if (!assignedParentId && s.parentId && nodeMap.has(s.parentId)) {
+      const parentShape = allShapesMap.get(s.parentId);
+      if (parentShape && parentShape.type === 'group') {
+        assignedParentId = s.parentId;
+      }
+    }
+
+    // 3) Enclosing frame check
+    if (!assignedParentId) {
+      if (s.parentId && nodeMap.has(s.parentId)) {
+        const parentShape = allShapesMap.get(s.parentId);
+        if (parentShape && parentShape.type === 'frame') {
+          assignedParentId = s.parentId;
+        }
+      }
+      if (!assignedParentId && frameNodes.length > 0) {
+        for (const fn of frameNodes) {
+          const fnAABB = computeAABB(fn.bounds);
+          const nAABB = computeAABB(node.bounds);
+          if (getEnclosureRatio(nAABB, fnAABB) >= 0.5) {
+            assignedParentId = fn.id;
+            break;
+          }
+        }
+      }
+    }
+
+    if (assignedParentId) {
+      const parentNode = nodeMap.get(assignedParentId);
+      if (parentNode) {
+        parentNode.children.push(node);
+        node.parent = parentNode.id;
+      } else {
+        looseShapes.push(node);
+      }
+    } else {
+      looseShapes.push(node);
+    }
+  }
+
+  // 5. Frame skipping (§6.2, §13): Frame "<name>" has no tagged shapes — skipped.
+  const activeRoots: IRNode[] = [];
+  for (const fn of frameNodes) {
+    if (fn.children.length === 0) {
+      rawLints.push({
+        text: `Frame "${fn.label}" has no tagged shapes — skipped.`,
+        shapeId: fn.id
+      });
+    } else {
+      activeRoots.push(fn);
+    }
+  }
+
+  if (frameNodes.length === 0 && looseShapes.length > 0) {
+    activeRoots.push(...looseShapes);
+  } else if (looseShapes.length > 0 && !options?.scope) {
+    rawLints.push({
+      text: `${looseShapes.length} loose shapes outside any frame — move into a frame or select to compile.`
+    });
+  }
+
+  // 6. Responsive check (§8.2, §13)
+  const hasResponsiveRoot = activeRoots.some((r) => r.role === 'page' && r.textProps?.isResponsive);
+  if (!hasResponsiveRoot) {
+    for (const n of nonFrameNodes) {
+      if (n.textProps?.hideOnMobile || typeof n.textProps?.mobileOrder === 'number') {
+        rawLints.push({
+          text: `Responsive props on #${n.shortId} but no responsive root page — tokens not emitted.`,
+          shapeId: n.id
+        });
+        delete n.textProps.hideOnMobile;
+        delete n.textProps.mobileOrder;
+      }
+    }
+  }
+
+  // 7. Arrows / Relations (§6.5, §13)
+  for (const arr of arrows) {
+    const props = (arr.props as Record<string, unknown>) || {};
+    const startBound = (props.start as Record<string, unknown>)?.boundShapeId as string | undefined;
+    const endBound = (props.end as Record<string, unknown>)?.boundShapeId as string | undefined;
+    if (startBound && endBound) {
+      const startNode = nodeMap.get(startBound);
+      const endNode = nodeMap.get(endBound);
+      if (startNode && endNode) {
+        const text = ((props.text as string) || '').trim();
+        const rel = text ? ` (${text})` : '';
+        relations.push(`Relations: #${startNode.shortId} → #${endNode.shortId}${rel}`);
+      } else {
+        rawLints.push({
+          text: 'Arrow endpoint untagged — relation omitted.',
+          shapeId: arr.id
+        });
+      }
+    }
+  }
+
+  // 8. Scope handling (§9.1)
+  let scopedMeta: IRTree['scopedMeta'];
+  let scopedIds: Set<string> | null = null;
+  if (options?.scope?.shapeIds && options.scope.shapeIds.length > 0) {
+    const rawIds = options.scope.shapeIds;
+    scopedIds = new Set<string>();
+
+    for (const id of rawIds) scopedIds.add(id);
+
+    let added = true;
+    while (added) {
+      added = false;
+      for (const [id, n] of nodeMap.entries()) {
+        if (!scopedIds.has(id) && n.parent && scopedIds.has(n.parent)) {
+          scopedIds.add(id);
+          added = true;
+        }
+      }
+    }
+
+    for (const id of Array.from(scopedIds)) {
+      let curr = nodeMap.get(id);
+      while (curr && curr.parent) {
+        scopedIds.add(curr.parent);
+        curr = nodeMap.get(curr.parent);
+      }
+    }
+
+    const primaryNode = nodeMap.get(rawIds[0]);
+    const scopeName =
+      options.scope.scopeName ||
+      primaryNode?.unitName ||
+      primaryNode?.label ||
+      primaryNode?.role ||
+      'Selection';
+
+    const rootFrame = activeRoots.find((r) => scopedIds!.has(r.id)) || activeRoots[0];
+    const totalNodesUnderRoot = countSubtree(rootFrame) - 1;
+
+    const filterSubtree = (node: IRNode) => {
+      node.children = node.children.filter((c) => scopedIds!.has(c.id));
+      for (const c of node.children) {
+        filterSubtree(c);
+      }
+    };
+
+    for (const r of activeRoots) {
+      filterSubtree(r);
+    }
+
+    const nodeCountInScope =
+      primaryNode && primaryNode.isUnit
+        ? primaryNode.children.length
+        : countSubtree(primaryNode || rootFrame) - 1;
+    const unitCountInScope = Array.from(scopedIds).filter((id) => nodeMap.get(id)?.isUnit).length;
+
+    scopedMeta = {
+      scopeName,
+      unitCount: Math.max(1, unitCountInScope),
+      nodeCount: Math.max(1, nodeCountInScope),
+      totalNodes: totalNodesUnderRoot,
+      rootName: rootFrame ? rootFrame.label : 'Canvas'
+    };
+  }
+
+  // 9. Process subtrees: layout flow direction, sorting, sibling patterns, paths
+  const processSubtree = (node: IRNode, currentPath: string, depth: number) => {
+    node.path = currentPath;
+    if (node.children.length > 0) {
+      node.direction = inferDirection(node.children);
+      sortChildren(node.children, node.direction);
+      annotateSiblingPatterns(node.children);
+
+      for (const child of node.children) {
+        const nextPath = `${currentPath} > #${child.shortId}`;
+        processSubtree(child, nextPath, depth + 1);
+      }
+    } else {
+      node.direction = 'Leaf';
+    }
+  };
+
+  for (const root of activeRoots) {
+    const rootPath = `Root > #${root.shortId}`;
+    processSubtree(root, rootPath, 0);
+  }
+
+  // Attach computed styles to every node
+  const attachStyles = (curr: IRNode, parent: IRNode | null, siblings: IRNode[]) => {
+    curr.style = inferNodeStyle(curr, parent, siblings, options);
+    for (const child of curr.children) {
+      attachStyles(child, curr, curr.children);
+    }
+  };
+
+  for (const root of activeRoots) {
+    attachStyles(root, null, activeRoots);
+  }
+
+  let finalLints: string[];
+  if (scopedIds && scopedIds.size > 0) {
+    finalLints = rawLints
+      .filter((l) => l.shapeId && scopedIds!.has(l.shapeId))
+      .map((l) => l.text);
+  } else {
+    finalLints = rawLints.map((l) => l.text);
+  }
+
+  return {
+    elementCount: nodeMap.size,
+    roots: activeRoots,
+    lints: finalLints,
+    scopedMeta,
+    relations: relations.length > 0 ? relations : undefined
   };
 }
 
