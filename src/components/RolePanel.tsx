@@ -11,7 +11,8 @@ import {
   Layers,
   StickyNote,
   Box,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import {
   ROLE_DEFINITIONS,
@@ -22,6 +23,14 @@ import {
 } from '../annotation/roles';
 import { getShapeMeta, updateShapeMeta, suggestRoleForShape } from '../annotation/shapeMeta';
 import { MarkDrawMeta, RoleResponsive } from '../annotation/types';
+import {
+  UnitDefinition,
+  getStoredUnits,
+  saveStoredUnit,
+  deleteStoredUnit,
+  createUnitDefinition,
+  stampUnit
+} from '../annotation/units';
 import { Input } from '@/components/ui/input';
 
 interface RolePanelProps {
@@ -34,6 +43,47 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
   const [roleSearch, setRoleSearch] = useState('');
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [storedUnits, setStoredUnits] = useState<UnitDefinition[]>([]);
+  const [showSaveUnitDialog, setShowSaveUnitDialog] = useState(false);
+  const [newUnitName, setNewUnitName] = useState('');
+  const [newUnitBaseRole, setNewUnitBaseRole] = useState<RoleName>('card');
+  const [stampOffsetCount, setStampOffsetCount] = useState(0);
+
+  const refreshUnits = () => {
+    setStoredUnits(getStoredUnits());
+  };
+
+  useEffect(() => {
+    refreshUnits();
+  }, []);
+
+  const handleSaveUnit = () => {
+    if (!editor || !newUnitName.trim() || selectedShapes.length === 0) return;
+    const unit = createUnitDefinition(newUnitName.trim(), newUnitBaseRole, selectedShapes);
+    saveStoredUnit(unit);
+    refreshUnits();
+
+    const ids = selectedShapes.map((s) => s.id);
+    updateShapeMeta(editor, ids, { unitId: unit.id });
+
+    setShowSaveUnitDialog(false);
+    setNewUnitName('');
+  };
+
+  const handleStampUnit = (unit: UnitDefinition) => {
+    if (!editor) return;
+    const offset = { x: stampOffsetCount * 20, y: stampOffsetCount * 20 };
+    setStampOffsetCount((prev) => (prev + 1) % 10);
+    const groupId = stampUnit(editor, unit, offset);
+    if (groupId) {
+      editor.setSelectedShapes([groupId as any]);
+    }
+  };
+
+  const handleDeleteUnit = (id: string) => {
+    deleteStoredUnit(id);
+    refreshUnits();
+  };
 
   useEffect(() => {
     if (!editor) return;
@@ -205,6 +255,80 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
             <span className="text-[var(--md-text-muted)]">Roots (Frames):</span>
             <span className="font-mono font-semibold">{frames.length}</span>
           </div>
+
+          {/* Root frames list */}
+          {frames.length > 0 && (
+            <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]">
+              <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider">
+                Root Frames
+              </span>
+              <div className="space-y-0.5">
+                {frames.map((f) => {
+                  const meta = getShapeMeta(f);
+                  const name = (f.props as any)?.name || meta?.props?.label || 'Page';
+                  return (
+                    <div
+                      key={f.id}
+                      onClick={() => editor.setSelectedShapes([f.id])}
+                      className="flex items-center justify-between px-2 py-1 rounded bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] cursor-pointer text-[11px]"
+                    >
+                      <span className="font-medium truncate">{name}</span>
+                      <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                        {meta?.role || 'page'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* My units list */}
+          <div className="space-y-1.5 pt-1.5 border-t border-[var(--md-border)]">
+            <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider flex items-center justify-between">
+              <span>My Units ({storedUnits.length})</span>
+            </span>
+            {storedUnits.length === 0 ? (
+              <p className="text-[10px] text-[var(--md-text-subtle)] italic">
+                No custom units saved yet. Multi-select shapes to create one.
+              </p>
+            ) : (
+              <div className="space-y-1 max-h-36 overflow-y-auto">
+                {storedUnits.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between px-2 py-1 rounded border border-[var(--md-border)] bg-[var(--md-surface)] text-[11px]"
+                  >
+                    <div className="min-w-0 pr-1">
+                      <div className="font-semibold truncate">{u.name}</div>
+                      <div className="text-[9px] text-[var(--md-text-subtle)] truncate">
+                        {u.baseRole} • {u.memberRoles.join(', ')}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleStampUnit(u)}
+                        className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                        title="Stamp copy onto canvas"
+                      >
+                        Stamp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUnit(u.id)}
+                        className="p-1 text-[var(--md-text-subtle)] hover:text-red-500 cursor-pointer"
+                        title="Delete unit"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <p className="text-[11px] text-[var(--md-text-subtle)] leading-relaxed pt-1 border-t border-[var(--md-border)]">
             Select any shape on canvas to assign its semantic role, label, and hierarchy.
           </p>
@@ -503,16 +627,98 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
           </div>
 
           {/* 7. UNIT ACTIONS (Multi-select) */}
-          {count > 1 && onSaveAsUnit && (
+          {count > 1 && (
             <div className="pt-2 border-t border-[var(--md-border)]">
               <button
                 type="button"
-                onClick={() => onSaveAsUnit(selectedShapes.map((s) => s.id))}
-                className="w-full flex items-center justify-center gap-1.5 py-1 px-2 text-xs font-semibold rounded border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer shadow-xs"
+                onClick={() => {
+                  if (onSaveAsUnit) {
+                    onSaveAsUnit(selectedShapes.map((s) => s.id));
+                  }
+                  setShowSaveUnitDialog(true);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-semibold rounded border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer shadow-xs"
               >
-                <Box size={12} />
+                <Box size={13} />
                 <span>Save {count} shapes as Unit...</span>
               </button>
+            </div>
+          )}
+
+          {/* Save Unit Dialog Modal */}
+          {showSaveUnitDialog && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div
+                className="w-80 rounded-xl border border-[var(--md-border)] bg-[var(--md-surface)] p-4 shadow-2xl space-y-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-[var(--md-border)] pb-2">
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-[var(--md-text)]">
+                    <Box size={14} className="text-purple-500" />
+                    <span>Save as Custom Unit</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSaveUnitDialog(false)}
+                    className="text-xs text-[var(--md-text-muted)] hover:text-[var(--md-text)] cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--md-text-muted)]">
+                    Unit Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={newUnitName}
+                    onChange={(e) => setNewUnitName(e.target.value)}
+                    placeholder="e.g. follow-card, metric-tile"
+                    className="h-7 text-xs"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--md-text-muted)]">
+                    Base Role (§10 fallback)
+                  </label>
+                  <select
+                    value={newUnitBaseRole}
+                    onChange={(e) => setNewUnitBaseRole(e.target.value as RoleName)}
+                    className="w-full h-7 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)]"
+                  >
+                    {Object.values(ROLE_DEFINITIONS).map((r) => (
+                      <option key={r.name} value={r.name}>
+                        {r.name} ({r.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-[10px] text-[var(--md-text-subtle)] bg-[var(--md-surface-raised)] p-2 rounded">
+                  Members: {count} shapes ({selectedShapes.map((s) => getShapeMeta(s)?.role || s.type).join(', ')})
+                </div>
+
+                <div className="flex justify-end gap-2 pt-1 border-t border-[var(--md-border)]">
+                  <button
+                    type="button"
+                    onClick={() => setShowSaveUnitDialog(false)}
+                    className="px-2.5 py-1 text-xs rounded border border-[var(--md-border)] hover:bg-[var(--md-surface-hover)] text-[var(--md-text)] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!newUnitName.trim()}
+                    onClick={handleSaveUnit}
+                    className="px-3 py-1 text-xs font-semibold rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Save Unit
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

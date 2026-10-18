@@ -1,7 +1,11 @@
 // src/annotation/types.ts
 export const ROLE_SCHEMA_VERSION = 1 as const;
 
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | undefined };
+
 export interface MarkDrawMeta {
+  [key: string]: JsonValue | undefined;
   schema: 1;                     // literal 1
   role: string | null;           // one of ROLE_NAMES (§4) — null = untagged
   unitId: string | null;         // custom unit this shape was stamped from, else null
@@ -11,6 +15,7 @@ export interface MarkDrawMeta {
 }
 
 export interface RoleResponsive {
+  [key: string]: JsonValue | undefined;
   order: number | 'auto';
   primary: boolean;
   smVisible: 'visible' | 'hidden' | 'collapse:drawer' | 'collapse:bottom-bar' | 'collapse:hamburger';
@@ -19,6 +24,7 @@ export interface RoleResponsive {
 }
 
 export interface RoleProps {
+  [key: string]: JsonValue | undefined;
   label?: string;          // user-edited label; untouched labels compile as [Text Placeholder]
   placeholder?: string;    // input/search/textarea only
   count?: number;          // parent of a repeated group: exact child count is binding

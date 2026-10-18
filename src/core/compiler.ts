@@ -24,6 +24,7 @@ import { getCatalogDefaultProps, isUntouchedLabel } from './widgets/widgetCatalo
 import { isUntouchedRoleLabel } from '../annotation/roleDefaults';
 import { detectSiblingPatterns } from './patterns';
 import { AI_DIRECTIVE_HEADER } from './directive';
+import { getPlatformProfile } from '../annotation/profiles';
 
 export const MARKDRAW_VERSION = '3.0.0';
 
@@ -141,9 +142,21 @@ export class MarkDrawCompiler {
       const uStr = `${uCount} unit${uCount === 1 ? '' : 's'}`;
       const nStr = `${nCount} node${nCount === 1 ? '' : 's'}`;
       directivePrefix = `_Scoped compile: "${ir.scopedMeta.scopeName}" — ${uStr}, ${nStr} (of ${ir.scopedMeta.totalNodes} in "${ir.scopedMeta.rootName}")_\n\n`;
+    } else if (ir.roots.some((r) => r.isAnnotationNode)) {
+      const profile = getPlatformProfile(opts.platform);
+      const platLine = `Target platform: ${profile.displayName}. ${profile.directiveLines.join(' ')}`;
+      const hasRespPage = ir.roots.some(
+        (r) =>
+          r.role === 'page' &&
+          (r.textProps?.isResponsive || r.textProps?.behaviors?.includes('responsive'))
+      );
+      const respLine = hasRespPage
+        ? '\n> Responsive: this page must adapt to mobile widths; per-shape sm:* tokens are binding.'
+        : '';
+      directivePrefix = `${AI_DIRECTIVE_HEADER}\n> ${platLine}${respLine}\n\n`;
     }
 
-    const legendPrefix = opts.includeLegend ? `${generateCanvasLegend(ir.roots)}\n\n---\n\n` : '';
+    const legendPrefix = opts.includeLegend ? `${generateCanvasLegend(ir.roots, opts)}\n\n---\n\n` : '';
     const warningSuffix =
       ir.skippedShapes && ir.skippedShapes > 0
         ? `\n\n_Warning: ${ir.skippedShapes} shape(s) skipped due to processing errors._`

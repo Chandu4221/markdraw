@@ -1,10 +1,51 @@
 import { IRNode } from './ir';
+import { CompilationOptions } from './types';
+import { getPlatformProfile } from '../annotation/profiles';
 
 interface LegendEntry {
   notation: string;
   meaning: string;
   example: string;
 }
+
+function capitalize(s: string): string {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const ROLE_LEGEND_MAP: Record<string, LegendEntry> = {
+  page: { notation: '[page "Title"]', meaning: 'Page root / screen container', example: '[page "Home"]' },
+  section: { notation: '[section "Title"]', meaning: 'Section container', example: '[section "Features"]' },
+  card: { notation: '[card "Title" variant]', meaning: 'Card container (variants: outline, elevated)', example: '[card "Product" elevated]' },
+  dialog: { notation: '[dialog "Title"]', meaning: 'Modal dialog window', example: '[dialog "Confirm"]' },
+  banner: { notation: '[banner "Notice"]', meaning: 'Notification banner', example: '[banner "Update available"]' },
+  drawer: { notation: '[drawer "Title"]', meaning: 'Slide-out drawer panel', example: '[drawer "Cart"]' },
+  group: { notation: '[group]', meaning: 'Group of elements', example: '[group]' },
+  heading: { notation: '[heading "Title" level]', meaning: 'Heading text (levels: h1, h2, h3)', example: '[heading "Overview" h2]' },
+  para: { notation: '[para]', meaning: 'Body paragraph text', example: '[para]' },
+  img: { notation: '[img]', meaning: 'Image placeholder', example: '[img]' },
+  video: { notation: '[video]', meaning: 'Video player', example: '[video]' },
+  icon: { notation: '[icon "name"]', meaning: 'Icon symbol', example: '[icon "search"]' },
+  avatar: { notation: '[avatar]', meaning: 'User avatar / profile image', example: '[avatar]' },
+  badge: { notation: '[badge "Label"]', meaning: 'Status or count badge', example: '[badge "New"]' },
+  divider: { notation: '[divider]', meaning: 'Visual separator line', example: '[divider]' },
+  spacer: { notation: '[spacer]', meaning: 'Layout spacing element', example: '[spacer]' },
+  button: { notation: '[button "Text" variant]', meaning: 'Button (variants: solid, ghost)', example: '[button "Send" ghost]' },
+  input: { notation: '[input "Placeholder"]', meaning: 'Single-line text input', example: '[input "Email..."]' },
+  textarea: { notation: '[textarea "Placeholder"]', meaning: 'Multi-line text input', example: '[textarea "Notes..."]' },
+  select: { notation: '[select "A|B|C"]', meaning: 'Dropdown select with choices', example: '[select "Option 1|Option 2"]' },
+  checkbox: { notation: '[checkbox "Label"]', meaning: 'Checkbox input', example: '[checkbox "Remember me"]' },
+  radio: { notation: '[radio "Label"]', meaning: 'Radio selection button', example: '[radio "Choice A"]' },
+  switch: { notation: '[switch on/off]', meaning: 'Toggle switch', example: '[switch on]' },
+  slider: { notation: '[slider N]', meaning: 'Range slider input', example: '[slider 50]' },
+  nav: { notation: '[nav]', meaning: 'Navigation menu', example: '[nav]' },
+  navbar: { notation: '[navbar "A, B, C"]', meaning: 'Top navigation bar', example: '[navbar "Home, Docs"]' },
+  tabs: { notation: '[tabs "A|B|C"]', meaning: 'Tabbed navigation control', example: '[tabs "Overview|Specs"]' },
+  crumb: { notation: '[crumb "A > B"]', meaning: 'Breadcrumb trail', example: '[crumb "Home > Products"]' },
+  pagination: { notation: '[pagination N]', meaning: 'Pagination controls', example: '[pagination 5]' },
+  toast: { notation: '[toast "Message"]', meaning: 'Transient toast message', example: '[toast "Saved successfully"]' },
+  tooltip: { notation: '[tooltip "Text"]', meaning: 'Hover tooltip', example: '[tooltip "More info"]' }
+};
 
 const WIDGET_LEGEND_MAP: Record<string, LegendEntry> = {
   button: {
@@ -373,12 +414,84 @@ function collectCanvasFeatures(roots: IRNode[]): {
   return { widgetTypes, behaviors, styles };
 }
 
+function generateAnnotationLegend(
+  roots: IRNode[],
+  options?: CompilationOptions
+): string {
+  const profile = getPlatformProfile(options?.platform);
+  const units: IRNode[] = [];
+  const rolesUsed = new Set<string>();
+
+  const visit = (node: IRNode) => {
+    if (node.isUnit && node.unitName) {
+      units.push(node);
+    } else if (node.role) {
+      rolesUsed.add(node.role);
+    }
+    for (const c of node.children) {
+      visit(c);
+    }
+  };
+
+  for (const r of roots) {
+    visit(r);
+  }
+
+  const lines: string[] = [];
+  lines.push('### MarkDraw Canvas Legend\n');
+
+  if (units.length > 0) {
+    lines.push('#### Custom Units');
+    lines.push('| Notation | Meaning | Composition |');
+    lines.push('| :--- | :--- | :--- |');
+    const seenUnitNames = new Set<string>();
+    for (const u of units) {
+      if (seenUnitNames.has(u.unitName!)) continue;
+      seenUnitNames.add(u.unitName!);
+      const composition = u.children.map((c) => c.role).join(' + ') || '—';
+      const meaning = capitalize(u.role);
+      lines.push(`| [${u.unitName}] | ${meaning} | ${composition} |`);
+    }
+    lines.push('');
+  }
+
+  lines.push('#### Standard Roles');
+  lines.push('| Notation | Meaning | Example |');
+  lines.push('| :--- | :--- | :--- |');
+
+  const sortedRoles = Array.from(rolesUsed).sort();
+  for (const role of sortedRoles) {
+    const entry = ROLE_LEGEND_MAP[role] || {
+      notation: `[${role}]`,
+      meaning: `${capitalize(role)} component`,
+      example: `[${role}]`
+    };
+
+    let notation = entry.notation;
+    if (profile.roleAliases && profile.roleAliases[role]) {
+      const alias = profile.roleAliases[role];
+      notation = notation.replace(`[${role}`, `[${alias}`);
+    }
+
+    lines.push(`| ${notation} | ${entry.meaning} | ${entry.example} |`);
+  }
+
+  return lines.join('\n');
+}
+
 /**
  * Generates an auto-derived, lean markdown legend documented ONLY for elements and styles present on the canvas.
  */
-export function generateCanvasLegend(roots: IRNode[]): string {
+export function generateCanvasLegend(
+  roots: IRNode[],
+  options?: CompilationOptions
+): string {
   if (!roots || roots.length === 0) {
     return '';
+  }
+
+  if (roots.some((r) => r.isAnnotationNode)) {
+    return generateAnnotationLegend(roots, options);
   }
 
   const { widgetTypes, behaviors, styles } = collectCanvasFeatures(roots);

@@ -1,0 +1,34 @@
+{
+  "id": "android-material",
+  "displayName": "Android (Material 3)",
+  "directiveLines": [
+    "Use Material 3 components and a Scaffold-based layout structure.",
+    "Prefer bottom navigation for top-level navigation on mobile."
+  ],
+  "roleAliases": {
+    "navbar": "TopAppBar",
+    "nav": "NavigationBar",
+    "banner": "Snackbar (inline)",
+    "dialog": "Dialog",
+    "switch": "Switch"
+  },
+  "extraRoles": {
+    "fab": {
+      "name": "fab",
+      "description": "Floating action button for the primary action",
+      "flags": ["extended"]
+    },
+    "bottom_sheet": {
+      "name": "bottom_sheet",
+      "description": "Bottom-anchored modal sheet"
+    },
+    "scaffold": {
+      "name": "scaffold",
+      "description": "App-level layout skeleton wrapping the page"
+    }
+  },
+  "conventions": [
+    "Top-level nav maps to bottom NavigationBar; secondary nav maps to a NavigationDrawer.",
+    "FAB for the single primary action of a screen."
+  ]
+}

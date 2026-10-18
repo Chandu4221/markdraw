@@ -8,6 +8,7 @@ import { generateShortId } from './ids';
 import { annotateSiblingPatterns } from './patterns';
 import { getShapeMeta } from '../annotation/shapeMeta';
 import { isAllowedRoleFlag } from '../annotation/roles';
+import { isUntouchedRoleLabel } from '../annotation/roleDefaults';
 
 export interface IRBounds {
   h: number;
@@ -525,6 +526,13 @@ function buildAnnotationIRTree(
 
   // Units lookup from options
   const unitDefs = options?.units || [];
+  for (const u of unitDefs) {
+    if (!u.baseRole) {
+      rawLints.push({
+        text: `Unit "${u.name}" has no base role — fix in the customization panel.`
+      });
+    }
+  }
 
   // 1. Process custom units / groups
   for (const g of groups) {
@@ -895,6 +903,26 @@ function buildAnnotationIRTree(
       node.direction = inferDirection(node.children);
       sortChildren(node.children, node.direction);
       annotateSiblingPatterns(node.children);
+
+      // Duplicate literal labels across repeated siblings (§13)
+      const labelCounts = new Map<string, { count: number; ids: string[] }>();
+      for (const child of node.children) {
+        const rawLabel = child.textProps?.label || child.label;
+        if (rawLabel && !isUntouchedRoleLabel(child.role, rawLabel)) {
+          const entry = labelCounts.get(rawLabel) || { count: 0, ids: [] };
+          entry.count++;
+          entry.ids.push(child.id);
+          labelCounts.set(rawLabel, entry);
+        }
+      }
+      for (const [text, entry] of labelCounts.entries()) {
+        if (entry.count >= 2) {
+          rawLints.push({
+            text: `Identical literal labels "${text}" across ${entry.count} repeated siblings — consider one template (legend rule: vary per item).`,
+            shapeId: node.id
+          });
+        }
+      }
 
       for (const child of node.children) {
         const nextPath = `${currentPath} > #${child.shortId}`;

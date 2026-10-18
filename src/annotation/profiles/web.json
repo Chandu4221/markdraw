@@ -1,0 +1,13 @@
+{
+  "id": "web",
+  "displayName": "Web",
+  "directiveLines": [
+    "Use semantic HTML and a utility-first CSS approach.",
+    "Prefer responsive utility classes over custom media queries."
+  ],
+  "roleAliases": {},
+  "extraRoles": {},
+  "conventions": [
+    "Single-column stacking on mobile unless sm tokens say otherwise."
+  ]
+}
