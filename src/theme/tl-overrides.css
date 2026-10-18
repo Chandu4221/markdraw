@@ -292,4 +292,94 @@
   justify-content: center;
 }
 
+/* ------------------------------------------------------------- */
+/* Native-Matching Form Controls for Inspector */
+/* ------------------------------------------------------------- */
+
+/* Slider matching tldraw's native OpacitySlider thumb & track */
+.markdraw-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  display: block;
+}
+
+.markdraw-slider:focus-visible {
+  outline: none;
+}
+
+.markdraw-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--md-border-strong);
+}
+
+.markdraw-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--md-surface);
+  border: 2px solid var(--md-text-bold);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  margin-top: -6.5px;
+  transition: transform 0.1s ease, border-color 0.1s ease;
+  cursor: grab;
+}
+
+.markdraw-slider:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.1);
+  border-color: var(--md-accent);
+}
+
+.markdraw-slider:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--md-accent);
+  outline-offset: 2px;
+}
+
+/* Firefox Support */
+.markdraw-slider::-moz-range-track {
+  width: 100%;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--md-border-strong);
+}
+
+.markdraw-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--md-surface);
+  border: 2px solid var(--md-text-bold);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+}
+
+.markdraw-slider:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--md-accent);
+  outline-offset: 2px;
+}
+
+/* Select dropdown matching tldraw's dropdown affordance */
+.markdraw-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 28px !important;
+}
+
+[data-theme='dark'] .markdraw-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+
 

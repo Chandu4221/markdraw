@@ -325,7 +325,9 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
   return (
     <div
       ref={panelRef}
-      className="tlui-style-panel tlui-style-panel__wrapper markdraw-unified-inspector !w-[264px] max-h-[calc(100vh-100px)] overflow-y-auto font-sans select-none bg-[var(--md-surface)] border border-[var(--md-border)] rounded-[var(--md-radius-md)] shadow-[var(--md-shadow-lg)] text-xs"
+      role="complementary"
+      aria-label="Inspector and Document Settings"
+      className="tlui-style-panel tlui-style-panel__wrapper markdraw-unified-inspector !w-[264px] max-h-[calc(100vh-100px)] overflow-y-auto font-sans select-none bg-[var(--md-surface)] border border-[var(--md-border)] rounded-[var(--md-radius-md)] shadow-[var(--md-shadow-lg)] text-xs text-[var(--md-text)]"
       data-ismobile={isMobile}
       onPointerLeave={handlePointerOut}
       onPointerDown={(e) => e.stopPropagation()}
@@ -353,7 +355,7 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
         </div>
         <button
           type="button"
-          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--md-surface)] transition-colors cursor-pointer"
           onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
           aria-label={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
@@ -370,49 +372,69 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
           {/* ========================================================= */}
           {count > 0 && (
             <div>
-              <button
-                type="button"
-                onClick={() => toggleSection('semantics')}
-                className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
-                aria-expanded={openSections.semantics}
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Tag size={12} className="text-blue-500 shrink-0" />
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                    Semantic Role
-                  </span>
-                  {currentRole && (
-                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-400 rounded">
-                      {currentRole}
+              <h3>
+                <button
+                  type="button"
+                  id="accordion-header-semantics"
+                  onClick={() => toggleSection('semantics')}
+                  className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
+                  aria-expanded={openSections.semantics}
+                  aria-controls="accordion-panel-semantics"
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Tag size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
+                    <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                      Semantic Role
                     </span>
-                  )}
-                </div>
-                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                  {openSections.semantics ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                </div>
-              </button>
+                    {currentRole && (
+                      <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-[var(--md-surface-raised)] border border-[var(--md-border)] text-[var(--md-text-bold)] rounded">
+                        {currentRole}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                    {openSections.semantics ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                  </div>
+                </button>
+              </h3>
 
               {openSections.semantics && (
-                <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]">
+                <div
+                  id="accordion-panel-semantics"
+                  role="region"
+                  aria-labelledby="accordion-header-semantics"
+                  className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]"
+                >
                   {/* Current Role & Search Dropdown */}
                   <div className="space-y-1 relative">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center justify-between">
-                      <span>Role</span>
+                    <div className="flex items-center justify-between">
+                      <label
+                        htmlFor="inspector-role-button"
+                        id="label-inspector-role"
+                        className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] cursor-pointer"
+                      >
+                        Role
+                      </label>
                       {currentRole && (
                         <button
                           type="button"
                           onClick={() => handleAssignRole(null)}
-                          className="text-[10px] text-red-500 hover:text-red-600 hover:underline cursor-pointer"
+                          className="text-[11px] font-medium text-red-600 dark:text-red-400 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 rounded px-1 cursor-pointer"
+                          aria-label="Clear assigned semantic role"
                         >
                           Clear
                         </button>
                       )}
-                    </label>
+                    </div>
 
                     <button
                       type="button"
+                      id="inspector-role-button"
+                      aria-labelledby="label-inspector-role"
+                      aria-haspopup="listbox"
+                      aria-expanded={isRoleDropdownOpen}
                       onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
-                      className="w-full h-7 px-2 flex items-center justify-between rounded border border-[var(--md-border)] bg-[var(--md-surface)] hover:bg-[var(--md-surface-raised)] text-left text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                      className="w-full h-8 px-2.5 flex items-center justify-between rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] hover:border-[var(--md-border-strong)] text-left text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--md-surface)] transition-colors cursor-pointer"
                     >
                       <span className="truncate">
                         {currentRole ? (
@@ -428,18 +450,23 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                           </span>
                         )}
                       </span>
-                      <ChevronDown size={12} className="text-[var(--md-text-muted)] shrink-0 ml-1" />
+                      <ChevronDown size={13} className="text-[var(--md-text-muted)] shrink-0 ml-1" />
                     </button>
 
                     {/* Role Picker Dropdown Menu */}
                     {isRoleDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] p-1.5 space-y-1 max-h-64 overflow-y-auto">
+                      <div
+                        role="listbox"
+                        aria-label="Select semantic role"
+                        className="absolute top-full left-0 right-0 mt-1 z-50 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] p-1.5 space-y-1 max-h-64 overflow-y-auto"
+                      >
                         <Input
                           type="text"
+                          aria-label="Search 31 roles or aliases"
                           placeholder="Search 31 roles or aliases..."
                           value={roleSearch}
                           onChange={(e) => setRoleSearch(e.target.value)}
-                          className="h-6 text-[11px] mb-1"
+                          className="h-7 text-xs mb-1"
                           autoFocus
                         />
 
@@ -447,27 +474,29 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                           if (roles.length === 0) return null;
                           return (
                             <div key={cat} className="space-y-0.5">
-                              <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--md-text-muted)] px-1.5 pt-1">
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--md-text-muted)] px-2 pt-1.5">
                                 {cat}
                               </div>
                               {roles.map((r) => (
                                 <button
                                   key={r.name}
                                   type="button"
+                                  role="option"
+                                  aria-selected={currentRole === r.name}
                                   onClick={() => handleAssignRole(r.name)}
-                                  className={`w-full flex items-center justify-between px-1.5 py-1 text-left rounded text-xs transition-colors cursor-pointer ${
+                                  className={`w-full flex items-center justify-between px-2 py-1.5 text-left rounded-[var(--md-radius-sm)] text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] ${
                                     currentRole === r.name
-                                      ? 'bg-blue-500 text-white font-semibold'
+                                      ? 'bg-[var(--md-accent)] text-white font-semibold'
                                       : 'hover:bg-[var(--md-surface-raised)] text-[var(--md-text)]'
                                   }`}
                                 >
                                   <span>{r.name}</span>
                                   {r.aliases.length > 0 && (
                                     <span
-                                      className={`text-[9px] truncate max-w-[100px] ${
+                                      className={`text-[10px] truncate max-w-[100px] ${
                                         currentRole === r.name
-                                          ? 'text-blue-100'
-                                          : 'text-[var(--md-text-subtle)]'
+                                          ? 'text-white/80'
+                                          : 'text-[var(--md-text-muted)]'
                                       }`}
                                     >
                                       {r.aliases.slice(0, 2).join(', ')}
@@ -485,14 +514,15 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                   {/* Suggestions (A.4) */}
                   {!currentRole && suggestedRole && (
                     <div className="space-y-1">
-                      <div className="text-[10px] font-semibold text-[var(--md-text-muted)] flex items-center gap-1">
-                        <Sparkles size={11} className="text-amber-500" />
-                        <span>Suggested</span>
+                      <div className="text-[11px] font-semibold text-[var(--md-text-muted)] flex items-center gap-1">
+                        <Sparkles size={12} className="text-amber-500 shrink-0" />
+                        <span>Suggested Role</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleAssignRole(suggestedRole)}
-                        className="px-2 py-0.5 text-[10px] font-medium rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+                        aria-label={`Assign suggested role ${suggestedRole}`}
+                        className="px-2.5 py-1 text-xs font-semibold rounded-[var(--md-radius-sm)] border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
                       >
                         +{suggestedRole}
                       </button>
@@ -501,36 +531,49 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
 
                   {/* Accessible Label / AccName Input */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                    <label
+                      htmlFor="inspector-accname-input"
+                      className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] cursor-pointer"
+                    >
                       Label / AccName
                     </label>
                     <Input
+                      id="inspector-accname-input"
                       type="text"
+                      aria-label="Accessible label or component name"
                       value={firstMeta?.props?.label || ''}
                       onChange={(e) => handleUpdateProp('label', e.target.value || undefined)}
                       placeholder='e.g. "Submit Form", "Main Navigation"...'
-                      className="h-7 text-xs"
+                      className="h-8 text-xs font-sans"
                     />
                   </div>
 
                   {/* Parent Container Selector */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center justify-between">
-                      <span>Parent Container</span>
+                    <div className="flex items-center justify-between">
+                      <label
+                        htmlFor="inspector-parent-select"
+                        className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] cursor-pointer"
+                      >
+                        Parent Container
+                      </label>
                       {firstMeta?.parentId && (
                         <button
                           type="button"
                           onClick={() => handleSetParent(null)}
-                          className="text-[10px] text-blue-500 hover:underline cursor-pointer"
+                          className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 rounded px-1 cursor-pointer"
+                          aria-label="Reset parent container to automatic geometry inference"
                         >
                           Auto (Geometry)
                         </button>
                       )}
-                    </label>
+                    </div>
                     <select
+                      id="inspector-parent-select"
+                      aria-label="Parent Container"
                       value={firstMeta?.parentId || ''}
                       onChange={(e) => handleSetParent(e.target.value || null)}
-                      className="w-full h-7 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                      className="markdraw-select w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-xs text-[var(--md-text)] hover:border-[var(--md-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--md-surface)] transition-colors cursor-pointer"
                     >
                       <option value="">Auto (Infer from AABB bounds)</option>
                       {potentialParents.map((p) => {
@@ -548,7 +591,7 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
 
                   {/* Allowed Behavior Flags */}
                   {roleDef && roleDef.flags && roleDef.flags.length > 0 && (
-                    <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]/50">
+                    <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]">
                       <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
                         Behaviors
                       </label>
@@ -560,10 +603,11 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                               key={flag}
                               type="button"
                               onClick={() => handleToggleBehavior(flag)}
-                              className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer border ${
+                              aria-pressed={isActive}
+                              className={`px-2 py-1 text-[11px] font-medium rounded-[var(--md-radius-sm)] transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] ${
                                 isActive
-                                  ? 'bg-blue-600 text-white border-blue-600'
-                                  : 'bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border-[var(--md-border)] hover:text-[var(--md-text)]'
+                                  ? 'bg-[var(--md-accent)] text-white border-[var(--md-accent)]'
+                                  : 'bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border-[var(--md-border)] hover:text-[var(--md-text-bold)] hover:border-[var(--md-border-strong)]'
                               }`}
                             >
                               {isActive ? '✓ ' : ''}
@@ -576,20 +620,25 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                   )}
 
                   {/* Responsive Props */}
-                  <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]/50">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
-                      <Smartphone size={11} />
+                  <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]">
+                    <label
+                      htmlFor="inspector-responsive-select"
+                      className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1 cursor-pointer"
+                    >
+                      <Smartphone size={12} className="text-[var(--md-text-muted)]" />
                       <span>Responsive</span>
                     </label>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-[var(--md-text-muted)]">Mobile:</span>
                       <select
+                        id="inspector-responsive-select"
+                        aria-label="Mobile Responsive Visibility"
                         value={firstMeta?.responsive?.smVisible || 'visible'}
                         onChange={(e) => {
                           const val = e.target.value as any;
                           handleUpdateResponsive(val === 'visible' ? null : { smVisible: val });
                         }}
-                        className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-xs text-[var(--md-text)]"
+                        className="markdraw-select flex-1 h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-xs text-[var(--md-text)] hover:border-[var(--md-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
                       >
                         <option value="visible">Visible on Mobile</option>
                         <option value="hidden">Hidden on Mobile</option>
@@ -601,28 +650,34 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                   </div>
 
                   {/* Style Note */}
-                  <div className="space-y-1 pt-1 border-t border-[var(--md-border)]/50">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
-                      <StickyNote size={11} />
+                  <div className="space-y-1 pt-1 border-t border-[var(--md-border)]">
+                    <label
+                      htmlFor="inspector-style-note-input"
+                      className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1 cursor-pointer"
+                    >
+                      <StickyNote size={12} className="text-[var(--md-text-muted)]" />
                       <span>Style Note (Non-binding)</span>
                     </label>
                     <textarea
+                      id="inspector-style-note-input"
+                      aria-label="Style Note (Non-binding)"
                       value={firstMeta?.props?.note || ''}
                       onChange={(e) => handleUpdateProp('note', e.target.value || undefined)}
                       placeholder="e.g. skeleton state on mount, dark card border..."
-                      className="w-full h-12 p-1.5 text-xs rounded border border-[var(--md-border)] bg-[var(--md-surface)] resize-none"
+                      className="w-full h-14 p-2 text-xs rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] hover:border-[var(--md-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] resize-none transition-colors"
                     />
                   </div>
 
                   {/* Unit Save Gesture (Multi-select) */}
                   {count > 1 && (
-                    <div className="pt-2 border-t border-[var(--md-border)]/50">
+                    <div className="pt-2 border-t border-[var(--md-border)]">
                       <button
                         type="button"
                         onClick={() => setShowSaveUnitDialog(true)}
-                        className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-semibold rounded border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 transition-colors cursor-pointer shadow-xs"
+                        aria-label={`Save ${count} selected shapes as a reusable custom unit`}
+                        className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-[var(--md-radius-sm)] border border-purple-500/40 bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 transition-colors cursor-pointer shadow-xs"
                       >
-                        <Box size={13} />
+                        <Box size={14} className="shrink-0" />
                         <span>Save {count} shapes as Unit...</span>
                       </button>
                     </div>
@@ -636,30 +691,39 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
           {/* SECTION 2: VISUAL STYLES (tldraw native styling tools)     */}
           {/* ========================================================= */}
           <div>
-            <button
-              type="button"
-              onClick={() => toggleSection('styles')}
-              className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
-              aria-expanded={openSections.styles}
-            >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Palette size={12} className="text-purple-500 shrink-0" />
-                <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                  Visual Styles
-                </span>
-              </div>
-              <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                {openSections.styles ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              </div>
-            </button>
+            <h3>
+              <button
+                type="button"
+                id="accordion-header-styles"
+                onClick={() => toggleSection('styles')}
+                className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
+                aria-expanded={openSections.styles}
+                aria-controls="accordion-panel-styles"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Palette size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                    Visual Styles
+                  </span>
+                </div>
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  {openSections.styles ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                </div>
+              </button>
+            </h3>
 
             {openSections.styles && (
-              <div className="p-2 space-y-2 bg-[var(--md-surface)]">
+              <div
+                id="accordion-panel-styles"
+                role="region"
+                aria-labelledby="accordion-header-styles"
+                className="p-2 space-y-2 bg-[var(--md-surface)]"
+              >
                 {styles ? (
                   <DefaultStylePanelContent styles={styles} />
                 ) : (
                   <div className="p-3 text-center text-xs text-[var(--md-text-muted)] italic">
-                    Select a shape on canvas to inspect and edit its visual styles.
+                    Select a shape on canvas to inspect and edit visual styles.
                   </div>
                 )}
               </div>
@@ -670,87 +734,125 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
           {/* SECTION 3: COMPILER & DOCUMENT SETTINGS (Direct in Panel) */}
           {/* ========================================================= */}
           <div>
-            <button
-              type="button"
-              onClick={() => toggleSection('settings')}
-              className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
-              aria-expanded={openSections.settings}
-            >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Sliders size={12} className="text-emerald-500 shrink-0" />
-                <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                  Compiler & Settings
-                </span>
-                {options && (
-                  <span className="px-1.5 py-0.2 text-[9px] font-mono text-[var(--md-text-subtle)] bg-[var(--md-surface-raised)] rounded">
-                    {options.platform || 'web'}
+            <h3>
+              <button
+                type="button"
+                id="accordion-header-settings"
+                onClick={() => toggleSection('settings')}
+                className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
+                aria-expanded={openSections.settings}
+                aria-controls="accordion-panel-settings"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Sliders size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                    Compiler & Settings
                   </span>
-                )}
-              </div>
-              <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                {openSections.settings ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              </div>
-            </button>
+                  {options && (
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] border border-[var(--md-border)] rounded">
+                      {options.platform || 'web'}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  {openSections.settings ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                </div>
+              </button>
+            </h3>
 
             {openSections.settings && options && (
-              <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]">
-                {/* Platform Profile Selector */}
+              <div
+                id="accordion-panel-settings"
+                role="region"
+                aria-labelledby="accordion-header-settings"
+                className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]"
+              >
+                {/* Target Platform Profile Selector */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                  <label
+                    htmlFor="inspector-platform-select"
+                    className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] cursor-pointer"
+                  >
                     Target Platform Profile
                   </label>
                   <select
+                    id="inspector-platform-select"
+                    aria-label="Target Platform Profile"
                     value={options.platform || 'web'}
                     onChange={(e) => {
                       const plat = e.target.value as any;
                       handleUpdateOption('platform', plat);
                       handleUpdateOption('platformId', plat);
                     }}
-                    className="w-full h-7 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                    className="markdraw-select w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-xs text-[var(--md-text)] hover:border-[var(--md-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--md-surface)] transition-colors cursor-pointer"
                   >
                     <option value="web">Web (Standard HTML / Tailwind)</option>
                     <option value="android-material">Android (Compose / Material 3)</option>
                   </select>
                 </div>
 
-                {/* Containment Threshold Slider */}
+                {/* Containment Threshold Slider matching tldraw slider */}
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold uppercase tracking-wider text-[11px] text-[var(--md-text-muted)]">
+                    <label
+                      htmlFor="inspector-containment-slider"
+                      className="font-semibold uppercase tracking-wider text-[11px] text-[var(--md-text-muted)] cursor-pointer"
+                    >
                       Containment Overlap
                     </label>
-                    <span className="font-mono text-xs font-semibold text-[var(--md-text-bold)]">
+                    <span
+                      id="containment-value-display"
+                      className="font-mono text-xs font-semibold text-[var(--md-text-bold)]"
+                    >
                       {Math.round((options.containmentThreshold ?? 0.85) * 100)}%
                     </span>
                   </div>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="1.0"
-                    step="0.05"
-                    value={options.containmentThreshold ?? 0.85}
-                    onChange={(e) =>
-                      handleUpdateOption('containmentThreshold', parseFloat(e.target.value))
-                    }
-                    className="w-full accent-[var(--md-accent)] cursor-pointer"
-                  />
-                  <div className="text-[10px] text-[var(--md-text-subtle)] leading-tight">
+
+                  <div className="py-1">
+                    <input
+                      id="inspector-containment-slider"
+                      type="range"
+                      min="0.5"
+                      max="1.0"
+                      step="0.05"
+                      aria-label="Containment Overlap"
+                      aria-valuemin={50}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.round((options.containmentThreshold ?? 0.85) * 100)}
+                      aria-valuetext={`${Math.round((options.containmentThreshold ?? 0.85) * 100)}%`}
+                      aria-describedby="containment-helptext"
+                      value={options.containmentThreshold ?? 0.85}
+                      onChange={(e) =>
+                        handleUpdateOption('containmentThreshold', parseFloat(e.target.value))
+                      }
+                      className="markdraw-slider"
+                    />
+                  </div>
+
+                  <div id="containment-helptext" className="text-[11px] text-[var(--md-text-muted)] leading-normal">
                     Minimum AABB overlap required to infer parent-child hierarchy.
                   </div>
                 </div>
 
                 {/* Snapping Tolerances Grid */}
-                <div className="space-y-1 pt-1 border-t border-[var(--md-border)]/50">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] block">
                     Tolerances (A.5)
-                  </label>
+                  </span>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] text-[var(--md-text-muted)]">Width Bucket (±%)</span>
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="tolerance-width-bucket"
+                        className="text-[11px] text-[var(--md-text-muted)] block cursor-pointer"
+                      >
+                        Width Bucket (±%)
+                      </label>
                       <Input
+                        id="tolerance-width-bucket"
                         type="number"
                         min="0"
                         max="10"
+                        aria-label="Width Bucket tolerance percentage"
                         value={options.sizeBucketTolerance ?? 2}
                         onChange={(e) =>
                           handleUpdateOption(
@@ -758,37 +860,51 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                             parseInt(e.target.value, 10) || 0
                           )
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-8 text-xs font-mono"
                       />
                     </div>
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] text-[var(--md-text-muted)]">Alignment (±%)</span>
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="tolerance-alignment"
+                        className="text-[11px] text-[var(--md-text-muted)] block cursor-pointer"
+                      >
+                        Alignment (±%)
+                      </label>
                       <Input
+                        id="tolerance-alignment"
                         type="number"
                         min="0"
                         max="10"
+                        aria-label="Alignment tolerance percentage"
                         value={options.alignTolerance ?? 3}
                         onChange={(e) =>
                           handleUpdateOption('alignTolerance', parseInt(e.target.value, 10) || 0)
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-8 text-xs font-mono"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Output Toggles */}
-                <div className="space-y-2 pt-1 border-t border-[var(--md-border)]/50">
+                <div className="space-y-2 pt-1.5 border-t border-[var(--md-border)]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-medium text-[var(--md-text)]">
+                      <label
+                        htmlFor="inspector-legend-switch"
+                        id="label-legend-switch"
+                        className="text-xs font-medium text-[var(--md-text)] block cursor-pointer select-none"
+                      >
                         Include Semantic Legend
-                      </div>
-                      <div className="text-[10px] text-[var(--md-text-subtle)]">
+                      </label>
+                      <span className="text-[11px] text-[var(--md-text-muted)] block">
                         Append bracket-tag spec reference
-                      </div>
+                      </span>
                     </div>
                     <Switch
+                      id="inspector-legend-switch"
+                      aria-labelledby="label-legend-switch"
+                      aria-label="Include Semantic Legend"
                       checked={options.includeLegend ?? false}
                       onCheckedChange={(checked) => handleUpdateOption('includeLegend', checked)}
                     />
@@ -796,14 +912,21 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-medium text-[var(--md-text)]">
+                      <label
+                        htmlFor="inspector-timestamp-switch"
+                        id="label-timestamp-switch"
+                        className="text-xs font-medium text-[var(--md-text)] block cursor-pointer select-none"
+                      >
                         Include Timestamp
-                      </div>
-                      <div className="text-[10px] text-[var(--md-text-subtle)]">
+                      </label>
+                      <span className="text-[11px] text-[var(--md-text-muted)] block">
                         Append compile date (non-deterministic)
-                      </div>
+                      </span>
                     </div>
                     <Switch
+                      id="inspector-timestamp-switch"
+                      aria-labelledby="label-timestamp-switch"
+                      aria-label="Include Timestamp"
                       checked={options.includeTimestamp ?? false}
                       onCheckedChange={(checked) =>
                         handleUpdateOption('includeTimestamp', checked)
@@ -812,28 +935,34 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                   </div>
                 </div>
 
-                {/* Page Note */}
-                <div className="space-y-1 pt-1 border-t border-[var(--md-border)]/50">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                {/* Document Header Note */}
+                <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]">
+                  <label
+                    htmlFor="inspector-page-note"
+                    className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] cursor-pointer"
+                  >
                     Document Header Note
                   </label>
                   <Input
+                    id="inspector-page-note"
                     type="text"
+                    aria-label="Document Header Note"
                     value={options.pageNote || ''}
                     onChange={(e) => handleUpdateOption('pageNote', e.target.value || '')}
                     placeholder="e.g. Design review v1, Mobile auth flow..."
-                    className="h-7 text-xs"
+                    className="h-8 text-xs font-sans"
                   />
                 </div>
 
                 {/* Reset to Defaults */}
-                <div className="pt-2 border-t border-[var(--md-border)]/50 flex justify-end">
+                <div className="pt-2 border-t border-[var(--md-border)] flex justify-end">
                   <button
                     type="button"
                     onClick={handleResetOptions}
-                    className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] rounded transition-colors cursor-pointer"
+                    aria-label="Reset compiler settings to default values"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] rounded-[var(--md-radius-sm)] transition-colors cursor-pointer"
                   >
-                    <RotateCcw size={11} />
+                    <RotateCcw size={12} className="shrink-0" />
                     <span>Reset Defaults</span>
                   </button>
                 </div>
@@ -845,30 +974,39 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
           {/* SECTION 4: CANVAS & UNITS                                  */}
           {/* ========================================================= */}
           <div>
-            <button
-              type="button"
-              onClick={() => toggleSection('units')}
-              className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
-              aria-expanded={openSections.units}
-            >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Box size={12} className="text-amber-500 shrink-0" />
-                <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                  Canvas & Units
-                </span>
-                {storedUnits.length > 0 && (
-                  <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded">
-                    {storedUnits.length}
+            <h3>
+              <button
+                type="button"
+                id="accordion-header-units"
+                onClick={() => toggleSection('units')}
+                className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
+                aria-expanded={openSections.units}
+                aria-controls="accordion-panel-units"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Box size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                    Canvas & Units
                   </span>
-                )}
-              </div>
-              <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
-                {openSections.units ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              </div>
-            </button>
+                  {storedUnits.length > 0 && (
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] border border-[var(--md-border)] rounded">
+                      {storedUnits.length}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  {openSections.units ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                </div>
+              </button>
+            </h3>
 
             {openSections.units && (
-              <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]">
+              <div
+                id="accordion-panel-units"
+                role="region"
+                aria-labelledby="accordion-header-units"
+                className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]"
+              >
                 {/* Stats */}
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center justify-between text-[11px]">
@@ -888,8 +1026,8 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
 
                 {/* Root frames list */}
                 {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').length > 0 && (
-                  <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]/50">
-                    <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider">
+                  <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]">
+                    <span className="text-[11px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider block">
                       Root Frames
                     </span>
                     <div className="space-y-1">
@@ -900,11 +1038,11 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                           <div
                             key={f.id}
                             onClick={() => editor.setSelectedShapes([f.id])}
-                            className="flex items-center justify-between px-2 py-1 rounded bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] cursor-pointer text-[11px] group"
+                            className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-raised)] hover:bg-[var(--md-border)]/40 cursor-pointer text-xs group transition-colors"
                           >
-                            <span className="font-medium truncate">{name}</span>
+                            <span className="font-medium text-[var(--md-text)] truncate">{name}</span>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                              <span className="text-[10px] text-[var(--md-text-muted)] font-mono">
                                 {meta?.role || 'page'}
                               </span>
                               <button
@@ -913,13 +1051,14 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                                   e.stopPropagation();
                                   handleCopyFrameContract(f.id);
                                 }}
-                                className="p-1 rounded hover:bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:text-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-colors cursor-pointer"
-                                title="Copy contract for this frame"
+                                aria-label={`Copy contract for frame ${name}`}
+                                className="p-1 rounded text-[var(--md-text-muted)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--md-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+                                title={`Copy contract for ${name}`}
                               >
                                 {copiedFrameId === f.id ? (
-                                  <Check size={11} className="text-green-500" />
+                                  <Check size={12} className="text-green-600 dark:text-green-400" />
                                 ) : (
-                                  <Copy size={11} />
+                                  <Copy size={12} />
                                 )}
                               </button>
                             </div>
@@ -931,19 +1070,19 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                 )}
 
                 {/* Stored Custom Units Library (§10) */}
-                <div className="space-y-1.5 pt-1.5 border-t border-[var(--md-border)]/50">
+                <div className="space-y-1.5 pt-1.5 border-t border-[var(--md-border)]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider flex items-center gap-1">
-                      <Box size={11} className="text-purple-500" />
+                    <span className="text-[11px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider flex items-center gap-1">
+                      <Box size={12} className="text-[var(--md-text-muted)]" />
                       <span>Custom Units</span>
                     </span>
-                    <span className="text-[10px] font-mono text-[var(--md-text-subtle)]">
+                    <span className="text-[10px] font-mono font-medium text-[var(--md-text-muted)]">
                       {storedUnits.length}
                     </span>
                   </div>
 
                   {storedUnits.length === 0 ? (
-                    <div className="text-[11px] text-[var(--md-text-muted)] italic py-1">
+                    <div className="text-[11px] text-[var(--md-text-muted)] italic py-1 leading-normal">
                       Multi-select shapes on canvas to save them as reusable units.
                     </div>
                   ) : (
@@ -951,13 +1090,13 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                       {storedUnits.map((u) => (
                         <div
                           key={u.id}
-                          className="flex items-center justify-between p-1.5 rounded border border-[var(--md-border)] bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] transition-colors text-xs"
+                          className="flex items-center justify-between p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] transition-colors text-xs"
                         >
                           <div className="min-w-0 pr-2">
-                            <div className="font-medium text-[var(--md-text-bold)] truncate">
+                            <div className="font-semibold text-[var(--md-text-bold)] truncate">
                               {u.name}
                             </div>
-                            <div className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                            <div className="text-[10px] text-[var(--md-text-muted)] font-mono">
                               Base: {u.baseRole} • {u.memberRoles?.length || 0} items
                             </div>
                           </div>
@@ -965,7 +1104,8 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                             <button
                               type="button"
                               onClick={() => handleStampUnit(u)}
-                              className="px-2 py-0.5 text-[11px] font-semibold rounded bg-purple-600 text-white hover:bg-purple-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400 transition-colors cursor-pointer"
+                              aria-label={`Stamp copy of ${u.name} unit onto canvas`}
+                              className="px-2.5 py-1 text-xs font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition-colors cursor-pointer"
                               title="Stamp copy onto canvas"
                             >
                               Stamp
@@ -973,10 +1113,11 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                             <button
                               type="button"
                               onClick={(e) => handleDeleteUnit(u.id, e)}
-                              className="p-1 rounded text-[var(--md-text-muted)] hover:text-red-500 hover:bg-[var(--md-surface)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 transition-colors cursor-pointer"
-                              title="Delete unit"
+                              aria-label={`Delete unit ${u.name}`}
+                              className="p-1 rounded text-[var(--md-text-muted)] hover:text-red-600 dark:hover:text-red-400 hover:bg-[var(--md-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition-colors cursor-pointer"
+                              title={`Delete unit ${u.name}`}
                             >
-                              <Trash2 size={11} />
+                              <Trash2 size={12} />
                             </button>
                           </div>
                         </div>
@@ -992,47 +1133,63 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
 
       {/* Save Unit Dialog Modal */}
       {showSaveUnitDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-unit-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
           <div
             className="w-80 rounded-xl border border-[var(--md-border)] bg-[var(--md-surface)] p-4 shadow-2xl space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[var(--md-border)] pb-2">
-              <div className="flex items-center gap-1.5 font-bold text-xs text-[var(--md-text)]">
-                <Box size={14} className="text-purple-500" />
+              <div id="dialog-unit-title" className="flex items-center gap-1.5 font-bold text-xs text-[var(--md-text-bold)]">
+                <Box size={14} className="text-purple-600 dark:text-purple-400" />
                 <span>Save as Custom Unit</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowSaveUnitDialog(false)}
-                className="p-1 rounded text-xs text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer transition-colors"
+                aria-label="Close dialog"
+                className="p-1 rounded text-xs text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] cursor-pointer transition-colors"
               >
                 ✕
               </button>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[var(--md-text-muted)]">
+              <label
+                htmlFor="dialog-new-unit-name"
+                className="text-[11px] font-semibold text-[var(--md-text-muted)] cursor-pointer"
+              >
                 Unit Name
               </label>
               <Input
+                id="dialog-new-unit-name"
                 type="text"
+                aria-label="Unit Name"
                 value={newUnitName}
                 onChange={(e) => setNewUnitName(e.target.value)}
                 placeholder="e.g. follow-card, metric-tile"
-                className="h-7 text-xs"
+                className="h-8 text-xs font-sans"
                 autoFocus
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[var(--md-text-muted)]">
+              <label
+                htmlFor="dialog-new-unit-role"
+                className="text-[11px] font-semibold text-[var(--md-text-muted)] cursor-pointer"
+              >
                 Base Role (§10 fallback)
               </label>
               <select
+                id="dialog-new-unit-role"
+                aria-label="Base Role fallback"
                 value={newUnitBaseRole}
                 onChange={(e) => setNewUnitBaseRole(e.target.value as RoleName)}
-                className="w-full h-7 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)]"
+                className="markdraw-select w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-xs text-[var(--md-text)] hover:border-[var(--md-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] cursor-pointer"
               >
                 {Object.values(ROLE_DEFINITIONS).map((r) => (
                   <option key={r.name} value={r.name}>
@@ -1042,7 +1199,7 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               </select>
             </div>
 
-            <div className="text-[10px] text-[var(--md-text-subtle)] bg-[var(--md-surface-raised)] p-2 rounded">
+            <div className="text-[11px] text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] p-2 rounded-[var(--md-radius-sm)] leading-normal">
               Members: {count} shapes ({selectedShapes.map((s) => getShapeMeta(s)?.role || s.type).join(', ')})
             </div>
 
@@ -1050,7 +1207,8 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               <button
                 type="button"
                 onClick={() => setShowSaveUnitDialog(false)}
-                className="px-2.5 py-1 text-xs rounded border border-[var(--md-border)] hover:bg-[var(--md-surface-hover)] hover:border-[var(--md-border-strong)] hover:text-[var(--md-text-bold)] text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer transition-colors"
+                aria-label="Cancel unit creation"
+                className="px-3 py-1.5 text-xs rounded-[var(--md-radius-sm)] border border-[var(--md-border)] hover:bg-[var(--md-surface-hover)] hover:border-[var(--md-border-strong)] hover:text-[var(--md-text-bold)] text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -1058,7 +1216,8 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                 type="button"
                 disabled={!newUnitName.trim()}
                 onClick={handleSaveUnit}
-                className="px-3 py-1 text-xs font-semibold rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 cursor-pointer transition-colors"
+                aria-label="Save Unit"
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 cursor-pointer transition-colors shadow-xs"
               >
                 Save Unit
               </button>
