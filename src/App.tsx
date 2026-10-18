@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TldrawCanvas, Editor } from './canvas/tldraw';
+import { ExcalidrawCanvas } from './canvas/excalidraw';
+import { CanvasDriver } from './canvas/port';
 import { CompilationOptions } from './core/types';
 import { LegendModal } from './components/LegendModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -54,6 +56,7 @@ export const App: React.FC = () => {
     }
   };
 
+  const [canvasEngine, setCanvasEngine] = useState<'excalidraw' | 'tldraw'>('excalidraw');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -63,6 +66,7 @@ export const App: React.FC = () => {
 
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Editor | null>(null);
+  const driverRef = useRef<CanvasDriver | null>(null);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -124,6 +128,15 @@ export const App: React.FC = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const toggleEngine = () => {
+    setCanvasEngine((prev) => (prev === 'excalidraw' ? 'tldraw' : 'excalidraw'));
+    showToast(
+      canvasEngine === 'excalidraw'
+        ? 'Switched to tldraw canvas engine'
+        : 'Switched to Excalidraw (MIT) canvas engine'
+    );
+  };
+
   // Settings Management
   const [options, setOptions] = useState<Required<CompilationOptions>>(() => {
     try {
@@ -167,6 +180,7 @@ export const App: React.FC = () => {
     copied,
     copiedFull,
     handleEditorMount,
+    handleDriverReady,
     getActiveContent,
     handleCopy,
     handleCopyFullContract,
@@ -178,6 +192,7 @@ export const App: React.FC = () => {
     activeDoc,
     pendingShapesRef,
     editorRef,
+    driverRef,
     setEditor,
     showToast,
     outputTab
@@ -222,6 +237,8 @@ export const App: React.FC = () => {
             onOpenSettings={() => setIsSettingsOpen(true)}
             theme={theme}
             toggleTheme={toggleTheme}
+            canvasEngine={canvasEngine}
+            onToggleEngine={toggleEngine}
           />
 
           {/* Main Workspace */}
@@ -237,17 +254,33 @@ export const App: React.FC = () => {
                   window.dispatchEvent(new Event('resize'));
                 }}
               >
-                <TldrawCanvas
-                  key={activeDoc.id}
-                  persistenceKey={activeDoc.persistenceKey}
-                  onDriverReady={(_driver, rawEditor) => {
-                    setEditor(rawEditor);
-                    editorRef.current = rawEditor;
-                  }}
-                  onEditorMount={handleEditorMount}
-                  showRoleChips={showRoleChips}
-                  onCopyContract={() => showToast('Copied contract to clipboard')}
-                />
+                {canvasEngine === 'excalidraw' ? (
+                  <ExcalidrawCanvas
+                    key={`excal_${activeDoc.id}`}
+                    persistenceKey={activeDoc.persistenceKey}
+                    onDriverReady={(driver) => {
+                      driverRef.current = driver;
+                      handleDriverReady(driver);
+                    }}
+                    theme={theme}
+                    showRoleChips={showRoleChips}
+                    onCopyContract={() => showToast('Copied contract to clipboard')}
+                  />
+                ) : (
+                  <TldrawCanvas
+                    key={`tl_${activeDoc.id}`}
+                    persistenceKey={activeDoc.persistenceKey}
+                    onDriverReady={(driver, rawEditor) => {
+                      driverRef.current = driver;
+                      setEditor(rawEditor);
+                      editorRef.current = rawEditor;
+                      handleDriverReady(driver);
+                    }}
+                    onEditorMount={handleEditorMount}
+                    showRoleChips={showRoleChips}
+                    onCopyContract={() => showToast('Copied contract to clipboard')}
+                  />
+                )}
 
                 {/* Toast Message */}
                 {toastMessage && (

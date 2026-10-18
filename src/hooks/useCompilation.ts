@@ -1,10 +1,31 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Editor } from '../canvas/tldraw';
+import { CanvasDriver } from '../canvas/port/CanvasDriver';
+import { CanvasShape } from '../canvas/port/CanvasShape';
 import { MarkDrawCompiler } from '../core/compiler';
 import { CompilationResult, CompilationOptions } from '../core/types';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from '../annotation/migrate';
 import { touchDocument, getDemoCanvasShapes, MarkDrawDocMeta } from '../core/documents';
 import { OutputTab } from '../components/output';
+
+export function canvasShapesToCompilerShapes(canvasShapes: CanvasShape[]): any[] {
+  return canvasShapes.map((s) => ({
+    id: s.id,
+    type: s.kind === 'frame' ? 'frame' : s.kind === 'group' ? 'group' : 'geo',
+    x: s.bounds.x,
+    y: s.bounds.y,
+    rotation: s.bounds.rotation || 0,
+    parentId: s.parentId,
+    props: {
+      geo: s.kind === 'ellipse' ? 'ellipse' : s.kind === 'diamond' ? 'diamond' : 'rectangle',
+      w: s.bounds.w,
+      h: s.bounds.h,
+      text: s.text,
+      name: s.name
+    },
+    meta: s.meta
+  }));
+}
 
 export interface UseCompilationProps {
   options: Required<CompilationOptions>;
@@ -12,8 +33,9 @@ export interface UseCompilationProps {
   compileScopeMode: 'all' | 'selection';
   activeDoc: MarkDrawDocMeta;
   pendingShapesRef: React.MutableRefObject<any[] | null>;
-  editorRef: React.MutableRefObject<Editor | null>;
-  setEditor: React.Dispatch<React.SetStateAction<Editor | null>>;
+  editorRef?: React.MutableRefObject<Editor | null>;
+  driverRef?: React.MutableRefObject<CanvasDriver | null>;
+  setEditor?: React.Dispatch<React.SetStateAction<Editor | null>>;
   showToast: (msg: string) => void;
   outputTab: OutputTab;
 }
@@ -25,6 +47,7 @@ export function useCompilation({
   activeDoc,
   pendingShapesRef,
   editorRef,
+  driverRef,
   setEditor,
   showToast,
   outputTab
@@ -46,25 +69,34 @@ export function useCompilation({
   const compileIdRef = useRef<number>(0);
 
   // Compile Trigger with Crash Recovery
-  const triggerCompile = useCallback(() => {
-    const currentEditor = editorRef.current;
-    if (!currentEditor) return;
-
+  const triggerCompile = useCallback(async () => {
     try {
-      const shapes = currentEditor.getCurrentPageShapes();
+      let shapes: any[] = [];
+      let selectedIds: string[] = [];
+
+      if (driverRef?.current) {
+        const canvasShapes = await driverRef.current.listShapes();
+        shapes = canvasShapesToCompilerShapes(canvasShapes);
+      } else if (editorRef?.current) {
+        shapes = editorRef.current.getCurrentPageShapes();
+        selectedIds = editorRef.current.getSelectedShapeIds().map((id) => id as string);
+      } else {
+        return;
+      }
+
       compileIdRef.current += 1;
 
       const compileOpts: CompilationOptions = {
         ...options,
         platformId,
         scope:
-          compileScopeMode === 'selection' && currentEditor.getSelectedShapeIds().length > 0
-            ? { shapeIds: currentEditor.getSelectedShapeIds().map((id) => id as string) }
+          compileScopeMode === 'selection' && selectedIds.length > 0
+            ? { shapeIds: selectedIds }
             : null
       };
 
       const start = performance.now();
-      const result = MarkDrawCompiler.compile(shapes, currentEditor, compileOpts);
+      const result = MarkDrawCompiler.compile(shapes, editorRef?.current || null, compileOpts);
       const duration = Math.round(performance.now() - start);
       setCompilation(result);
       if (duration > 50) {
@@ -76,12 +108,38 @@ export function useCompilation({
       console.error('MarkDraw compilation error:', err);
       showToast('Compile error — showing last valid output');
     }
-  }, [options, platformId, compileScopeMode, showToast, editorRef]);
+  }, [options, platformId, compileScopeMode, showToast, editorRef, driverRef]);
+
+  const handleDriverReady = useCallback(
+    (driver: CanvasDriver) => {
+      if (driverRef) {
+        driverRef.current = driver;
+      }
+
+      triggerCompile();
+
+      const unlisten = driver.onShapesChanged(() => {
+        touchDocument(activeDoc.id);
+
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = window.setTimeout(triggerCompile, 35);
+      });
+
+      return unlisten;
+    },
+    [driverRef, triggerCompile, activeDoc.id]
+  );
 
   const handleEditorMount = useCallback(
     (mountedEditor: Editor) => {
-      editorRef.current = mountedEditor;
-      setEditor(mountedEditor);
+      if (editorRef) {
+        editorRef.current = mountedEditor;
+      }
+      if (setEditor) {
+        setEditor(mountedEditor);
+      }
 
       try {
         mountedEditor.updateInstanceState({ isToolLocked: false, isGridMode: true });
@@ -182,9 +240,14 @@ export function useCompilation({
   }, [getActiveContent]);
 
   const handleCopyFullContract = useCallback(async () => {
-    if (!editorRef.current) return;
-    const shapes = editorRef.current.getCurrentPageShapes();
-    const fullRes = MarkDrawCompiler.compile(shapes, editorRef.current, {
+    let shapes: any[] = [];
+    if (driverRef?.current) {
+      const canvasShapes = await driverRef.current.listShapes();
+      shapes = canvasShapesToCompilerShapes(canvasShapes);
+    } else if (editorRef?.current) {
+      shapes = editorRef.current.getCurrentPageShapes();
+    }
+    const fullRes = MarkDrawCompiler.compile(shapes, editorRef?.current || null, {
       ...options,
       includeLegend: true
     });
@@ -203,7 +266,7 @@ export function useCompilation({
       setCopiedFull(true);
       setTimeout(() => setCopiedFull(false), 2000);
     }
-  }, [editorRef, options]);
+  }, [editorRef, driverRef, options]);
 
   const handleDownload = useCallback(() => {
     const ext = outputTab === 'json' ? 'json' : outputTab === 'ascii' ? 'txt' : 'md';
@@ -223,6 +286,7 @@ export function useCompilation({
     copiedFull,
     triggerCompile,
     handleEditorMount,
+    handleDriverReady,
     getActiveContent,
     handleCopy,
     handleCopyFullContract,

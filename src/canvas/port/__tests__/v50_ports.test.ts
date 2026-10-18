@@ -250,4 +250,176 @@ describe('v5.0 Ports & Adapter Architecture (§3)', () => {
     expect(storedDoc.units.length).toBe(1);
     expect(storedDoc.units[0].name).toBe('Navbar Unit');
   });
+
+  describe('ExcalidrawDriver Conformance (§6, GATE 2)', () => {
+    function createMockExcalidrawApi() {
+      let elements: any[] = [];
+      let appState: any = {
+        scrollX: 0,
+        scrollY: 0,
+        zoom: { value: 1 },
+        selectedElementIds: {}
+      };
+      const changeListeners: ((elements: any[], state: any) => void)[] = [];
+
+      return {
+        getSceneElements: () => elements,
+        getAppState: () => appState,
+        updateScene: (scene: any) => {
+          if (scene.elements) {
+            elements = scene.elements;
+          }
+          if (scene.appState) {
+            appState = { ...appState, ...scene.appState };
+          }
+          changeListeners.forEach((cb) => cb(elements, appState));
+        },
+        onChange: (cb: any) => {
+          changeListeners.push(cb);
+          return () => {
+            const idx = changeListeners.indexOf(cb);
+            if (idx !== -1) changeListeners.splice(idx, 1);
+          };
+        },
+        scrollToContent: vi.fn()
+      } as any;
+    }
+
+    it('conforms to CanvasDriver contract for CRUD operations via ExcalidrawDriver', async () => {
+      const { ExcalidrawDriver } = await import('../../excalidraw/ExcalidrawDriver');
+      const api = createMockExcalidrawApi();
+      const driver = new ExcalidrawDriver(api);
+
+      const shapeId = await driver.createShape({
+        kind: 'frame',
+        bounds: { x: 10, y: 20, w: 400, h: 300, rotation: 0 },
+        parentId: null,
+        name: 'Excalidraw Frame',
+        text: null,
+        arrowEndpoints: null,
+        meta: { markdraw: { schema: 1, role: 'page' } }
+      });
+
+      expect(shapeId).toBeDefined();
+
+      const shape = await driver.getShape(shapeId);
+      expect(shape).not.toBeNull();
+      expect(shape?.kind).toBe('frame');
+      expect(shape?.bounds.w).toBe(400);
+
+      // Update shape
+      await driver.updateShape(shapeId, { bounds: { x: 10, y: 20, w: 500, h: 300, rotation: 0 } });
+      const updated = await driver.getShape(shapeId);
+      expect(updated?.bounds.w).toBe(500);
+
+      // List shapes with filters
+      const all = await driver.listShapes();
+      expect(all.length).toBe(1);
+
+      const filtered = await driver.listShapes({ kinds: ['rect'] });
+      expect(filtered.length).toBe(0);
+
+      const matchFilter = await driver.listShapes({ kinds: ['frame'] });
+      expect(matchFilter.length).toBe(1);
+
+      // Delete shape
+      await driver.deleteShape(shapeId);
+      const deleted = await driver.getShape(shapeId);
+      expect(deleted).toBeNull();
+    });
+
+    it('handles Excalidraw grouping by assigning virtual group parentId (§6)', async () => {
+      const { ExcalidrawDriver } = await import('../../excalidraw/ExcalidrawDriver');
+      const api = createMockExcalidrawApi();
+      const driver = new ExcalidrawDriver(api);
+
+      const id1 = await driver.createShape({
+        kind: 'rect',
+        bounds: { x: 0, y: 0, w: 100, h: 40, rotation: 0 },
+        parentId: null,
+        name: null,
+        text: 'Item 1',
+        arrowEndpoints: null,
+        meta: {}
+      });
+
+      const id2 = await driver.createShape({
+        kind: 'rect',
+        bounds: { x: 0, y: 50, w: 100, h: 40, rotation: 0 },
+        parentId: null,
+        name: null,
+        text: 'Item 2',
+        arrowEndpoints: null,
+        meta: {}
+      });
+
+      const groupId = await driver.groupShapes([id1, id2]);
+      expect(groupId).toMatch(/^virtual:grp_/);
+
+      const shape1 = await driver.getShape(id1);
+      const shape2 = await driver.getShape(id2);
+      expect(shape1?.parentId).toBe(groupId);
+      expect(shape2?.parentId).toBe(groupId);
+    });
+
+    it('converts Excalidraw scenes to vendor-neutral StoredDocument and restores', async () => {
+      const { excalidrawSceneToStoredDocument, storedDocumentToExcalidrawElements } = await import(
+        '../../excalidraw/v5-export.excalidraw'
+      );
+
+      const mockElements: any[] = [
+        {
+          id: 'excal_frame',
+          type: 'frame',
+          x: 0,
+          y: 0,
+          width: 800,
+          height: 600,
+          angle: 0,
+          frameId: null,
+          groupIds: [],
+          customData: { markdraw: { schema: 1, role: 'page' } },
+          isDeleted: false
+        },
+        {
+          id: 'excal_btn',
+          type: 'rectangle',
+          x: 50,
+          y: 50,
+          width: 120,
+          height: 40,
+          angle: 0,
+          frameId: 'excal_frame',
+          groupIds: [],
+          customData: { markdraw: { schema: 1, role: 'button' } },
+          isDeleted: false
+        }
+      ];
+
+      const stored = excalidrawSceneToStoredDocument(mockElements, [
+        {
+          id: 'u1',
+          name: 'Hero Unit',
+          tag: 'Hero Unit',
+          baseRole: 'hero',
+          memberRoles: ['button'],
+          createdAt: 100,
+          updatedAt: 200
+        }
+      ]);
+
+      expect(stored.shapes.length).toBe(2);
+      expect(stored.shapes[0].kind).toBe('frame');
+      expect(stored.shapes[1].kind).toBe('rect');
+      expect(stored.shapes[1].parentId).toBe('excal_frame');
+      expect(stored.units.length).toBe(1);
+
+      // Reconstruct Excalidraw elements
+      const restored = storedDocumentToExcalidrawElements(stored);
+      expect(restored.length).toBe(2);
+      expect(restored[0].type).toBe('frame');
+      expect(restored[1].type).toBe('rectangle');
+      expect(restored[1].frameId).toBe('excal_frame');
+    });
+  });
 });

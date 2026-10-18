@@ -35,6 +35,8 @@ export interface AppHeaderProps {
   onOpenSettings: () => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
+  canvasEngine?: 'excalidraw' | 'tldraw';
+  onToggleEngine?: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -58,7 +60,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenLegend,
   onOpenSettings,
   theme,
-  toggleTheme
+  toggleTheme,
+  canvasEngine = 'excalidraw',
+  onToggleEngine
 }) => {
   return (
     <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
@@ -72,6 +76,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border border-[var(--md-border)]">
           v{MARKDRAW_VERSION}
         </span>
+        {onToggleEngine && (
+          <button
+            type="button"
+            onClick={onToggleEngine}
+            className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-accent)] border border-[var(--md-border)] hover:border-[var(--md-accent)] cursor-pointer transition-colors"
+            title="Click to toggle between Excalidraw (MIT) and tldraw canvas engines"
+          >
+            Engine: {canvasEngine === 'excalidraw' ? 'Excalidraw (MIT)' : 'tldraw'}
+          </button>
+        )}
 
         {/* Document Menu */}
         <DocumentMenu
