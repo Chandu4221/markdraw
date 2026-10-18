@@ -799,178 +799,182 @@ export const App: React.FC = () => {
               }}
             >
               <div className="h-full flex flex-col shrink-0 overflow-hidden w-full min-w-0">
-                {/* Output Toolbar (Line 1: Tabs, Line 2: Preview/Raw on Left + Copy Actions on Right on SAME line) */}
-                <div className="min-h-10 px-2.5 py-1.5 border-b border-[var(--md-border)] flex items-center justify-between flex-wrap shrink-0 select-none gap-2 bg-[var(--md-surface)]">
-                  {/* Primary Tabs */}
-                  <div
-                    role="tablist"
-                    aria-label="Output View Modes"
-                    className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
-                  >
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'spec'}
-                      aria-label="Spec Table view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'spec'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
-                      }`}
-                      onClick={() => setOutputTab('spec')}
+                {/* Output Toolbar: 2 Dedicated Structured Tiers */}
+                <div className="shrink-0 select-none bg-[var(--md-surface)] border-b border-[var(--md-border)]">
+                  {/* Tier 1: View Navigation Tabs (Left) & Format Toggle (Right) */}
+                  <div className="min-h-9 px-2.5 py-1 border-b border-[var(--md-border)]/50 flex items-center justify-between gap-2 flex-wrap">
+                    {/* Primary Tabs */}
+                    <div
+                      role="tablist"
+                      aria-label="Output View Modes"
+                      className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
                     >
-                      <FileText size={13} />
-                      <span>Spec <span className="hidden xl:inline">Table</span></span>
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'grid'}
-                      aria-label="Spatial Grid view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'grid'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                      }`}
-                      onClick={() => setOutputTab('grid')}
-                    >
-                      <LayoutGrid size={13} />
-                      <span><span className="hidden xl:inline">Spatial </span>Grid</span>
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'ascii'}
-                      aria-label="ASCII layout view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'ascii'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                      }`}
-                      onClick={() => setOutputTab('ascii')}
-                    >
-                      <Terminal size={13} />
-                      <span>ASCII</span>
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={outputTab === 'json'}
-                      aria-label="JSON AST view"
-                      className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                        outputTab === 'json'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                      }`}
-                      onClick={() => setOutputTab('json')}
-                    >
-                      <Code size={13} />
-                      <span>JSON<span className="hidden xl:inline"> AST</span></span>
-                    </button>
+                      <button
+                        role="tab"
+                        aria-selected={outputTab === 'spec'}
+                        aria-label="Spec Table view"
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputTab === 'spec'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                        }`}
+                        onClick={() => setOutputTab('spec')}
+                      >
+                        <FileText size={13} />
+                        <span>Spec Table</span>
+                      </button>
+                      <button
+                        role="tab"
+                        aria-selected={outputTab === 'grid'}
+                        aria-label="Spatial Grid view"
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputTab === 'grid'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                        }`}
+                        onClick={() => setOutputTab('grid')}
+                      >
+                        <LayoutGrid size={13} />
+                        <span>Spatial Grid</span>
+                      </button>
+                      <button
+                        role="tab"
+                        aria-selected={outputTab === 'ascii'}
+                        aria-label="ASCII layout view"
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputTab === 'ascii'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                        }`}
+                        onClick={() => setOutputTab('ascii')}
+                      >
+                        <Terminal size={13} />
+                        <span>ASCII</span>
+                      </button>
+                      <button
+                        role="tab"
+                        aria-selected={outputTab === 'json'}
+                        aria-label="JSON AST view"
+                        className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                          outputTab === 'json'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                        }`}
+                        onClick={() => setOutputTab('json')}
+                      >
+                        <Code size={13} />
+                        <span>JSON AST</span>
+                      </button>
+                    </div>
+
+                    {/* View Mode Toggle (Preview vs Raw) - only for spec and grid */}
+                    {(outputTab === 'spec' || outputTab === 'grid') && (
+                      <div
+                        role="group"
+                        aria-label="Display View Mode"
+                        className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
+                      >
+                        <button
+                          type="button"
+                          aria-pressed={outputDisplayMode === 'preview'}
+                          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                            outputDisplayMode === 'preview'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                          }`}
+                          onClick={() => handleOutputDisplayModeChange('preview')}
+                          title="Formatted Markdown Preview"
+                          aria-label="Formatted preview mode"
+                        >
+                          <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
+                          <span>Preview</span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={outputDisplayMode === 'raw'}
+                          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                            outputDisplayMode === 'raw'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                          }`}
+                          onClick={() => handleOutputDisplayModeChange('raw')}
+                          title="Raw Markdown Syntax"
+                          aria-label="Raw Markdown mode"
+                        >
+                          <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
+                          <span>Raw</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Secondary Controls: View Mode & Platform on Left + Actions on Right (wraps onto next line when space is constrained) */}
-                  <div className="flex items-center justify-between gap-2 flex-wrap flex-1 min-w-0">
-                    {/* View Mode & Platform Controls Group */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* View Mode Toggle (Preview vs Raw) */}
-                      {(outputTab === 'spec' || outputTab === 'grid') && (
-                        <div
-                          role="group"
-                          aria-label="Display View Mode"
-                          className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
-                        >
-                          <button
-                            type="button"
-                            aria-pressed={outputDisplayMode === 'preview'}
-                            className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                              outputDisplayMode === 'preview'
-                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
-                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                            }`}
-                            onClick={() => handleOutputDisplayModeChange('preview')}
-                            title="Formatted Markdown Preview"
-                            aria-label="Formatted preview mode"
-                          >
-                            <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
-                            <span>Preview</span>
-                          </button>
-                          <button
-                            type="button"
-                            aria-pressed={outputDisplayMode === 'raw'}
-                            className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                              outputDisplayMode === 'raw'
-                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
-                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                            }`}
-                            onClick={() => handleOutputDisplayModeChange('raw')}
-                            title="Raw Markdown Syntax"
-                            aria-label="Raw Markdown mode"
-                          >
-                            <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
-                            <span>Raw</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Platform Selector & Scope Toggle (v4 - §9.3) */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Tier 2: Compilation Target & Export Actions */}
+                  <div className="min-h-9 px-2.5 py-1 flex items-center justify-between gap-2 flex-wrap bg-[var(--md-surface-raised)]/25">
+                    {/* Platform Selector & Scope Toggle */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1 text-[11px] text-[var(--md-text-muted)] font-medium">
+                        <span>Profile:</span>
                         <select
                           value={platformId}
                           onChange={(e) => setPlatformId(e.target.value)}
-                          className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer"
+                          className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer hover:border-[var(--md-border-strong)] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]"
                           title="Target compilation platform profile (§10)"
                         >
                           <option value="web">Web</option>
                           <option value="android-material">Android (M3)</option>
                         </select>
-                        <div
-                          role="group"
-                          aria-label="Compilation Scope"
-                          className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                      </div>
+
+                      <div
+                        role="group"
+                        aria-label="Compilation Scope"
+                        className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setCompileScopeMode('all')}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                            compileScopeMode === 'all'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                          }`}
+                          title="Compile all roots on canvas"
                         >
-                          <button
-                            type="button"
-                            onClick={() => setCompileScopeMode('all')}
-                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
-                              compileScopeMode === 'all'
-                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                            }`}
-                            title="Compile all roots on canvas"
-                          >
-                            All
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCompileScopeMode('selection')}
-                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
-                              compileScopeMode === 'selection'
-                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                            }`}
-                            title="Compile selected subtree only"
-                          >
-                            Selection
-                          </button>
-                        </div>
+                          All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCompileScopeMode('selection')}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                            compileScopeMode === 'selection'
+                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                          }`}
+                          title="Compile selected subtree only"
+                        >
+                          Selection
+                        </button>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0 flex-wrap">
+                    <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                       <Button
                         variant={copied ? 'success' : 'brand'}
                         size="sm"
                         onClick={handleCopy}
-                        className="h-7 gap-1.5 text-xs font-medium shrink-0 px-2.5"
+                        className="h-6 gap-1 text-[11px] font-medium shrink-0 px-2 cursor-pointer"
                         title="Copy lean contract (Directive + Spec Table)"
                         aria-label="Copy to Clipboard"
                       >
                         {copied ? (
                           <>
-                            <Check size={12} />
+                            <Check size={11} />
                             <span>Copied</span>
                           </>
                         ) : (
                           <>
-                            <Copy size={12} />
+                            <Copy size={11} />
                             <span>Copy</span>
                           </>
                         )}
@@ -979,18 +983,18 @@ export const App: React.FC = () => {
                         variant={copiedFull ? 'success' : 'outline'}
                         size="sm"
                         onClick={handleCopyFullContract}
-                        className="h-7 gap-1.5 text-xs font-medium shrink-0 px-2.5"
+                        className="h-6 gap-1 text-[11px] font-medium shrink-0 px-2 cursor-pointer"
                         title="Copy full contract with auto-generated canvas legend"
                         aria-label="Copy Full Contract"
                       >
                         {copiedFull ? (
                           <>
-                            <Check size={12} />
+                            <Check size={11} />
                             <span>Copied Full</span>
                           </>
                         ) : (
                           <>
-                            <Copy size={12} />
+                            <Copy size={11} />
                             <span>Copy Full</span>
                           </>
                         )}
@@ -999,11 +1003,11 @@ export const App: React.FC = () => {
                         variant="ghost"
                         size="icon-sm"
                         onClick={handleDownload}
-                        className="shrink-0"
+                        className="h-6 w-6 shrink-0 cursor-pointer text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)]"
                         title="Download Source"
                         aria-label="Download Source"
                       >
-                        <Download size={14} />
+                        <Download size={13} />
                       </Button>
                     </div>
                   </div>
