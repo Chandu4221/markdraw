@@ -865,95 +865,96 @@ export const App: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Secondary Controls: Preview/Raw Toggle on Left + Actions on Right (Always on the same line) */}
-                  <div className="flex items-center justify-between gap-2 flex-1 min-w-[280px]">
-                    {/* View Mode Toggle (Preview vs Raw) */}
-                    {(outputTab === 'spec' || outputTab === 'grid') ? (
-                      <div
-                        role="group"
-                        aria-label="Display View Mode"
-                        className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
-                      >
-                        <button
-                          type="button"
-                          aria-pressed={outputDisplayMode === 'preview'}
-                          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                            outputDisplayMode === 'preview'
-                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
-                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                          }`}
-                          onClick={() => handleOutputDisplayModeChange('preview')}
-                          title="Formatted Markdown Preview"
-                          aria-label="Formatted preview mode"
+                  {/* Secondary Controls: View Mode & Platform on Left + Actions on Right (wraps onto next line when space is constrained) */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap flex-1 min-w-0">
+                    {/* View Mode & Platform Controls Group */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* View Mode Toggle (Preview vs Raw) */}
+                      {(outputTab === 'spec' || outputTab === 'grid') && (
+                        <div
+                          role="group"
+                          aria-label="Display View Mode"
+                          className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)] shrink-0"
                         >
-                          <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
-                          <span>Preview</span>
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={outputDisplayMode === 'raw'}
-                          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
-                            outputDisplayMode === 'raw'
-                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
-                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                          }`}
-                          onClick={() => handleOutputDisplayModeChange('raw')}
-                          title="Raw Markdown Syntax"
-                          aria-label="Raw Markdown mode"
-                        >
-                          <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
-                          <span>Raw</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div />
-                    )}
+                          <button
+                            type="button"
+                            aria-pressed={outputDisplayMode === 'preview'}
+                            className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                              outputDisplayMode === 'preview'
+                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                            }`}
+                            onClick={() => handleOutputDisplayModeChange('preview')}
+                            title="Formatted Markdown Preview"
+                            aria-label="Formatted preview mode"
+                          >
+                            <Eye size={12} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
+                            <span>Preview</span>
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={outputDisplayMode === 'raw'}
+                            className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-[4px] transition-colors cursor-pointer ${
+                              outputDisplayMode === 'raw'
+                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
+                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                            }`}
+                            onClick={() => handleOutputDisplayModeChange('raw')}
+                            title="Raw Markdown Syntax"
+                            aria-label="Raw Markdown mode"
+                          >
+                            <Code size={12} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
+                            <span>Raw</span>
+                          </button>
+                        </div>
+                      )}
 
-                    {/* Platform Selector & Scope Toggle (v4 - §9.3) */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <select
-                        value={platformId}
-                        onChange={(e) => setPlatformId(e.target.value)}
-                        className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer"
-                        title="Target compilation platform profile (§10)"
-                      >
-                        <option value="web">Web</option>
-                        <option value="android-material">Android (M3)</option>
-                      </select>
-                      <div
-                        role="group"
-                        aria-label="Compilation Scope"
-                        className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setCompileScopeMode('all')}
-                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
-                            compileScopeMode === 'all'
-                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                          }`}
-                          title="Compile all roots on canvas"
+                      {/* Platform Selector & Scope Toggle (v4 - §9.3) */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <select
+                          value={platformId}
+                          onChange={(e) => setPlatformId(e.target.value)}
+                          className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer"
+                          title="Target compilation platform profile (§10)"
                         >
-                          All
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCompileScopeMode('selection')}
-                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
-                            compileScopeMode === 'selection'
-                              ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
-                              : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
-                          }`}
-                          title="Compile selected subtree only"
+                          <option value="web">Web</option>
+                          <option value="android-material">Android (M3)</option>
+                        </select>
+                        <div
+                          role="group"
+                          aria-label="Compilation Scope"
+                          className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
                         >
-                          Selection
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => setCompileScopeMode('all')}
+                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                              compileScopeMode === 'all'
+                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                            }`}
+                            title="Compile all roots on canvas"
+                          >
+                            All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCompileScopeMode('selection')}
+                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                              compileScopeMode === 'selection'
+                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                            }`}
+                            title="Compile selected subtree only"
+                          >
+                            Selection
+                          </button>
+                        </div>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0 ml-auto">
+                    <div className="flex items-center gap-1 shrink-0 flex-wrap">
                       <Button
                         variant={copied ? 'success' : 'brand'}
                         size="sm"
