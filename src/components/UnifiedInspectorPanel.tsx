@@ -327,7 +327,7 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
       ref={panelRef}
       role="complementary"
       aria-label="Inspector and Document Settings"
-      className="tlui-style-panel tlui-style-panel__wrapper markdraw-unified-inspector !w-[264px] max-h-[calc(100vh-100px)] overflow-y-auto font-sans select-none bg-[var(--md-surface)] border border-[var(--md-border)] rounded-[var(--md-radius-md)] shadow-[var(--md-shadow-lg)] text-xs text-[var(--md-text)]"
+      className="tlui-style-panel tlui-style-panel__wrapper markdraw-unified-inspector !w-[300px] max-h-[calc(100vh-100px)] overflow-y-auto font-sans select-none bg-[var(--md-surface)] border border-[var(--md-border)] rounded-[var(--md-radius-md)] shadow-[var(--md-shadow-lg)] text-xs text-[var(--md-text)]"
       data-ismobile={isMobile}
       onPointerLeave={handlePointerOut}
       onPointerDown={(e) => e.stopPropagation()}
@@ -348,14 +348,14 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               : `${count} shapes selected`}
           </span>
           {count > 0 && currentUnitId && (
-            <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-purple-600 text-white rounded">
+            <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-purple-600 text-white rounded shrink-0">
               UNIT
             </span>
           )}
         </div>
         <button
           type="button"
-          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--md-surface)] transition-colors cursor-pointer"
+          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--md-surface)] transition-colors cursor-pointer shrink-0"
           onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
           aria-label={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
@@ -383,16 +383,16 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Tag size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
-                    <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                    <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors whitespace-nowrap shrink-0">
                       Semantic Role
                     </span>
                     {currentRole && (
-                      <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-[var(--md-surface-raised)] border border-[var(--md-border)] text-[var(--md-text-bold)] rounded">
+                      <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-[var(--md-surface-raised)] border border-[var(--md-border)] text-[var(--md-text-bold)] rounded truncate max-w-[100px]">
                         {currentRole}
                       </span>
                     )}
                   </div>
-                  <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors shrink-0">
                     {openSections.semantics ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                   </div>
                 </button>
@@ -702,11 +702,11 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Palette size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
-                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors whitespace-nowrap shrink-0">
                     Visual Styles
                   </span>
                 </div>
-                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors shrink-0">
                   {openSections.styles ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                 </div>
               </button>
@@ -745,16 +745,16 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Sliders size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
-                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors whitespace-nowrap shrink-0">
                     Compiler & Settings
                   </span>
                   {options && (
-                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] border border-[var(--md-border)] rounded">
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] border border-[var(--md-border)] rounded truncate max-w-[100px]">
                       {options.platform || 'web'}
                     </span>
                   )}
                 </div>
-                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors shrink-0">
                   {openSections.settings ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                 </div>
               </button>
@@ -985,16 +985,16 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Box size={13} className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] shrink-0 transition-colors" />
-                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors whitespace-nowrap shrink-0">
                     Canvas & Units
                   </span>
                   {storedUnits.length > 0 && (
-                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] border border-[var(--md-border)] rounded">
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-text-muted)] bg-[var(--md-surface-raised)] border border-[var(--md-border)] rounded shrink-0">
                       {storedUnits.length}
                     </span>
                   )}
                 </div>
-                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors">
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)] transition-colors shrink-0">
                   {openSections.units ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                 </div>
               </button>

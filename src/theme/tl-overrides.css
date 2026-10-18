@@ -276,8 +276,8 @@
 .tlui-style-panel.markdraw-unified-inspector,
 .tlui-style-panel__wrapper:has(.markdraw-unified-inspector),
 .tlui-style-panel__wrapper.markdraw-unified-inspector {
-  width: 264px !important;
-  max-width: 264px !important;
+  width: 300px !important;
+  max-width: 300px !important;
   background-color: var(--md-surface) !important;
   border: 1px solid var(--md-border) !important;
   border-radius: var(--md-radius-md) !important;
@@ -289,7 +289,28 @@
 }
 
 .markdraw-unified-inspector .tlui-buttons__grid {
-  justify-content: center;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  width: 100% !important;
+  justify-items: center !important;
+  align-items: center !important;
+  gap: 2px 0 !important;
+}
+
+.markdraw-unified-inspector .tlui-buttons__grid > .tlui-button {
+  margin: 0 !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: var(--md-radius-sm) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.markdraw-unified-inspector .tlui-slider__container {
+  padding: 0 4px !important;
+  width: 100% !important;
 }
 
 /* ------------------------------------------------------------- */
