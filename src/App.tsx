@@ -8,6 +8,7 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { DocumentMenu } from './components/DocumentMenu';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { UnifiedInspectorPanel } from './components/UnifiedInspectorPanel';
+import { CompilationOptionsContext } from './core/CompilationOptionsContext';
 import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from './annotation/migrate';
 import { LegacyWidgetShapeUtil } from './annotation/legacyShapeUtil';
@@ -152,10 +153,25 @@ export const App: React.FC = () => {
   const [platformId, setPlatformId] = useState<string>('web');
   const [compileScopeMode, setCompileScopeMode] = useState<'all' | 'selection'>('all');
 
-  const handleOptionsChange = (newOpts: Required<CompilationOptions>) => {
-    setOptions(newOpts);
-    localStorage.setItem('markdraw_settings', JSON.stringify(newOpts));
-  };
+  const handleOptionsChange = useCallback(
+    (
+      newOptsOrUpdater:
+        | Required<CompilationOptions>
+        | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)
+    ) => {
+      setOptions((prev) => {
+        const next =
+          typeof newOptsOrUpdater === 'function' ? newOptsOrUpdater(prev) : newOptsOrUpdater;
+        try {
+          localStorage.setItem('markdraw_settings', JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+    },
+    []
+  );
 
   const [compilation, setCompilation] = useState<CompilationResult>({
     markdownSpec: 'Draw elements on the canvas or pick UI components to compile.',
@@ -550,7 +566,8 @@ export const App: React.FC = () => {
 
   return (
     <ErrorBoundary getRecoverySnapshot={getRecoverySnapshot}>
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--md-bg)] text-[var(--md-text)] font-sans antialiased">
+      <CompilationOptionsContext.Provider value={{ options, setOptions: handleOptionsChange }}>
+        <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--md-bg)] text-[var(--md-text)] font-sans antialiased">
         {/* Top Application Header */}
         <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
           <div className="flex items-center gap-2">
@@ -1037,6 +1054,7 @@ export const App: React.FC = () => {
         />
         <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
       </div>
+      </CompilationOptionsContext.Provider>
     </ErrorBoundary>
   );
 };

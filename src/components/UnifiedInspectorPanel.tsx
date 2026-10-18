@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react';
 import {
   useEditor,
   TLShape,
@@ -9,6 +9,7 @@ import {
 } from '@tldraw/tldraw';
 import {
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   Tag,
   Sparkles,
@@ -18,7 +19,9 @@ import {
   Check,
   Trash2,
   Copy,
-  Palette
+  Palette,
+  Sliders,
+  RotateCcw
 } from 'lucide-react';
 import {
   ROLE_DEFINITIONS,
@@ -36,7 +39,10 @@ import {
   createUnitDefinition,
   stampUnit
 } from '../annotation/units';
+import { RoleResponsive } from '../annotation/types';
+import { useCompilationOptions } from '../core/CompilationOptionsContext';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 
 export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
   isMobile
@@ -46,23 +52,9 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   usePassThroughWheelEvents(panelRef as any);
 
-  const [activeTab, setActiveTab] = useState<'semantics' | 'style'>(() => {
-    try {
-      const saved = localStorage.getItem('markdraw_inspector_tab');
-      return saved === 'style' ? 'style' : 'semantics';
-    } catch {
-      return 'semantics';
-    }
-  });
-
-  const handleTabChange = (tab: 'semantics' | 'style') => {
-    setActiveTab(tab);
-    try {
-      localStorage.setItem('markdraw_inspector_tab', tab);
-    } catch {
-      // ignore
-    }
-  };
+  const compilationCtx = useCompilationOptions();
+  const options = compilationCtx?.options;
+  const setOptions = compilationCtx?.setOptions;
 
   const [selectedShapes, setSelectedShapes] = useState<TLShape[]>([]);
   const [roleSearch, setRoleSearch] = useState('');
@@ -74,6 +66,34 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
   const [newUnitBaseRole, setNewUnitBaseRole] = useState<RoleName>('card');
   const [stampOffsetCount, setStampOffsetCount] = useState(0);
   const [copiedFrameId, setCopiedFrameId] = useState<string | null>(null);
+
+  // Collapsible section states with localStorage persistence
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('markdraw_inspector_sections');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return {
+      semantics: true,
+      styles: true,
+      settings: false,
+      units: true
+    };
+  });
+
+  const toggleSection = (key: string) => {
+    setOpenSections((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem('markdraw_inspector_sections', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const refreshUnits = () => {
     setStoredUnits(getStoredUnits());
@@ -125,36 +145,31 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
   }, [editor]);
 
   const count = selectedShapes.length;
-
-  const candidateParents = useMemo(() => {
-    if (!editor || count === 0) return [];
-    const selIds = new Set(selectedShapes.map((s) => s.id));
-    const all = editor.getCurrentPageShapes();
-    return all.filter((s) => {
-      if (selIds.has(s.id)) return false;
-      if (s.type === 'frame' || s.type === 'group') return true;
-      const meta = getShapeMeta(s);
-      if (meta && ['page', 'section', 'card', 'hero', 'dialog'].includes(meta.role || '')) {
-        return true;
-      }
-      return false;
-    });
-  }, [editor, selectedShapes, count]);
-
   const firstShape = selectedShapes[0];
   const firstMeta = firstShape ? getShapeMeta(firstShape) : null;
-  const currentRole = firstMeta?.role || null;
-  const currentUnitId = firstMeta?.unitId || null;
-  const currentParentId = firstMeta?.parentId || firstShape?.parentId || null;
+  const currentRole = firstMeta?.role;
+  const currentUnitId = firstMeta?.unitId;
 
+  // Potential parent shapes on the canvas (excluding selected shapes)
+  const potentialParents = useMemo(() => {
+    if (!editor) return [];
+    const all = editor.getCurrentPageShapes();
+    const selectedIds = new Set(selectedShapes.map((s) => s.id));
+    return all.filter((s) => !selectedIds.has(s.id));
+  }, [editor, selectedShapes]);
+
+  // Suggested role for selected shape
   const suggestedRole = useMemo(() => {
-    if (!editor || count !== 1 || !firstShape) return null;
-    return suggestRoleForShape(firstShape, editor);
-  }, [editor, count, firstShape]);
+    if (count === 1 && firstShape) {
+      return suggestRoleForShape(firstShape, editor);
+    }
+    return null;
+  }, [count, firstShape, editor]);
 
-  const groupedRoles = useMemo(() => {
-    const filtered = searchRoles(roleSearch);
-    const groups: Record<RoleCategory, typeof filtered> = {
+  // Grouped search results for roles
+  const filteredGroupedRoles = useMemo(() => {
+    const matched = searchRoles(roleSearch);
+    const groups: Record<RoleCategory, typeof matched> = {
       structure: [],
       content: [],
       interaction: [],
@@ -162,87 +177,63 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
       feedback: [],
       utility: []
     };
-    for (const r of filtered) {
-      groups[r.category].push(r);
-    }
+    matched.forEach((r) => {
+      if (groups[r.category]) {
+        groups[r.category].push(r);
+      }
+    });
     return groups;
   }, [roleSearch]);
 
-  const rootPageShape = useMemo(() => {
-    if (!editor) return null;
-    const all = editor.getCurrentPageShapes();
-    return all.find((s) => s.type === 'frame' || getShapeMeta(s)?.role === 'page') || null;
-  }, [editor, selectedShapes]);
-
-  const hasResponsiveRoot = useMemo(() => {
-    if (!rootPageShape) return false;
-    const meta = getShapeMeta(rootPageShape);
-    const behaviors = (meta?.props as any)?.behaviors || [];
-    return behaviors.includes('responsive') || meta?.responsive !== null;
-  }, [rootPageShape]);
-
-  const handleAssignRole = (roleName: string | null) => {
-    if (!editor || count === 0) return;
+  const handleAssignRole = (role: RoleName | null) => {
+    if (!editor || selectedShapes.length === 0) return;
     const shapeIds = selectedShapes.map((s) => s.id);
-    updateShapeMeta(editor, shapeIds, { role: roleName });
+    updateShapeMeta(editor, shapeIds, { role });
     setIsRoleDropdownOpen(false);
     setRoleSearch('');
   };
 
-  const handleToggleFlag = (flag: string) => {
-    if (!editor || count === 0) return;
-    const shapeIds = selectedShapes.map((s) => s.id);
-    for (const id of shapeIds) {
-      const s = editor.getShape(id as any);
-      if (!s) continue;
-      const meta = getShapeMeta(s);
-      const currentFlags: string[] = (meta?.props as any)?.behaviors || [];
-      const nextFlags = currentFlags.includes(flag)
-        ? currentFlags.filter((f) => f !== flag)
-        : [...currentFlags, flag];
-      updateShapeMeta(editor, [id], {
-        props: { ...meta?.props, behaviors: nextFlags }
-      });
-    }
-  };
-
   const handleUpdateProp = (key: string, value: any) => {
-    if (!editor || count === 0) return;
+    if (!editor || selectedShapes.length === 0) return;
     const shapeIds = selectedShapes.map((s) => s.id);
-    for (const id of shapeIds) {
-      const s = editor.getShape(id as any);
-      if (!s) continue;
-      const meta = getShapeMeta(s);
-      updateShapeMeta(editor, [id], {
-        props: { ...meta?.props, [key]: value }
-      });
-    }
+    updateShapeMeta(editor, shapeIds, {
+      props: { [key]: value }
+    });
   };
 
-  const handleUpdateResponsive = (partial: any) => {
+  const handleToggleBehavior = (behavior: string) => {
+    if (!editor || selectedShapes.length === 0) return;
+    const currentFlags: string[] = (firstMeta?.props as any)?.behaviors || [];
+    const nextFlags = currentFlags.includes(behavior)
+      ? currentFlags.filter((f) => f !== behavior)
+      : [...currentFlags, behavior];
+
+    handleUpdateProp('behaviors', nextFlags.length > 0 ? nextFlags : undefined);
+  };
+
+  const handleSetParent = (parentId: string | null) => {
+    if (!editor || selectedShapes.length === 0) return;
+    const shapeIds = selectedShapes.map((s) => s.id);
+    updateShapeMeta(editor, shapeIds, { parentId });
+  };
+
+  const handleUpdateResponsive = (patch: Partial<RoleResponsive> | null) => {
     if (!editor || count === 0) return;
     const shapeIds = selectedShapes.map((s) => s.id);
-    for (const id of shapeIds) {
-      const s = editor.getShape(id as any);
-      if (!s) continue;
-      const meta = getShapeMeta(s);
-      const prev = meta?.responsive || {
+    if (patch === null) {
+      updateShapeMeta(editor, shapeIds, { responsive: null });
+    } else {
+      const existing: RoleResponsive = firstMeta?.responsive || {
         order: 'auto',
         primary: false,
         smVisible: 'visible',
         smFullWidth: false,
         tablet: 'maintain'
       };
-      updateShapeMeta(editor, [id], {
-        responsive: { ...prev, ...partial }
+      updateShapeMeta(editor, shapeIds, {
+        responsive: { ...existing, ...patch }
       });
     }
-  };
-
-  const handleSetParentId = (parentId: string | null) => {
-    if (!editor || count === 0) return;
-    const shapeIds = selectedShapes.map((s) => s.id);
-    updateShapeMeta(editor, shapeIds, { parentId });
   };
 
   const handleSaveUnit = () => {
@@ -268,7 +259,8 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
     }
   };
 
-  const handleDeleteUnit = (id: string) => {
+  const handleDeleteUnit = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     deleteStoredUnit(id);
     refreshUnits();
   };
@@ -287,15 +279,44 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
     };
     findChildren(frameId);
     const scopeIds = [frameId, ...descendants];
+    const frame = editor.getShape(frameId as any);
+    const frameName = (frame?.props as any)?.name || 'Page';
     const res = MarkDrawCompiler.compile(all, editor, {
-      annotationMode: true,
-      scope: { shapeIds: scopeIds }
+      ...(options || {}),
+      scope: { shapeIds: scopeIds, scopeName: frameName }
     });
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(res.markdownSpec);
-    }
+    navigator.clipboard.writeText(res.markdownSpec);
     setCopiedFrameId(frameId);
     setTimeout(() => setCopiedFrameId(null), 2000);
+  };
+
+  // Compiler settings helpers
+  const handleUpdateOption = <K extends keyof Required<import('../core/types').CompilationOptions>>(
+    key: K,
+    value: Required<import('../core/types').CompilationOptions>[K]
+  ) => {
+    if (!setOptions) return;
+    setOptions((prev) => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleResetOptions = () => {
+    if (!setOptions) return;
+    setOptions((prev) => ({
+      ...prev,
+      containmentThreshold: 0.85,
+      rowClusterThreshold: 16,
+      gridBandThreshold: 32,
+      sizeBucketTolerance: 2,
+      alignTolerance: 3,
+      includeTimestamp: false,
+      includeLegend: false,
+      pageNote: '',
+      platform: 'web',
+      platformId: 'web'
+    }));
   };
 
   const roleDef = currentRole ? ROLE_DEFINITIONS[currentRole as RoleName] : null;
@@ -312,26 +333,19 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Header with Title and Collapse Button */}
+      {/* 1. Global Inspector Header */}
       <div className="h-9 px-3 border-b border-[var(--md-border)] flex items-center justify-between bg-[var(--md-surface)] shrink-0">
         <div className="flex items-center gap-1.5 min-w-0">
-          {activeTab === 'semantics' ? (
-            <Tag size={13} className="text-blue-500 shrink-0" />
-          ) : (
-            <Palette size={13} className="text-blue-500 shrink-0" />
-          )}
           <span className="text-xs font-semibold text-[var(--md-text-bold)] truncate">
-            {activeTab === 'style'
-              ? 'Style & Tools'
-              : count === 0
-              ? 'Canvas Overview'
+            {count === 0
+              ? 'Inspector & Document'
               : count === 1
               ? currentRole
                 ? `${currentRole} (${firstShape.type})`
                 : `Untagged (${firstShape.type})`
               : `${count} shapes selected`}
           </span>
-          {activeTab === 'semantics' && currentUnitId && (
+          {count > 0 && currentUnitId && (
             <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-purple-600 text-white rounded">
               UNIT
             </span>
@@ -350,314 +364,191 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
       </div>
 
       {!isCollapsed && (
-        <>
-          {/* Segmented Switcher: Semantics vs Style */}
-          <div className="p-1.5 border-b border-[var(--md-border)] bg-[var(--md-surface-raised)]">
-            <div className="flex rounded-[var(--md-radius-sm)] bg-[var(--md-surface)] p-0.5 border border-[var(--md-border)]">
-              <button
-                type="button"
-                onClick={() => handleTabChange('semantics')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-[4px] transition-all cursor-pointer ${
-                  activeTab === 'semantics'
-                    ? 'bg-[var(--md-accent)] text-white shadow-xs'
-                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
-                }`}
-              >
-                <Tag size={12} />
-                <span>Semantics</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange('style')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-[4px] transition-all cursor-pointer ${
-                  activeTab === 'style'
-                    ? 'bg-[var(--md-accent)] text-white shadow-xs'
-                    : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
-                }`}
-              >
-                <Palette size={12} />
-                <span>Style</span>
-              </button>
-            </div>
-          </div>
-
-          {/* TAB 1: STYLE CONTENT (Native tldraw tools) */}
-          {activeTab === 'style' && (
-            <div className="p-2 space-y-2">
-              {styles ? (
-                <DefaultStylePanelContent styles={styles} />
-              ) : (
-                <div className="p-3 text-center text-xs text-[var(--md-text-muted)] italic">
-                  Select a shape on canvas to inspect and edit its visual styles.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: SEMANTICS CONTENT (MarkDraw role inspection) */}
-          {activeTab === 'semantics' && (
+        <div className="divide-y divide-[var(--md-border)]">
+          {/* ========================================================= */}
+          {/* SECTION 1: SEMANTIC ROLE (Displayed when shapes selected) */}
+          {/* ========================================================= */}
+          {count > 0 && (
             <div>
-              {count === 0 ? (
-                /* Empty selection overview */
-                <div className="p-3 space-y-3 text-[var(--md-text)]">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[var(--md-text-muted)]">Tagged Elements:</span>
-                    <span className="font-mono font-semibold">
-                      {editor.getCurrentPageShapes().filter((s) => Boolean(getShapeMeta(s)?.role)).length} / {editor.getCurrentPageShapes().length}
+              <button
+                type="button"
+                onClick={() => toggleSection('semantics')}
+                className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
+                aria-expanded={openSections.semantics}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Tag size={12} className="text-blue-500 shrink-0" />
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                    Semantic Role
+                  </span>
+                  {currentRole && (
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-400 rounded">
+                      {currentRole}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[var(--md-text-muted)]">Roots (Frames):</span>
-                    <span className="font-mono font-semibold">
-                      {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').length}
-                    </span>
-                  </div>
-
-                  {/* Root frames list */}
-                  {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').length > 0 && (
-                    <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]">
-                      <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider">
-                        Root Frames
-                      </span>
-                      <div className="space-y-0.5">
-                        {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').map((f) => {
-                          const meta = getShapeMeta(f);
-                          const name = (f.props as any)?.name || meta?.props?.label || 'Page';
-                          return (
-                            <div
-                              key={f.id}
-                              onClick={() => editor.setSelectedShapes([f.id])}
-                              className="flex items-center justify-between px-2 py-1 rounded bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] cursor-pointer text-[11px] group"
-                            >
-                              <span className="font-medium truncate">{name}</span>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
-                                  {meta?.role || 'page'}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCopyFrameContract(f.id);
-                                  }}
-                                  className="p-1 rounded hover:bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:text-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-colors cursor-pointer"
-                                  title="Copy contract for this frame"
-                                >
-                                  {copiedFrameId === f.id ? (
-                                    <Check size={11} className="text-green-500" />
-                                  ) : (
-                                    <Copy size={11} />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
                   )}
-
-                  {/* My units list */}
-                  <div className="space-y-1.5 pt-1.5 border-t border-[var(--md-border)]">
-                    <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider flex items-center justify-between">
-                      <span>My Units ({storedUnits.length})</span>
-                    </span>
-                    {storedUnits.length === 0 ? (
-                      <p className="text-[10px] text-[var(--md-text-subtle)] italic">
-                        No custom units saved yet. Multi-select shapes to create one.
-                      </p>
-                    ) : (
-                      <div className="space-y-1 max-h-36 overflow-y-auto">
-                        {storedUnits.map((u) => (
-                          <div
-                            key={u.id}
-                            className="flex items-center justify-between px-2 py-1 rounded border border-[var(--md-border)] bg-[var(--md-surface)] text-[11px]"
-                          >
-                            <div className="min-w-0 pr-1">
-                              <div className="font-semibold truncate">{u.name}</div>
-                              <div className="text-[9px] text-[var(--md-text-subtle)] truncate">
-                                {u.baseRole} • {u.memberRoles.join(', ')}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => handleStampUnit(u)}
-                                className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-400 transition-colors cursor-pointer"
-                                title="Stamp copy onto canvas"
-                              >
-                                Stamp
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteUnit(u.id)}
-                                className="p-1 rounded text-[var(--md-text-subtle)] hover:text-red-500 hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 transition-colors cursor-pointer"
-                                title="Delete unit"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <p className="text-[11px] text-[var(--md-text-subtle)] leading-relaxed pt-1 border-t border-[var(--md-border)]">
-                    Select any shape on canvas to assign its semantic role, label, and hierarchy.
-                  </p>
                 </div>
-              ) : (
-                /* Selected shapes role inspector */
-                <div className="p-3 space-y-3">
-                  {/* 1. ROLE PICKER */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
-                        <Tag size={11} className="text-blue-500" />
-                        <span>Semantic Role</span>
-                      </label>
+                <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                  {openSections.semantics ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                </div>
+              </button>
+
+              {openSections.semantics && (
+                <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]">
+                  {/* Current Role & Search Dropdown */}
+                  <div className="space-y-1 relative">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center justify-between">
+                      <span>Role</span>
                       {currentRole && (
                         <button
                           type="button"
                           onClick={() => handleAssignRole(null)}
-                          className="text-[10px] text-red-500 hover:text-red-400 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 rounded px-0.5 cursor-pointer"
+                          className="text-[10px] text-red-500 hover:text-red-600 hover:underline cursor-pointer"
                         >
-                          Clear role
+                          Clear
                         </button>
                       )}
-                    </div>
+                    </label>
 
-                    {/* Suggestion chip if geometry suggests something */}
-                    {suggestedRole && !currentRole && (
-                      <div className="pt-0.5">
-                        <button
-                          type="button"
-                          onClick={() => handleAssignRole(suggestedRole)}
-                          className="w-full flex items-center justify-between gap-1 px-2 py-1 text-[11px] font-medium rounded border border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer shadow-xs"
-                        >
-                          <span className="flex items-center gap-1">
-                            <Sparkles size={11} />
-                            <span>Looks like <strong>{suggestedRole}</strong></span>
-                          </span>
-                          <span className="text-[10px] underline">Assign?</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Dropdown trigger */}
-                    <div className="relative pt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
-                        className="w-full h-8 px-2.5 flex items-center justify-between rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] text-xs font-medium text-[var(--md-text)] hover:border-[var(--md-border-strong)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] transition-colors cursor-pointer"
-                      >
-                        <span className="truncate">
-                          {currentRole ? (
-                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                              [{currentRole}]
+                    <button
+                      type="button"
+                      onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
+                      className="w-full h-7 px-2 flex items-center justify-between rounded border border-[var(--md-border)] bg-[var(--md-surface)] hover:bg-[var(--md-surface-raised)] text-left text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                    >
+                      <span className="truncate">
+                        {currentRole ? (
+                          <span className="font-semibold text-[var(--md-text-bold)]">
+                            {currentRole}{' '}
+                            <span className="font-normal text-[var(--md-text-muted)]">
+                              ({roleDef?.category})
                             </span>
-                          ) : (
-                            <span className="text-[var(--md-text-muted)]">— Select Role —</span>
-                          )}
-                        </span>
-                        <ChevronDown size={13} className="text-[var(--md-text-muted)]" />
-                      </button>
+                          </span>
+                        ) : (
+                          <span className="text-[var(--md-text-muted)] italic">
+                            Assign a semantic role...
+                          </span>
+                        )}
+                      </span>
+                      <ChevronDown size={12} className="text-[var(--md-text-muted)] shrink-0 ml-1" />
+                    </button>
 
-                      {/* Dropdown popup */}
-                      {isRoleDropdownOpen && (
-                        <div className="absolute top-9 left-0 right-0 z-50 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] p-2 space-y-2 max-h-64 overflow-y-auto">
-                          <Input
-                            type="text"
-                            placeholder="Search roles or aliases (e.g. popup, cta)..."
-                            value={roleSearch}
-                            onChange={(e) => setRoleSearch(e.target.value)}
-                            className="h-7 text-xs"
-                            autoFocus
-                          />
+                    {/* Role Picker Dropdown Menu */}
+                    {isRoleDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] p-1.5 space-y-1 max-h-64 overflow-y-auto">
+                        <Input
+                          type="text"
+                          placeholder="Search 31 roles or aliases..."
+                          value={roleSearch}
+                          onChange={(e) => setRoleSearch(e.target.value)}
+                          className="h-6 text-[11px] mb-1"
+                          autoFocus
+                        />
 
-                          {(Object.keys(groupedRoles) as RoleCategory[]).map((cat) => {
-                            const items = groupedRoles[cat];
-                            if (items.length === 0) return null;
-                            return (
-                              <div key={cat} className="space-y-1">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--md-text-subtle)] px-1">
-                                  {cat}
-                                </div>
-                                <div className="grid grid-cols-2 gap-1">
-                                  {items.map((r) => (
-                                    <button
-                                      key={r.name}
-                                      type="button"
-                                      onClick={() => handleAssignRole(r.name)}
-                                      className={`px-2 py-1 text-left text-xs rounded transition-colors cursor-pointer flex items-center justify-between focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
-                                        currentRole === r.name
-                                          ? 'bg-blue-600 text-white font-bold'
-                                          : 'hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] text-[var(--md-text)]'
-                                      }`}
-                                      title={r.decisionRule}
-                                    >
-                                      <span className="font-mono">{r.name}</span>
-                                      {currentRole === r.name && <Check size={11} />}
-                                    </button>
-                                  ))}
-                                </div>
+                        {Object.entries(filteredGroupedRoles).map(([cat, roles]) => {
+                          if (roles.length === 0) return null;
+                          return (
+                            <div key={cat} className="space-y-0.5">
+                              <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--md-text-muted)] px-1.5 pt-1">
+                                {cat}
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Role description */}
-                    {roleDef && (
-                      <p className="text-[10px] text-[var(--md-text-subtle)] italic pt-0.5 leading-tight">
-                        {roleDef.decisionRule}
-                      </p>
+                              {roles.map((r) => (
+                                <button
+                                  key={r.name}
+                                  type="button"
+                                  onClick={() => handleAssignRole(r.name)}
+                                  className={`w-full flex items-center justify-between px-1.5 py-1 text-left rounded text-xs transition-colors cursor-pointer ${
+                                    currentRole === r.name
+                                      ? 'bg-blue-500 text-white font-semibold'
+                                      : 'hover:bg-[var(--md-surface-raised)] text-[var(--md-text)]'
+                                  }`}
+                                >
+                                  <span>{r.name}</span>
+                                  {r.aliases.length > 0 && (
+                                    <span
+                                      className={`text-[9px] truncate max-w-[100px] ${
+                                        currentRole === r.name
+                                          ? 'text-blue-100'
+                                          : 'text-[var(--md-text-subtle)]'
+                                      }`}
+                                    >
+                                      {r.aliases.slice(0, 2).join(', ')}
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
 
-                  {/* 2. LABEL / TEXT */}
+                  {/* Suggestions (A.4) */}
+                  {!currentRole && suggestedRole && (
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-semibold text-[var(--md-text-muted)] flex items-center gap-1">
+                        <Sparkles size={11} className="text-amber-500" />
+                        <span>Suggested</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAssignRole(suggestedRole)}
+                        className="px-2 py-0.5 text-[10px] font-medium rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+                      >
+                        +{suggestedRole}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Accessible Label / AccName Input */}
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
-                      Label / Text
+                      Label / AccName
                     </label>
                     <Input
                       type="text"
                       value={firstMeta?.props?.label || ''}
                       onChange={(e) => handleUpdateProp('label', e.target.value || undefined)}
-                      placeholder="e.g. Follow, Alex, Profile"
+                      placeholder='e.g. "Submit Form", "Main Navigation"...'
                       className="h-7 text-xs"
                     />
                   </div>
 
-                  {/* 3. PARENT CONTAINER (§7 explicit override) */}
+                  {/* Parent Container Selector */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
-                      Parent Container
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center justify-between">
+                      <span>Parent Container</span>
+                      {firstMeta?.parentId && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetParent(null)}
+                          className="text-[10px] text-blue-500 hover:underline cursor-pointer"
+                        >
+                          Auto (Geometry)
+                        </button>
+                      )}
                     </label>
                     <select
-                      value={currentParentId || ''}
-                      onChange={(e) => handleSetParentId(e.target.value ? e.target.value : null)}
-                      className="w-full h-7 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)]"
+                      value={firstMeta?.parentId || ''}
+                      onChange={(e) => handleSetParent(e.target.value || null)}
+                      className="w-full h-7 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer"
                     >
-                      <option value="">— auto (implied membership) —</option>
-                      {candidateParents.map((p) => {
+                      <option value="">Auto (Infer from AABB bounds)</option>
+                      {potentialParents.map((p) => {
                         const meta = getShapeMeta(p);
                         const role = meta?.role || p.type;
-                        const label = meta?.props?.label ? ` "${meta.props.label}"` : '';
+                        const label = (p.props as any)?.name || meta?.props?.label || p.id.slice(-6);
                         return (
                           <option key={p.id} value={p.id}>
-                            [{role}] shape:{p.id.slice(0, 6)}...{label}
+                            {role} — &quot;{label}&quot;
                           </option>
                         );
                       })}
                     </select>
                   </div>
 
-                  {/* 4. BEHAVIOR FLAGS (§4 allow-list) */}
-                  {roleDef && roleDef.flags.length > 0 && (
-                    <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]">
+                  {/* Allowed Behavior Flags */}
+                  {roleDef && roleDef.flags && roleDef.flags.length > 0 && (
+                    <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]/50">
                       <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
                         Behaviors
                       </label>
@@ -668,13 +559,14 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                             <button
                               key={flag}
                               type="button"
-                              onClick={() => handleToggleFlag(flag)}
-                              className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+                              onClick={() => handleToggleBehavior(flag)}
+                              className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors cursor-pointer border ${
                                 isActive
-                                  ? 'bg-blue-600 text-white border-blue-700 font-bold hover:bg-blue-700'
-                                  : 'bg-[var(--md-surface)] text-[var(--md-text-muted)] border-[var(--md-border)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] hover:border-[var(--md-border-strong)]'
+                                  ? 'bg-blue-600 text-white border-blue-600'
+                                  : 'bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border-[var(--md-border)] hover:text-[var(--md-text)]'
                               }`}
                             >
+                              {isActive ? '✓ ' : ''}
                               {flag}
                             </button>
                           );
@@ -683,76 +575,48 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
                     </div>
                   )}
 
-                  {/* 5. RESPONSIVE PROPS (Visible only if root is responsive) */}
-                  <div className="pt-1 border-t border-[var(--md-border)] space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
-                        <Smartphone size={11} className="text-purple-500" />
-                        <span>Responsive</span>
-                      </span>
-                      {!hasResponsiveRoot && (
-                        <span className="text-[9px] text-[var(--md-text-subtle)] italic">
-                          Root page not responsive
-                        </span>
-                      )}
-                    </div>
-
-                    {hasResponsiveRoot ? (
-                      <div className="pl-2 border-l-2 border-purple-500/40 space-y-2 pt-1">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs text-[var(--md-text)]">Mobile visibility</label>
-                          <select
-                            value={firstMeta?.responsive?.smVisible || 'visible'}
-                            onChange={(e) => handleUpdateResponsive({ smVisible: e.target.value as any })}
-                            className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px]"
-                          >
-                            <option value="visible">Visible</option>
-                            <option value="hidden">Hide on mobile</option>
-                            <option value="collapse:drawer">Collapse to Drawer</option>
-                            <option value="collapse:hamburger">Collapse to Menu</option>
-                          </select>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs text-[var(--md-text)]">Mobile order</label>
-                          <Input
-                            type="number"
-                            value={firstMeta?.responsive?.order === 'auto' ? '' : (firstMeta?.responsive?.order ?? '')}
-                            onChange={(e) =>
-                              handleUpdateResponsive({
-                                order: e.target.value === '' ? 'auto' : parseInt(e.target.value, 10)
-                              })
-                            }
-                            placeholder="auto"
-                            className="h-6 w-20 text-[11px]"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-[var(--md-text-subtle)]">
-                        Enable Responsive flag on the root page frame to activate per-shape responsive tokens.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* 6. PROPS & STYLE NOTE */}
-                  <div className="pt-1 border-t border-[var(--md-border)] space-y-2">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
-                        <StickyNote size={11} />
-                        <span>Style Note (Non-binding)</span>
-                      </label>
-                      <textarea
-                        value={firstMeta?.props?.note || ''}
-                        onChange={(e) => handleUpdateProp('note', e.target.value || undefined)}
-                        placeholder="e.g. skeleton state on mount, dark card border..."
-                        className="w-full h-12 p-1.5 text-xs rounded border border-[var(--md-border)] bg-[var(--md-surface)] resize-none"
-                      />
+                  {/* Responsive Props */}
+                  <div className="space-y-1.5 pt-1 border-t border-[var(--md-border)]/50">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
+                      <Smartphone size={11} />
+                      <span>Responsive</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[var(--md-text-muted)]">Mobile:</span>
+                      <select
+                        value={firstMeta?.responsive?.smVisible || 'visible'}
+                        onChange={(e) => {
+                          const val = e.target.value as any;
+                          handleUpdateResponsive(val === 'visible' ? null : { smVisible: val });
+                        }}
+                        className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-xs text-[var(--md-text)]"
+                      >
+                        <option value="visible">Visible on Mobile</option>
+                        <option value="hidden">Hidden on Mobile</option>
+                        <option value="collapse:drawer">Collapse to Drawer</option>
+                        <option value="collapse:bottom-bar">Collapse to Bottom Bar</option>
+                        <option value="collapse:hamburger">Collapse to Hamburger</option>
+                      </select>
                     </div>
                   </div>
 
-                  {/* 7. UNIT ACTIONS (Multi-select) */}
+                  {/* Style Note */}
+                  <div className="space-y-1 pt-1 border-t border-[var(--md-border)]/50">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)] flex items-center gap-1">
+                      <StickyNote size={11} />
+                      <span>Style Note (Non-binding)</span>
+                    </label>
+                    <textarea
+                      value={firstMeta?.props?.note || ''}
+                      onChange={(e) => handleUpdateProp('note', e.target.value || undefined)}
+                      placeholder="e.g. skeleton state on mount, dark card border..."
+                      className="w-full h-12 p-1.5 text-xs rounded border border-[var(--md-border)] bg-[var(--md-surface)] resize-none"
+                    />
+                  </div>
+
+                  {/* Unit Save Gesture (Multi-select) */}
                   {count > 1 && (
-                    <div className="pt-2 border-t border-[var(--md-border)]">
+                    <div className="pt-2 border-t border-[var(--md-border)]/50">
                       <button
                         type="button"
                         onClick={() => setShowSaveUnitDialog(true)}
@@ -767,7 +631,363 @@ export const UnifiedInspectorPanel = memo(function UnifiedInspectorPanel({
               )}
             </div>
           )}
-        </>
+
+          {/* ========================================================= */}
+          {/* SECTION 2: VISUAL STYLES (tldraw native styling tools)     */}
+          {/* ========================================================= */}
+          <div>
+            <button
+              type="button"
+              onClick={() => toggleSection('styles')}
+              className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
+              aria-expanded={openSections.styles}
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Palette size={12} className="text-purple-500 shrink-0" />
+                <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                  Visual Styles
+                </span>
+              </div>
+              <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                {openSections.styles ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              </div>
+            </button>
+
+            {openSections.styles && (
+              <div className="p-2 space-y-2 bg-[var(--md-surface)]">
+                {styles ? (
+                  <DefaultStylePanelContent styles={styles} />
+                ) : (
+                  <div className="p-3 text-center text-xs text-[var(--md-text-muted)] italic">
+                    Select a shape on canvas to inspect and edit its visual styles.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ========================================================= */}
+          {/* SECTION 3: COMPILER & DOCUMENT SETTINGS (Direct in Panel) */}
+          {/* ========================================================= */}
+          <div>
+            <button
+              type="button"
+              onClick={() => toggleSection('settings')}
+              className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
+              aria-expanded={openSections.settings}
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Sliders size={12} className="text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                  Compiler & Settings
+                </span>
+                {options && (
+                  <span className="px-1.5 py-0.2 text-[9px] font-mono text-[var(--md-text-subtle)] bg-[var(--md-surface-raised)] rounded">
+                    {options.platform || 'web'}
+                  </span>
+                )}
+              </div>
+              <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                {openSections.settings ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              </div>
+            </button>
+
+            {openSections.settings && options && (
+              <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]">
+                {/* Platform Profile Selector */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                    Target Platform Profile
+                  </label>
+                  <select
+                    value={options.platform || 'web'}
+                    onChange={(e) => {
+                      const plat = e.target.value as any;
+                      handleUpdateOption('platform', plat);
+                      handleUpdateOption('platformId', plat);
+                    }}
+                    className="w-full h-7 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-2 text-xs text-[var(--md-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                  >
+                    <option value="web">Web (Standard HTML / Tailwind)</option>
+                    <option value="android-material">Android (Compose / Material 3)</option>
+                  </select>
+                </div>
+
+                {/* Containment Threshold Slider */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <label className="font-semibold uppercase tracking-wider text-[11px] text-[var(--md-text-muted)]">
+                      Containment Overlap
+                    </label>
+                    <span className="font-mono text-xs font-semibold text-[var(--md-text-bold)]">
+                      {Math.round((options.containmentThreshold ?? 0.85) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="1.0"
+                    step="0.05"
+                    value={options.containmentThreshold ?? 0.85}
+                    onChange={(e) =>
+                      handleUpdateOption('containmentThreshold', parseFloat(e.target.value))
+                    }
+                    className="w-full accent-[var(--md-accent)] cursor-pointer"
+                  />
+                  <div className="text-[10px] text-[var(--md-text-subtle)] leading-tight">
+                    Minimum AABB overlap required to infer parent-child hierarchy.
+                  </div>
+                </div>
+
+                {/* Snapping Tolerances Grid */}
+                <div className="space-y-1 pt-1 border-t border-[var(--md-border)]/50">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                    Tolerances (A.5)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-[var(--md-text-muted)]">Width Bucket (±%)</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="10"
+                        value={options.sizeBucketTolerance ?? 2}
+                        onChange={(e) =>
+                          handleUpdateOption(
+                            'sizeBucketTolerance',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="h-7 text-xs font-mono"
+                      />
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-[var(--md-text-muted)]">Alignment (±%)</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="10"
+                        value={options.alignTolerance ?? 3}
+                        onChange={(e) =>
+                          handleUpdateOption('alignTolerance', parseInt(e.target.value, 10) || 0)
+                        }
+                        className="h-7 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Output Toggles */}
+                <div className="space-y-2 pt-1 border-t border-[var(--md-border)]/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-medium text-[var(--md-text)]">
+                        Include Semantic Legend
+                      </div>
+                      <div className="text-[10px] text-[var(--md-text-subtle)]">
+                        Append bracket-tag spec reference
+                      </div>
+                    </div>
+                    <Switch
+                      checked={options.includeLegend ?? false}
+                      onCheckedChange={(checked) => handleUpdateOption('includeLegend', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-medium text-[var(--md-text)]">
+                        Include Timestamp
+                      </div>
+                      <div className="text-[10px] text-[var(--md-text-subtle)]">
+                        Append compile date (non-deterministic)
+                      </div>
+                    </div>
+                    <Switch
+                      checked={options.includeTimestamp ?? false}
+                      onCheckedChange={(checked) =>
+                        handleUpdateOption('includeTimestamp', checked)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Page Note */}
+                <div className="space-y-1 pt-1 border-t border-[var(--md-border)]/50">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+                    Document Header Note
+                  </label>
+                  <Input
+                    type="text"
+                    value={options.pageNote || ''}
+                    onChange={(e) => handleUpdateOption('pageNote', e.target.value || '')}
+                    placeholder="e.g. Design review v1, Mobile auth flow..."
+                    className="h-7 text-xs"
+                  />
+                </div>
+
+                {/* Reset to Defaults */}
+                <div className="pt-2 border-t border-[var(--md-border)]/50 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleResetOptions}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] rounded transition-colors cursor-pointer"
+                  >
+                    <RotateCcw size={11} />
+                    <span>Reset Defaults</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ========================================================= */}
+          {/* SECTION 4: CANVAS & UNITS                                  */}
+          {/* ========================================================= */}
+          <div>
+            <button
+              type="button"
+              onClick={() => toggleSection('units')}
+              className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-raised)] transition-colors cursor-pointer select-none group"
+              aria-expanded={openSections.units}
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Box size={12} className="text-amber-500 shrink-0" />
+                <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                  Canvas & Units
+                </span>
+                {storedUnits.length > 0 && (
+                  <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded">
+                    {storedUnits.length}
+                  </span>
+                )}
+              </div>
+              <div className="text-[var(--md-text-muted)] group-hover:text-[var(--md-text-bold)]">
+                {openSections.units ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              </div>
+            </button>
+
+            {openSections.units && (
+              <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface)]">
+                {/* Stats */}
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-[var(--md-text-muted)]">Tagged Elements:</span>
+                    <span className="font-mono font-semibold text-[var(--md-text-bold)]">
+                      {editor.getCurrentPageShapes().filter((s) => Boolean(getShapeMeta(s)?.role)).length}{' '}
+                      / {editor.getCurrentPageShapes().length}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-[var(--md-text-muted)]">Root Frames:</span>
+                    <span className="font-mono font-semibold text-[var(--md-text-bold)]">
+                      {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').length}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Root frames list */}
+                {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').length > 0 && (
+                  <div className="space-y-1 pt-1.5 border-t border-[var(--md-border)]/50">
+                    <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider">
+                      Root Frames
+                    </span>
+                    <div className="space-y-1">
+                      {editor.getCurrentPageShapes().filter((s) => s.type === 'frame').map((f) => {
+                        const meta = getShapeMeta(f);
+                        const name = (f.props as any)?.name || meta?.props?.label || 'Page';
+                        return (
+                          <div
+                            key={f.id}
+                            onClick={() => editor.setSelectedShapes([f.id])}
+                            className="flex items-center justify-between px-2 py-1 rounded bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] cursor-pointer text-[11px] group"
+                          >
+                            <span className="font-medium truncate">{name}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                                {meta?.role || 'page'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyFrameContract(f.id);
+                                }}
+                                className="p-1 rounded hover:bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:text-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+                                title="Copy contract for this frame"
+                              >
+                                {copiedFrameId === f.id ? (
+                                  <Check size={11} className="text-green-500" />
+                                ) : (
+                                  <Copy size={11} />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Stored Custom Units Library (§10) */}
+                <div className="space-y-1.5 pt-1.5 border-t border-[var(--md-border)]/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-semibold text-[var(--md-text-muted)] tracking-wider flex items-center gap-1">
+                      <Box size={11} className="text-purple-500" />
+                      <span>Custom Units</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-[var(--md-text-subtle)]">
+                      {storedUnits.length}
+                    </span>
+                  </div>
+
+                  {storedUnits.length === 0 ? (
+                    <div className="text-[11px] text-[var(--md-text-muted)] italic py-1">
+                      Multi-select shapes on canvas to save them as reusable units.
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {storedUnits.map((u) => (
+                        <div
+                          key={u.id}
+                          className="flex items-center justify-between p-1.5 rounded border border-[var(--md-border)] bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] transition-colors text-xs"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <div className="font-medium text-[var(--md-text-bold)] truncate">
+                              {u.name}
+                            </div>
+                            <div className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                              Base: {u.baseRole} • {u.memberRoles?.length || 0} items
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStampUnit(u)}
+                              className="px-2 py-0.5 text-[11px] font-semibold rounded bg-purple-600 text-white hover:bg-purple-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400 transition-colors cursor-pointer"
+                              title="Stamp copy onto canvas"
+                            >
+                              Stamp
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteUnit(u.id, e)}
+                              className="p-1 rounded text-[var(--md-text-muted)] hover:text-red-500 hover:bg-[var(--md-surface)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 transition-colors cursor-pointer"
+                              title="Delete unit"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Save Unit Dialog Modal */}
