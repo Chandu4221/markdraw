@@ -18,6 +18,8 @@ interface ChipItem {
   isUnit: boolean;
   isUntagged: boolean;
   isRoot: boolean;
+  isSelected: boolean;
+  isFlushWithParentTop: boolean;
   x: number;
   y: number;
   w: number;
@@ -56,6 +58,7 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
   // If zoomed out too far (< 0.25), hide chips for readability
   if (zoom < 0.25) return null;
 
+  const selectedShapeIds = new Set(editor.getSelectedShapeIds() as string[]);
   const chips: ChipItem[] = [];
 
   for (const shape of shapes) {
@@ -72,12 +75,27 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
     // Convert page coordinates to viewport pixel coordinates
     const screenPoint = editor.pageToViewport({ x: bounds.x, y: bounds.y });
 
+    // Check if flush with parent frame top
+    let isFlushWithParentTop = false;
+    const parentId = shape.parentId || meta?.parentId;
+    if (parentId && parentId !== editor.getCurrentPageId()) {
+      const parentShape = editor.getShape(parentId as any);
+      if (parentShape) {
+        const parentBounds = editor.getShapePageBounds(parentShape);
+        if (parentBounds && Math.abs(bounds.y - parentBounds.y) < 14) {
+          isFlushWithParentTop = true;
+        }
+      }
+    }
+
     chips.push({
       shapeId: shape.id,
       label: meta?.props?.label || meta?.role || 'untagged',
       isUnit: Boolean(meta?.unitId),
       isUntagged: !hasRole,
       isRoot: shape.type === 'frame' || meta?.role === 'page',
+      isSelected: selectedShapeIds.has(shape.id),
+      isFlushWithParentTop,
       x: screenPoint.x,
       y: screenPoint.y,
       w: bounds.w * zoom,
@@ -113,27 +131,45 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
     onCopyContract?.(shapeId, res.markdownSpec);
   };
 
+  // Track placed chip locations to prevent visual overlaps
+  const placedPills: { x: number; y: number; w: number; h: number }[] = [];
+
   return (
     <div
       className="absolute inset-0 pointer-events-none z-20 overflow-hidden font-sans select-none"
       aria-hidden="true"
     >
       {chips.map((chip) => {
-        const chipTop = Math.max(0, chip.y - 18);
-        const chipLeft = chip.x;
+        // Child flush with container top goes inside to avoid collision with container chip
+        let chipTop = chip.isFlushWithParentTop ? chip.y + 4 : Math.max(0, chip.y - 18);
+        let chipLeft = chip.isFlushWithParentTop ? chip.x + 4 : chip.x;
+        const approxWidth = Math.max(48, chip.label.length * 7 + 16);
+
+        // Collision avoidance: if overlapping an already placed chip, shift horizontally
+        for (const placed of placedPills) {
+          if (
+            Math.abs(chipTop - placed.y) < 16 &&
+            chipLeft < placed.x + placed.w &&
+            chipLeft + approxWidth > placed.x
+          ) {
+            chipLeft = placed.x + placed.w + 4;
+          }
+        }
+        placedPills.push({ x: chipLeft, y: chipTop, w: approxWidth, h: 18 });
 
         return (
-          <div
-            key={chip.shapeId}
-            style={{
-              position: 'absolute',
-              left: `${chipLeft}px`,
-              top: `${chipTop}px`,
-              transformOrigin: 'top left'
-            }}
-            className="pointer-events-auto"
-          >
-            <div className="flex items-center">
+          <React.Fragment key={chip.shapeId}>
+            {/* Shape Role Badge */}
+            <div
+              style={{
+                position: 'absolute',
+                left: `${chipLeft}px`,
+                top: `${chipTop}px`,
+                transformOrigin: 'top left',
+                zIndex: chip.isSelected ? 30 : 20
+              }}
+              className="pointer-events-auto"
+            >
               <button
                 type="button"
                 onClick={(e) => {
@@ -141,30 +177,51 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
                   editor.setSelectedShapes([chip.shapeId as any]);
                   onChipClick?.(chip.shapeId);
                 }}
-                className={`px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-t-[3px] border shadow-xs transition-opacity cursor-pointer ${
+                className={`px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[3px] border shadow-xs transition-all cursor-pointer ${
+                  chip.isSelected
+                    ? 'ring-2 ring-blue-500 font-bold opacity-100 scale-105'
+                    : 'opacity-80 hover:opacity-100'
+                } ${
                   chip.isUnit
-                    ? 'bg-purple-600 text-white border-purple-700 opacity-80 hover:opacity-100'
+                    ? 'bg-purple-600 text-white border-purple-700'
                     : chip.isUntagged
-                    ? 'bg-[var(--md-surface)] text-[var(--md-text-subtle)] border-dashed border-[var(--md-border)] opacity-60 hover:opacity-100'
-                    : 'bg-blue-600 text-white border-blue-700 opacity-75 hover:opacity-100'
+                    ? 'bg-[var(--md-surface)] text-[var(--md-text-subtle)] border-dashed border-[var(--md-border)]'
+                    : 'bg-blue-600 text-white border-blue-700'
                 }`}
                 title={`Role: ${chip.label} (click to configure)`}
               >
                 {chip.isUnit ? `[#${chip.label}]` : chip.label}
               </button>
-              {chip.isRoot && (
+            </div>
+
+            {/* Root Frame Copy Contract Button (Anchored cleanly at Top-Right of Root Frame) */}
+            {chip.isRoot && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${Math.max(chip.x + 60, chip.x + chip.w - 56)}px`,
+                  top: `${Math.max(0, chip.y - 18)}px`,
+                  transformOrigin: 'top right',
+                  zIndex: 25
+                }}
+                className="pointer-events-auto"
+              >
                 <button
                   type="button"
                   onClick={(e) => handleCopyContract(e, chip.shapeId)}
-                  className="px-1 py-0.5 text-[9px] bg-[var(--md-surface-raised)] border border-l-0 border-[var(--md-border)] text-[var(--md-text)] rounded-tr-[3px] hover:bg-blue-600 hover:text-white transition-colors cursor-pointer flex items-center gap-0.5 shadow-xs"
+                  className="px-1.5 py-0.5 text-[9px] font-semibold bg-[var(--md-surface-raised)] border border-[var(--md-border-strong)] text-[var(--md-text)] rounded-[3px] hover:bg-blue-600 hover:text-white hover:border-blue-700 transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
                   title="Copy lean contract for this root frame"
                 >
-                  {copiedRootId === chip.shapeId ? <Check size={10} className="text-green-500" /> : <Copy size={10} />}
+                  {copiedRootId === chip.shapeId ? (
+                    <Check size={10} className="text-green-500" />
+                  ) : (
+                    <Copy size={10} />
+                  )}
                   <span>Copy</span>
                 </button>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
+          </React.Fragment>
         );
       })}
     </div>

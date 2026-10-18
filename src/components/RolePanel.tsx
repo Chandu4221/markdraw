@@ -13,7 +13,9 @@ import {
   Box,
   Check,
   Trash2,
-  Copy
+  Copy,
+  PanelLeft,
+  PanelRight
 } from 'lucide-react';
 import {
   ROLE_DEFINITIONS,
@@ -45,6 +47,28 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
   const [roleSearch, setRoleSearch] = useState('');
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isOverviewCollapsed, setIsOverviewCollapsed] = useState(false);
+  const [panelSide, setPanelSide] = useState<'left' | 'right'>(() => {
+    try {
+      const saved = localStorage.getItem('markdraw_role_panel_side');
+      return saved === 'right' ? 'right' : 'left';
+    } catch {
+      return 'left';
+    }
+  });
+
+  const togglePanelSide = () => {
+    setPanelSide((prev) => {
+      const next = prev === 'left' ? 'right' : 'left';
+      try {
+        localStorage.setItem('markdraw_role_panel_side', next);
+      } catch {}
+      return next;
+    });
+  };
+
+  const positionClass = panelSide === 'left' ? 'top-14 left-3' : 'top-3 right-[168px]';
+
   const [storedUnits, setStoredUnits] = useState<UnitDefinition[]>([]);
   const [showSaveUnitDialog, setShowSaveUnitDialog] = useState(false);
   const [newUnitName, setNewUnitName] = useState('');
@@ -263,7 +287,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
 
     return (
       <div
-        className="absolute top-3 right-3 w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none text-xs"
+        className={`absolute ${positionClass} w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none text-xs transition-all duration-150`}
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
@@ -274,12 +298,33 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
             <Layers size={13} className="text-blue-500" />
             <span>Canvas Overview</span>
           </div>
-        </div>
-        <div className="p-3 space-y-3 text-[var(--md-text)]">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-[var(--md-text-muted)]">Tagged Elements:</span>
-            <span className="font-mono font-semibold">{taggedCount} / {totalCount}</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+              onClick={togglePanelSide}
+              title={panelSide === 'left' ? 'Dock to Right (beside styles)' : 'Dock to Left'}
+              aria-label={panelSide === 'left' ? 'Dock to Right' : 'Dock to Left'}
+            >
+              {panelSide === 'left' ? <PanelRight size={13} /> : <PanelLeft size={13} />}
+            </button>
+            <button
+              type="button"
+              className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+              onClick={() => setIsOverviewCollapsed((prev) => !prev)}
+              title={isOverviewCollapsed ? 'Expand Overview' : 'Collapse Overview'}
+              aria-label={isOverviewCollapsed ? 'Expand Overview' : 'Collapse Overview'}
+            >
+              {isOverviewCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            </button>
           </div>
+        </div>
+        {!isOverviewCollapsed && (
+          <div className="p-3 space-y-3 text-[var(--md-text)]">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-[var(--md-text-muted)]">Tagged Elements:</span>
+              <span className="font-mono font-semibold">{taggedCount} / {totalCount}</span>
+            </div>
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-[var(--md-text-muted)]">Roots (Frames):</span>
             <span className="font-mono font-semibold">{frames.length}</span>
@@ -379,6 +424,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
             Select any shape on canvas to assign its semantic role, label, and hierarchy.
           </p>
         </div>
+        )}
       </div>
     );
   }
@@ -388,7 +434,7 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
 
   return (
     <div
-      className="absolute top-3 right-3 w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none"
+      className={`absolute ${positionClass} w-72 rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface)] shadow-[var(--md-shadow-lg)] z-30 overflow-hidden font-sans select-none transition-all duration-150`}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
@@ -411,16 +457,27 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
             </span>
           )}
         </div>
-        <button
-          type="button"
-          className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
-          onClick={() => setIsCollapsed((prev) => !prev)}
-          title={isCollapsed ? 'Expand Panel' : 'Collapse Panel'}
-          aria-label={isCollapsed ? 'Expand Role Panel' : 'Collapse Role Panel'}
-          aria-expanded={!isCollapsed}
-        >
-          {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+            onClick={togglePanelSide}
+            title={panelSide === 'left' ? 'Dock to Right (beside styles)' : 'Dock to Left'}
+            aria-label={panelSide === 'left' ? 'Dock to Right' : 'Dock to Left'}
+          >
+            {panelSide === 'left' ? <PanelRight size={13} /> : <PanelLeft size={13} />}
+          </button>
+          <button
+            type="button"
+            className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            title={isCollapsed ? 'Expand Panel' : 'Collapse Panel'}
+            aria-label={isCollapsed ? 'Expand Role Panel' : 'Collapse Role Panel'}
+            aria-expanded={!isCollapsed}
+          >
+            {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          </button>
+        </div>
       </div>
 
       {!isCollapsed && (
