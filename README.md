@@ -65,7 +65,7 @@ MarkDraw's architecture and design were shaped through extensive design sessions
 
 ## License & Dependencies
 
-- **MarkDraw's own code**: MIT (pending final LICENSE file — add before any public distribution).
+- **MarkDraw's own code**: MIT (see [LICENSE](LICENSE) file).
 - **`@tldraw/tldraw`**: NOT MIT. tldraw uses its own license — free for development, hobby (non-commercial, watermark) and trial licenses available, **commercial production use requires a paid license key**. See [tldraw's license terms](https://tldraw.dev/community/license). Deploying or selling a product built on tldraw requires verifying your license status with tldraw.
 - Anyone cloning and running this repo in development mode is within tldraw's default terms; hosted/commercial deployments are not.
 
@@ -74,7 +74,7 @@ MarkDraw's architecture and design were shaped through extensive design sessions
 ## Roadmap
 
 - [ ] Live-LLM end-to-end benchmark (contract vs screenshot vs prose vs raw JSON, ≥3 models), results published here
-- [ ] `LICENSE` file (MIT for MarkDraw code, dependency notice for tldraw)
+- [x] `LICENSE` file (MIT for MarkDraw code, dependency notice for tldraw)
 - [ ] CLI (`markdraw compile <file> --root X`) and MCP server for agent integrations
 - [ ] Canvas adapter layer (loose coupling to the editor — Excalidraw port under evaluation)
 - [ ] Authoring speed: coverage indicator, bulk tagging, clickable lints, starter templates
