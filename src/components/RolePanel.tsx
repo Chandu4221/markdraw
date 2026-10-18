@@ -12,7 +12,8 @@ import {
   StickyNote,
   Box,
   Check,
-  Trash2
+  Trash2,
+  Copy
 } from 'lucide-react';
 import {
   ROLE_DEFINITIONS,
@@ -23,6 +24,7 @@ import {
 } from '../annotation/roles';
 import { getShapeMeta, updateShapeMeta, suggestRoleForShape } from '../annotation/shapeMeta';
 import { MarkDrawMeta, RoleResponsive } from '../annotation/types';
+import { MarkDrawCompiler } from '../core/compiler';
 import {
   UnitDefinition,
   getStoredUnits,
@@ -83,6 +85,33 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
   const handleDeleteUnit = (id: string) => {
     deleteStoredUnit(id);
     refreshUnits();
+  };
+
+  const [copiedFrameId, setCopiedFrameId] = useState<string | null>(null);
+
+  const handleCopyFrameContract = (frameId: string) => {
+    if (!editor) return;
+    const all = editor.getCurrentPageShapes();
+    const descendants: string[] = [];
+    const findChildren = (pid: string) => {
+      for (const s of all) {
+        if (s.parentId === pid || getShapeMeta(s)?.parentId === pid) {
+          descendants.push(s.id);
+          findChildren(s.id);
+        }
+      }
+    };
+    findChildren(frameId);
+    const scopeIds = [frameId, ...descendants];
+    const res = MarkDrawCompiler.compile(all, editor, {
+      annotationMode: true,
+      scope: { shapeIds: scopeIds }
+    });
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(res.markdownSpec);
+    }
+    setCopiedFrameId(frameId);
+    setTimeout(() => setCopiedFrameId(null), 2000);
   };
 
   useEffect(() => {
@@ -270,12 +299,29 @@ export const RolePanel: React.FC<RolePanelProps> = ({ editor, onSaveAsUnit }) =>
                     <div
                       key={f.id}
                       onClick={() => editor.setSelectedShapes([f.id])}
-                      className="flex items-center justify-between px-2 py-1 rounded bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] cursor-pointer text-[11px]"
+                      className="flex items-center justify-between px-2 py-1 rounded bg-[var(--md-surface-raised)] hover:bg-[var(--md-surface-hover)] cursor-pointer text-[11px] group"
                     >
                       <span className="font-medium truncate">{name}</span>
-                      <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
-                        {meta?.role || 'page'}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-[var(--md-text-subtle)] font-mono">
+                          {meta?.role || 'page'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyFrameContract(f.id);
+                          }}
+                          className="p-1 rounded hover:bg-[var(--md-surface)] text-[var(--md-text-muted)] hover:text-blue-500 transition-colors cursor-pointer"
+                          title="Copy contract for this frame"
+                        >
+                          {copiedFrameId === f.id ? (
+                            <Check size={11} className="text-green-500" />
+                          ) : (
+                            <Copy size={11} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

@@ -40,8 +40,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       includeLegend: false,
       pageNote: options.pageNote || '',
       platform: options.platform ?? 'web',
+      platformId: options.platformId ?? options.platform ?? 'web',
       scope: options.scope ?? null,
-      units: options.units ?? []
+      units: options.units ?? [],
+      annotationMode: options.annotationMode ?? false
     });
   };
 

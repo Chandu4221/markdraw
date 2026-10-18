@@ -177,8 +177,10 @@ export interface CompilationOptions {
   includeLegend?: boolean;       // default false
   pageNote?: string;             // page-level note in document header
   platform?: 'web' | 'android-material';
+  platformId?: string;
   scope?: { shapeIds: string[]; scopeName?: string } | null;
   units?: import('../annotation/units').UnitDefinition[];
+  annotationMode?: boolean;
 }
 
 export interface CompilationResult {

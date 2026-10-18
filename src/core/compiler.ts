@@ -118,9 +118,11 @@ export class MarkDrawCompiler {
       includeTimestamp: options?.includeTimestamp ?? false,
       includeLegend: options?.includeLegend ?? false,
       pageNote: options?.pageNote ?? '',
-      platform: options?.platform ?? 'web',
+      platform: options?.platform ?? (options?.platformId === 'android-material' ? 'android-material' : 'web'),
+      platformId: options?.platformId ?? options?.platform ?? 'web',
       scope: options?.scope ?? null,
-      units: options?.units ?? []
+      units: options?.units ?? [],
+      annotationMode: options?.annotationMode ?? false
     };
 
     // All compilation flows strictly Shapes -> IR -> Serializers

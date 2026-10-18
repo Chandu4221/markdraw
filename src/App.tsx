@@ -18,6 +18,7 @@ import { useRenderMode, setRenderMode } from './core/renderMode';
 import { isAnnotationModeActive } from './annotation/config';
 import { RolePanel } from './components/RolePanel';
 import { RoleChipsOverlay } from './annotation/RoleChipsOverlay';
+import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from './annotation/migrate';
 
 export const ANNOTATION_MODE = isAnnotationModeActive();
 import {
@@ -100,8 +101,10 @@ const DEFAULT_OPTIONS: Required<CompilationOptions> = {
   includeLegend: false,
   pageNote: '',
   platform: 'web',
+  platformId: 'web',
   scope: null,
-  units: []
+  units: [],
+  annotationMode: false
 };
 
 export const App: React.FC = () => {
@@ -385,6 +388,9 @@ export const App: React.FC = () => {
     return DEFAULT_OPTIONS;
   });
 
+  const [platformId, setPlatformId] = useState<string>('web');
+  const [compileScopeMode, setCompileScopeMode] = useState<'all' | 'selection'>('all');
+
   const handleOptionsChange = (newOpts: Required<CompilationOptions>) => {
     setOptions(newOpts);
     localStorage.setItem('markdraw_settings', JSON.stringify(newOpts));
@@ -450,8 +456,17 @@ export const App: React.FC = () => {
       compileIdRef.current += 1;
       const currentCompileId = compileIdRef.current;
 
-      // Offload to Web Worker when > 300 shapes
-      if (widgetShapes.length > 300 && workerRef.current) {
+      const compileOpts: CompilationOptions = {
+        ...options,
+        platformId,
+        scope:
+          compileScopeMode === 'selection' && currentEditor.getSelectedShapeIds().length > 0
+            ? { shapeIds: currentEditor.getSelectedShapeIds().map((id) => id as string) }
+            : null
+      };
+
+      // Offload to Web Worker when > 300 shapes and not in annotation mode (worker handles legacy widget AST)
+      if (!ANNOTATION_MODE && widgetShapes.length > 300 && workerRef.current) {
         const serialized = widgetShapes.map((s) => {
           let x = s.x;
           let y = s.y;
@@ -478,11 +493,11 @@ export const App: React.FC = () => {
         workerRef.current.postMessage({
           compileId: currentCompileId,
           shapes: serialized,
-          options
+          options: compileOpts
         });
       } else {
         const start = performance.now();
-        const result = MarkDrawCompiler.compile(shapes, currentEditor, options);
+        const result = MarkDrawCompiler.compile(shapes, currentEditor, compileOpts);
         const duration = Math.round(performance.now() - start);
         setCompilation(result);
         if (duration > 50) {
@@ -495,7 +510,7 @@ export const App: React.FC = () => {
       console.error('MarkDraw compilation error:', err);
       showToast('Compile error — showing last valid output');
     }
-  }, [options, showToast]);
+  }, [options, platformId, compileScopeMode, showToast]);
 
   const handleEditorMount = useCallback(
     (mountedEditor: Editor) => {
@@ -503,7 +518,7 @@ export const App: React.FC = () => {
       setEditor(mountedEditor);
 
       try {
-        mountedEditor.updateInstanceState({ isToolLocked: true, isGridMode: true });
+        mountedEditor.updateInstanceState({ isToolLocked: !ANNOTATION_MODE, isGridMode: true });
       } catch (err) {
         console.error('Lockdown configuration error:', err);
       }
@@ -513,24 +528,51 @@ export const App: React.FC = () => {
         const toCreate = pendingShapesRef.current;
         pendingShapesRef.current = null;
         try {
-          mountedEditor.createShapes(toCreate);
+          if (ANNOTATION_MODE) {
+            const hasWidgets = toCreate.some((s: any) => isV3Widget(s));
+            if (hasWidgets) {
+              const migrated = migrateShapes(toCreate);
+              mountedEditor.createShapes(migrated.shapes);
+            } else {
+              mountedEditor.createShapes(toCreate);
+            }
+          } else {
+            mountedEditor.createShapes(toCreate);
+          }
         } catch (err) {
           console.error('[MarkDraw] Failed to create pending shapes:', err);
         }
       } else {
-        // Otherwise, if canvas is completely empty, seed with demo layout (Task 1.6)
+        // Otherwise, if canvas is completely empty, seed with demo layout
         const currentShapes = mountedEditor.getCurrentPageShapes();
         if (currentShapes.length === 0) {
           try {
-            mountedEditor.createShapes(getDemoCanvasShapes());
+            const demo = getDemoCanvasShapes();
+            if (ANNOTATION_MODE) {
+              const migrated = migrateShapes(demo as any);
+              mountedEditor.createShapes(migrated.shapes);
+            } else {
+              mountedEditor.createShapes(demo);
+            }
           } catch (err) {
             console.error('[MarkDraw] Failed to seed demo shapes:', err);
+          }
+        } else if (ANNOTATION_MODE) {
+          // Check if existing shapes have v3 widgets to migrate on load (§12)
+          const hasV3Widgets = currentShapes.some((s) => isV3Widget(s));
+          if (hasV3Widgets) {
+            backupDocumentBeforeMigration(activeDoc.id, currentShapes);
+            const { shapes: migrated } = migrateShapes(currentShapes);
+            mountedEditor.deleteShapes(currentShapes.map((s) => s.id));
+            mountedEditor.createShapes(migrated);
+            showToast('Migrated v3 document to v4 semantic annotation layer.');
           }
         }
       }
 
       // Enforce wireframe widget only
       const enforceWidgetOnly = () => {
+        if (ANNOTATION_MODE) return;
         const shapes = mountedEditor.getCurrentPageShapes();
         const invalidShapes = shapes.filter((s) => s.type !== 'ui-widget');
         if (invalidShapes.length > 0) {
@@ -1128,7 +1170,11 @@ export const App: React.FC = () => {
               {/* Properties / Role Panel & Role Chips */}
               {ANNOTATION_MODE ? (
                 <>
-                  <RoleChipsOverlay editor={editor} showChips={showRoleChips} />
+                  <RoleChipsOverlay
+                    editor={editor}
+                    showChips={showRoleChips}
+                    onCopyContract={() => showToast('Copied contract to clipboard')}
+                  />
                   <RolePanel editor={editor} />
                 </>
               ) : (
@@ -1484,6 +1530,51 @@ export const App: React.FC = () => {
                       </div>
                     ) : (
                       <div />
+                    )}
+
+                    {/* Platform Selector & Scope Toggle (v4 Annotation Mode - §9.3) */}
+                    {ANNOTATION_MODE && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <select
+                          value={platformId}
+                          onChange={(e) => setPlatformId(e.target.value)}
+                          className="h-6 rounded border border-[var(--md-border)] bg-[var(--md-surface)] px-1.5 text-[11px] text-[var(--md-text)] font-medium cursor-pointer"
+                          title="Target compilation platform profile (§10)"
+                        >
+                          <option value="web">Web</option>
+                          <option value="android-material">Android (M3)</option>
+                        </select>
+                        <div
+                          role="group"
+                          aria-label="Compilation Scope"
+                          className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setCompileScopeMode('all')}
+                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                              compileScopeMode === 'all'
+                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                            }`}
+                            title="Compile all roots on canvas"
+                          >
+                            All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCompileScopeMode('selection')}
+                            className={`px-1.5 py-0.5 text-[10px] font-medium rounded-[3px] transition-colors cursor-pointer ${
+                              compileScopeMode === 'selection'
+                                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
+                                : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
+                            }`}
+                            title="Compile selected subtree only"
+                          >
+                            Selection
+                          </button>
+                        </div>
+                      </div>
                     )}
 
                     {/* Actions */}
