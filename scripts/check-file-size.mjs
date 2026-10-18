@@ -6,11 +6,8 @@ const SRC_DIR = path.resolve(process.cwd(), 'src');
 const MAX_LINES = 500;
 const WARN_LINES = 400;
 
-// Legacy god files identified in §1 / §5 scheduled for Phase 2 decomposition or untouchable core (§12)
+// Legacy files: untouchable core compiler/legend files (§12) or MarkdownPreview
 const LEGACY_ALLOWLIST = new Set([
-  'src/components/UnifiedInspectorPanel.tsx',
-  'src/App.tsx',
-  'src/components/RolePanel.tsx',
   'src/core/ir.ts',
   'src/core/compiler.ts',
   'src/components/MarkdownPreview.tsx',
