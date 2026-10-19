@@ -12,6 +12,7 @@ import { ReflowPreview } from '../../components/simulation/ReflowPreview';
 import { getShapeMeta } from '../../annotation/shapeMeta';
 import { CompilationOptions } from '../../core/types';
 import { UnitDefinition } from '../../annotation/units';
+import { Tag } from 'lucide-react';
 
 export interface ExcalidrawCanvasProps {
   persistenceKey: string;
@@ -183,6 +184,37 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         gridModeEnabled={true}
         zenModeEnabled={false}
         viewModeEnabled={false}
+        renderTopRightUI={(_isMobile, appState) => {
+          const isOpen = appState?.openSidebar?.name === 'markdraw-inspector';
+          return (
+            <div className="flex items-center gap-1.5 pointer-events-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  driverRef.current?.rawApi?.toggleSidebar({
+                    name: 'markdraw-inspector',
+                    force: !isOpen
+                  });
+                }}
+                className={`h-9 px-3 rounded-[var(--md-radius-sm)] border text-sm font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
+                  isOpen
+                    ? 'bg-[var(--md-accent)] text-white border-[var(--md-accent)]'
+                    : 'bg-[var(--md-surface-raised)] text-[var(--md-text)] border-[var(--md-border)] hover:bg-[var(--md-surface-2)] hover:border-[var(--md-border-strong)]'
+                }`}
+                title="Toggle MarkDraw Semantics Inspector"
+                aria-label="Toggle MarkDraw Semantics Inspector"
+              >
+                <Tag size={15} />
+                <span>Inspector</span>
+                {selectedIds.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-blue-600 text-white">
+                    {selectedIds.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          );
+        }}
         UIOptions={{
           dockedSidebarBreakpoint: 0,
           canvasActions: {
@@ -241,7 +273,13 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         driver={driverState}
         showChips={showRoleChips && !simulationRootId}
         showUntagged={showUntaggedChips && !simulationRootId}
-        onChipClick={onChipClick}
+        onChipClick={(shapeId) => {
+          driverRef.current?.rawApi?.toggleSidebar({
+            name: 'markdraw-inspector',
+            force: true
+          });
+          onChipClick?.(shapeId);
+        }}
         onCopyContract={onCopyContract}
       />
       {simulationRootId && (
