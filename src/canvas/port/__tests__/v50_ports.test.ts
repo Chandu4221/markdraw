@@ -85,6 +85,10 @@ class MockDriver implements CanvasDriver {
     };
   }
 
+  onViewportChanged(_cb: (vp: any) => void) {
+    return () => {};
+  }
+
   setSelection(ids: string[]): void {
     this.selectedIds = ids;
     this.selectionListeners.forEach((cb) => cb(ids));

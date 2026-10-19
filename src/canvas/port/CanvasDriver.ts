@@ -23,7 +23,7 @@ export interface CanvasDriver {
   // events — granular diffs, the ONLY change channel
   onShapesChanged(cb: (diff: ShapesDiff) => void): Unsubscribe;
   onSelectionChanged(cb: (ids: string[]) => void): Unsubscribe;
-  onViewportChanged?(cb: (vp: Viewport) => void): Unsubscribe;
+  onViewportChanged(cb: (vp: Viewport) => void): Unsubscribe;
 
   // ui commands
   setSelection(ids: string[]): void;

@@ -73,7 +73,7 @@ describe('v6 Defect 1: Chip detach on pan/zoom (§1.2.1)', () => {
     expect(screenY).toBe(106);
   });
 
-  it.fails('ExcalidrawDriver implements onViewportChanged and emits diffs when scroll or zoom changes (RED REPRO)', () => {
+  it('ExcalidrawDriver implements onViewportChanged and emits diffs when scroll or zoom changes', () => {
     const mockApi: any = {
       getSceneElements: () => [],
       getAppState: () => ({ scrollX: 0, scrollY: 0, zoom: { value: 1 }, selectedElementIds: {} }),
@@ -83,8 +83,7 @@ describe('v6 Defect 1: Chip detach on pan/zoom (§1.2.1)', () => {
     const driver = new ExcalidrawDriver(mockApi);
     const viewportEvents: Viewport[] = [];
 
-    // Fails because driver.onViewportChanged is not implemented yet in ExcalidrawDriver
-    const unsubscribe = (driver as any).onViewportChanged((vp: Viewport) => {
+    const unsubscribe = driver.onViewportChanged((vp: Viewport) => {
       viewportEvents.push(vp);
     });
 

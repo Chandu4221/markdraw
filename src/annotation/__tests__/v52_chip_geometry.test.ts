@@ -39,6 +39,7 @@ describe('v5.2 Chip Geometry & Positioning (§1.2, §1.3)', () => {
       groupShapes: vi.fn(async () => 'grp_id'),
       onShapesChanged: vi.fn(() => () => {}),
       onSelectionChanged: vi.fn(() => () => {}),
+      onViewportChanged: vi.fn(() => () => {}),
       setSelection: vi.fn(),
       panTo: vi.fn(),
       copyToClipboard: vi.fn(async () => {})
@@ -102,6 +103,7 @@ describe('v5.2 Chip Geometry & Positioning (§1.2, §1.3)', () => {
         groupShapes: vi.fn(async () => 'grp_id'),
         onShapesChanged: vi.fn(() => () => {}),
         onSelectionChanged: vi.fn(() => () => {}),
+        onViewportChanged: vi.fn(() => () => {}),
         setSelection: vi.fn(),
         panTo: vi.fn(),
         copyToClipboard: vi.fn(async () => {})

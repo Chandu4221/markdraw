@@ -11,8 +11,10 @@ export class ExcalidrawDriver implements CanvasDriver {
   private api: ExcalidrawImperativeAPI;
   private shapeListeners: ((diff: ShapesDiff) => void)[] = [];
   private selectionListeners: ((ids: string[]) => void)[] = [];
+  private viewportListeners: ((vp: Viewport) => void)[] = [];
   private previousElements: Map<string, ExcalidrawElement> = new Map();
   private previousSelectedIds: Set<string> = new Set();
+  private previousViewport: Viewport = { x: 0, y: 0, zoom: 1 };
   private unsubscribeOnChange: Unsubscribe | null = null;
 
   constructor(api: ExcalidrawImperativeAPI) {
@@ -38,6 +40,11 @@ export class ExcalidrawDriver implements CanvasDriver {
     this.previousSelectedIds = new Set(
       Object.keys(state.selectedElementIds || {}).filter((id) => state.selectedElementIds[id])
     );
+    this.previousViewport = {
+      x: state?.scrollX ?? 0,
+      y: state?.scrollY ?? 0,
+      zoom: typeof state?.zoom === 'object' ? state.zoom.value : (state?.zoom ?? 1)
+    };
   }
 
   private bindOnChange(): void {
@@ -53,6 +60,7 @@ export class ExcalidrawDriver implements CanvasDriver {
     }
     this.shapeListeners = [];
     this.selectionListeners = [];
+    this.viewportListeners = [];
   }
 
   public handleSceneChange(
@@ -135,6 +143,31 @@ export class ExcalidrawDriver implements CanvasDriver {
           console.error('[ExcalidrawDriver] Error in selection listener:', err);
         }
       });
+    }
+
+    // Viewport changes (scrollX, scrollY, zoom)
+    const currentState = state ?? this.api.getAppState();
+    if (currentState) {
+      const newZoom = typeof currentState.zoom === 'object' ? currentState.zoom.value : (currentState.zoom ?? 1);
+      const newVp: Viewport = {
+        x: currentState.scrollX ?? 0,
+        y: currentState.scrollY ?? 0,
+        zoom: newZoom
+      };
+      if (
+        newVp.x !== this.previousViewport.x ||
+        newVp.y !== this.previousViewport.y ||
+        newVp.zoom !== this.previousViewport.zoom
+      ) {
+        this.previousViewport = newVp;
+        this.viewportListeners.forEach((cb) => {
+          try {
+            cb(newVp);
+          } catch (err) {
+            console.error('[ExcalidrawDriver] Error in viewport listener:', err);
+          }
+        });
+      }
     }
   }
 
@@ -293,6 +326,13 @@ export class ExcalidrawDriver implements CanvasDriver {
     } catch {}
     return () => {
       this.selectionListeners = this.selectionListeners.filter((l) => l !== cb);
+    };
+  }
+
+  onViewportChanged(cb: (vp: Viewport) => void): Unsubscribe {
+    this.viewportListeners.push(cb);
+    return () => {
+      this.viewportListeners = this.viewportListeners.filter((l) => l !== cb);
     };
   }
 

@@ -18,6 +18,7 @@ function createMockDriver(shapes: CanvasShape[]): CanvasDriver {
     groupShapes: vi.fn(async () => 'group_id'),
     onShapesChanged: vi.fn(() => () => {}),
     onSelectionChanged: vi.fn(() => () => {}),
+    onViewportChanged: vi.fn(() => () => {}),
     setSelection: vi.fn(),
     panTo: vi.fn(),
     copyToClipboard: vi.fn(async () => {})
