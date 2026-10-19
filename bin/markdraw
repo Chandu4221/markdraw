@@ -823,11 +823,16 @@ function getShapeMeta(shape) {
   if (!meta || typeof meta !== "object") return null;
   const m = meta;
   if (m.schema !== ROLE_SCHEMA_VERSION) return null;
-  return meta;
+  const resolvedType = m.type ?? m.role ?? null;
+  return {
+    ...m,
+    type: resolvedType,
+    role: resolvedType
+  };
 }
 
 // src/annotation/roles.ts
-var ROLE_NAMES = Object.freeze([
+var TYPE_VOCABULARY = Object.freeze([
   "page",
   "section",
   "card",
@@ -863,7 +868,7 @@ var ROLE_NAMES = Object.freeze([
   "bottom_sheet",
   "scaffold"
 ]);
-var ROLE_DEFINITIONS = Object.freeze({
+var TYPE_DEFINITIONS = Object.freeze({
   page: {
     name: "page",
     aliases: ["screen", "artboard"],
@@ -1103,16 +1108,18 @@ var ROLE_DEFINITIONS = Object.freeze({
     flags: []
   }
 });
-var ROLE_LIST = Object.freeze(
-  ROLE_NAMES.map((name) => ROLE_DEFINITIONS[name])
+var ROLE_DEFINITIONS = TYPE_DEFINITIONS;
+var TYPE_LIST = Object.freeze(
+  TYPE_VOCABULARY.map((name) => TYPE_DEFINITIONS[name])
 );
-function isValidRole(role) {
-  return ROLE_NAMES.includes(role);
+function isValidType(type) {
+  return TYPE_VOCABULARY.includes(type);
 }
-function isAllowedRoleFlag(role, flag) {
-  if (!isValidRole(role)) return false;
-  return ROLE_DEFINITIONS[role].flags.includes(flag);
+function isAllowedTypeFlag(type, flag) {
+  if (!isValidType(type)) return false;
+  return TYPE_DEFINITIONS[type].flags.includes(flag);
 }
+var isAllowedRoleFlag = isAllowedTypeFlag;
 
 // src/core/types.ts
 function createShapeId(id) {

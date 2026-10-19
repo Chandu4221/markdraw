@@ -14,6 +14,17 @@ MarkDraw takes a different approach: keep freehand drawing (no rigid widget libr
 
 **The intent**: the contract *constrains* the AI to what the author declared, rather than relying on vision inference.
 
+## What's New in v5.2
+
+- **Naming Trinity (`Type` / `Name` / `ID`)**: Standardized shape metadata vocabulary. The semantic property is named `Type` (with backward-compatible support for `role`), the user-facing label is `Name`, and the persistent identifier is `ID`.
+- **Redesigned 4-Mode Inspector**: A progressive inspector that switches strictly between four focused modes:
+  - `Canvas`: Shows canvas coverage (tagged shape count), roots list with quick contract copy, and 3-step storyboard.
+  - `Untagged`: Shows the Type picker and Name input only.
+  - `Tagged`: Shows Type row, Name input, and three closed-by-default accordion sections: Responsive (breakpoint segmented control), Behavior (type-specific flag chips), and Advanced (parent override and style note).
+  - `Multi-select`: Shows bulk Type assignment and unit creation.
+- **Fixed-Trio Breakpoint Switch (1200 / 768 / 375)**: Responsive preview is controlled directly from the inspector's Responsive row using a 3-way segmented control (Desktop 1200, Tablet 768, Smartphone 375). When 768 or 375 is selected, a non-destructive guideline and reflow preview render inside the root page bounds on the canvas.
+- **Design Token Bridge**: Design tokens (`tokens.css`) bridge into canvas theme variables, verified across the entire `src/` codebase with automated token tests.
+
 ---
 
 ## Key Features
