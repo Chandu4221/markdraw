@@ -54,10 +54,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
-        <DialogHeader className="h-12 px-4 border-b border-[var(--md-border)] flex flex-row items-center justify-between space-y-0">
+        <DialogHeader className="h-12 px-4 border-b border-[var(--color-line-subtle)] flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-2">
-            <Sliders size={16} className="text-[var(--md-accent)]" />
-            <DialogTitle className="text-sm font-semibold text-[var(--md-text-bold)]">
+            <Sliders size={16} className="text-[var(--color-accent)]" />
+            <DialogTitle className="text-sm font-semibold text-[var(--color-ink-primary)]">
               Document Settings
             </DialogTitle>
           </div>
@@ -77,10 +77,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-[var(--md-text)]">
+                    <div className="text-sm font-medium text-[var(--color-ink-secondary)]">
                       Include Legend
                     </div>
-                    <div className="text-sm text-[var(--md-text-subtle)]">
+                    <div className="text-sm text-[var(--color-ink-muted)]">
                       Appends bracket-tag documentation to markdown output
                     </div>
                   </div>
@@ -94,10 +94,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-[var(--md-text)]">
+                    <div className="text-sm font-medium text-[var(--color-ink-secondary)]">
                       Include Timestamp
                     </div>
-                    <div className="text-sm text-[var(--md-text-subtle)]">
+                    <div className="text-sm text-[var(--color-ink-muted)]">
                       Disabled by default for byte-for-byte determinism
                     </div>
                   </div>
@@ -111,10 +111,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-[var(--md-text)]">
+                    <div className="text-sm font-medium text-[var(--color-ink-secondary)]">
                       Show Canvas Type Chips
                     </div>
-                    <div className="text-sm text-[var(--md-text-subtle)]">
+                    <div className="text-sm text-[var(--color-ink-muted)]">
                       Display type badge overlays directly on shapes
                     </div>
                   </div>
@@ -130,14 +130,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Containment Overlap */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-sm">
-                  <label className="font-medium text-[var(--md-text)]">
+                  <label className="font-medium text-[var(--color-ink-secondary)]">
                     Containment Overlap
                   </label>
-                  <span className="font-mono text-[var(--md-text-muted)]">
+                  <span className="font-mono text-[var(--color-ink-muted)]">
                     {Math.round(options.containmentThreshold * 100)}%
                   </span>
                 </div>
-                <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
+                <p className="text-sm text-[var(--color-ink-muted)] leading-normal">
                   Minimum overlap required for parent-child hierarchy.
                 </p>
                 <input
@@ -152,21 +152,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       containmentThreshold: parseFloat(e.target.value)
                     })
                   }
-                  className="w-full accent-[var(--md-accent)] cursor-pointer"
+                  className="w-full accent-[var(--color-accent)] cursor-pointer"
                 />
               </div>
 
               {/* Size Bucket Tolerance (A.5) */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-sm">
-                  <label className="font-medium text-[var(--md-text)]">
+                  <label className="font-medium text-[var(--color-ink-secondary)]">
                     Size Bucket Tolerance (±%)
                   </label>
-                  <span className="font-mono text-[var(--md-text-muted)]">
+                  <span className="font-mono text-[var(--color-ink-muted)]">
                     ±{options.sizeBucketTolerance ?? 2}%
                   </span>
                 </div>
-                <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
+                <p className="text-sm text-[var(--color-ink-muted)] leading-normal">
                   Snapping tolerance for width buckets (e.g. 48–52% snaps to 50%).
                 </p>
                 <Input
@@ -187,14 +187,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Align Tolerance (A.5) */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-sm">
-                  <label className="font-medium text-[var(--md-text)]">
+                  <label className="font-medium text-[var(--color-ink-secondary)]">
                     Alignment Tolerance (±%)
                   </label>
-                  <span className="font-mono text-[var(--md-text-muted)]">
+                  <span className="font-mono text-[var(--color-ink-muted)]">
                     ±{options.alignTolerance ?? 3}%
                   </span>
                 </div>
-                <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
+                <p className="text-sm text-[var(--color-ink-muted)] leading-normal">
                   Center-alignment tolerance within parent container.
                 </p>
                 <Input
@@ -215,12 +215,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </Tabs>
         </div>
 
-        <DialogFooter className="h-12 px-4 border-t border-[var(--md-border)] flex items-center justify-between sm:justify-between bg-[var(--md-surface)]">
+        <DialogFooter className="h-12 px-4 border-t border-[var(--color-line-subtle)] flex items-center justify-between sm:justify-between bg-[var(--color-surface-1)]">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleReset}
-            className="gap-1.5 text-sm text-[var(--md-text-muted)]"
+            className="gap-1.5 text-sm text-[var(--color-ink-muted)]"
           >
             <RotateCcw size={14} />
             <span>Reset Defaults</span>

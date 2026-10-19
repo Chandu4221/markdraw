@@ -178,7 +178,7 @@ describe('v5.0 Design System & Tokens Enforcement (§4, §10)', () => {
     expect(styleViolations).toEqual([]);
   });
 
-  it.fails('(e) contains zero --md- token dialect usage across all src/ files (§1.2.4 RED REPRO)', () => {
+  it('(e) contains zero --md- token dialect usage across all src/ files (§1.2.4)', () => {
     const files = getSourceFiles();
     const mdTokenViolations: string[] = [];
 

@@ -3,17 +3,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-sm border px-2 py-0.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--md-accent-ring)]',
+  'inline-flex items-center rounded-sm border px-2 py-0.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-ring)]',
   {
     variants: {
       variant: {
         default:
-          'border-[var(--md-border)] bg-[var(--md-surface-raised)] text-[var(--md-text)]',
+          'border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-[var(--color-ink-primary)]',
         secondary:
-          'border-transparent bg-[var(--md-surface)] text-[var(--md-text-muted)]',
-        outline: 'border-[var(--md-border)] text-[var(--md-text-muted)]',
+          'border-transparent bg-[var(--color-surface-1)] text-[var(--color-ink-muted)]',
+        outline: 'border-[var(--color-line-subtle)] text-[var(--color-ink-muted)]',
         accent:
-          'border-[var(--md-accent)] bg-[var(--md-accent-subtle)] text-[var(--md-accent)] font-semibold'
+          'border-[var(--color-accent)] bg-[var(--color-accent-subtle)] text-[var(--color-accent)] font-semibold'
       }
     },
     defaultVariants: {

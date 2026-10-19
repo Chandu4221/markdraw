@@ -19,12 +19,20 @@
   --color-line-subtle: var(--md-line-subtle);
   --color-line-strong: var(--md-line-strong);
 
-  /* Semantic Hues & Accent */
   --color-accent: var(--md-accent);
   --color-accent-hover: var(--md-accent-hover);
+  --color-accent-subtle: var(--md-accent-subtle);
+  --color-accent-ring: var(--md-accent-ring);
+  --color-accent-contrast: var(--md-accent-contrast);
   --color-danger: var(--md-danger);
   --color-success: var(--md-success);
   --color-warning: var(--md-warning);
+
+  /* Shadows */
+  --shadow-sm: var(--md-shadow-sm);
+  --shadow-md: var(--md-shadow-md);
+  --shadow-lg: var(--md-shadow-lg);
+  --shadow-xl: var(--md-shadow-xl);
 
   /* Chip Grammar */
   --color-role-chip-bg: var(--md-role-chip-bg);
@@ -166,6 +174,61 @@
   --md-shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
   --md-shadow-lg: 0 10px 18px -3px rgba(0, 0, 0, 0.35), 0 4px 8px -4px rgba(0, 0, 0, 0.25);
   --md-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+
+  /* Unified Token Names (§4 Single Authority) */
+  --color-surface-0: var(--md-surface-0);
+  --color-surface-1: var(--md-surface-1);
+  --color-surface-2: var(--md-surface-2);
+  --color-surface-3: var(--md-surface-3);
+  --color-surface-4: var(--md-surface-4);
+
+  --color-ink-primary: var(--md-ink-primary);
+  --color-ink-secondary: var(--md-ink-secondary);
+  --color-ink-muted: var(--md-ink-muted);
+
+  --color-line-subtle: var(--md-line-subtle);
+  --color-line-strong: var(--md-line-strong);
+
+  --color-accent: var(--md-accent);
+  --color-accent-hover: var(--md-accent-hover);
+  --color-accent-contrast: var(--md-accent-contrast);
+  --color-accent-subtle: var(--md-accent-subtle);
+  --color-accent-ring: var(--md-accent-ring);
+
+  --color-danger: var(--md-danger);
+  --color-success: var(--md-success);
+  --color-warning: var(--md-warning);
+
+  --color-role-chip-bg: var(--md-role-chip-bg);
+  --color-role-chip-text: var(--md-role-chip-text);
+  --color-untagged-chip-bg: var(--md-untagged-chip-bg);
+  --color-untagged-chip-text: var(--md-untagged-chip-text);
+
+  --color-role-structure: var(--md-role-structure);
+  --color-role-structure-bg: var(--md-role-structure-bg);
+  --color-role-content: var(--md-role-content);
+  --color-role-content-bg: var(--md-role-content-bg);
+  --color-role-interaction: var(--md-role-interaction);
+  --color-role-interaction-bg: var(--md-role-interaction-bg);
+  --color-role-nav: var(--md-role-nav);
+  --color-role-nav-bg: var(--md-role-nav-bg);
+  --color-role-feedback: var(--md-role-feedback);
+  --color-role-feedback-bg: var(--md-role-feedback-bg);
+  --color-role-utility: var(--md-role-utility);
+  --color-role-utility-bg: var(--md-role-utility-bg);
+  --color-role-platform: var(--md-role-platform);
+  --color-role-platform-bg: var(--md-role-platform-bg);
+
+  --radius-sm: var(--md-radius-sm);
+  --radius-md: var(--md-radius-md);
+  --radius-lg: var(--md-radius-lg);
+  --radius-xl: var(--md-radius-xl);
+  --radius-full: 9999px;
+
+  --shadow-sm: var(--md-shadow-sm);
+  --shadow-md: var(--md-shadow-md);
+  --shadow-lg: var(--md-shadow-lg);
+  --shadow-xl: var(--md-shadow-xl);
 }
 
 [data-theme='light'] {

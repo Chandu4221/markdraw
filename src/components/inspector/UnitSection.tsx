@@ -33,34 +33,34 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
   onNewUnitBaseRoleChange
 }) => {
   return (
-    <div className="border-t border-[var(--md-line-subtle)]">
+    <div className="border-t border-[var(--color-line-subtle)]">
       <button
         type="button"
         id="accordion-header-units"
         onClick={onToggle}
-        className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
+        className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--color-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          <Box size={14} className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] shrink-0 transition-colors" />
-          <span className="text-sm font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
+          <Box size={14} className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-primary)] shrink-0 transition-colors" />
+          <span className="text-sm font-semibold tracking-wider uppercase text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-primary)] transition-colors whitespace-nowrap shrink-0">
             Custom Units
           </span>
           {units.length > 0 && (
-            <span className="px-1.5 py-0.5 text-sm font-mono font-medium text-[var(--md-ink-muted)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] rounded shrink-0">
+            <span className="px-1.5 py-0.5 text-sm font-mono font-medium text-[var(--color-ink-muted)] bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] rounded shrink-0">
               {units.length}
             </span>
           )}
         </div>
-        <div className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors shrink-0">
+        <div className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-primary)] transition-colors shrink-0">
           {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </div>
       </button>
 
       {isOpen && (
-        <div className="p-3 pt-2 space-y-2 bg-[var(--md-surface-1)]">
+        <div className="p-3 pt-2 space-y-2 bg-[var(--color-surface-1)]">
           {units.length === 0 ? (
-            <div className="text-sm text-[var(--md-ink-muted)] italic py-1 leading-normal">
+            <div className="text-sm text-[var(--color-ink-muted)] italic py-1 leading-normal">
               Multi-select shapes on canvas to save them as reusable units.
             </div>
           ) : (
@@ -68,11 +68,11 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
               {units.map((u) => (
                 <div
                   key={u.id}
-                  className="flex items-center justify-between p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] hover:bg-[var(--md-surface-3)] transition-colors text-sm"
+                  className="flex items-center justify-between p-2 rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] transition-colors text-sm"
                 >
                   <div className="min-w-0 pr-2">
-                    <div className="font-semibold text-[var(--md-ink-primary)] truncate">{u.name}</div>
-                    <div className="text-sm text-[var(--md-ink-muted)] font-mono">
+                    <div className="font-semibold text-[var(--color-ink-primary)] truncate">{u.name}</div>
+                    <div className="text-sm text-[var(--color-ink-muted)] font-mono">
                       Base: {u.baseRole} • {u.memberRoles?.length || 0} items
                     </div>
                   </div>
@@ -80,7 +80,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => onStampUnit(u)}
-                      className="px-2.5 py-1 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] transition-colors cursor-pointer"
+                      className="px-2.5 py-1 text-sm font-semibold rounded-[var(--radius-sm)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] transition-colors cursor-pointer"
                     >
                       Stamp
                     </button>
@@ -88,7 +88,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                       type="button"
                       aria-label={`Delete custom unit ${u.name}`}
                       onClick={(e) => onDeleteUnit(u.id, e)}
-                      className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--md-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] transition-colors cursor-pointer"
+                      className="p-1 rounded text-[var(--color-ink-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] transition-colors cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -108,18 +108,18 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
           <div
-            className="w-80 rounded-xl border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] p-4 shadow-2xl space-y-3"
+            className="w-80 rounded-xl border border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] p-4 shadow-2xl space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[var(--md-line-subtle)] pb-2">
-              <div className="flex items-center gap-1.5 font-bold text-sm text-[var(--md-ink-primary)]">
+            <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2">
+              <div className="flex items-center gap-1.5 font-bold text-sm text-[var(--color-ink-primary)]">
                 <Box size={14} className="text-[var(--color-accent)]" />
                 <span>Save as Custom Unit</span>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-[var(--md-ink-muted)] uppercase tracking-wider block">
+              <label className="text-sm font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider block">
                 Unit Name
               </label>
               <input
@@ -132,18 +132,18 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                   if (e.key === 'Enter') onSaveUnit();
                   if (e.key === 'Escape') onCloseSaveDialog();
                 }}
-                className="w-full h-8 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-sm text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)]"
+                className="w-full h-8 px-2.5 rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-sm text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-[var(--md-ink-muted)] uppercase tracking-wider block">
+              <label className="text-sm font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider block">
                 Base Spec Role
               </label>
               <select
                 value={newUnitBaseRole}
                 onChange={(e) => onNewUnitBaseRoleChange(e.target.value as RoleName)}
-                className="w-full h-8 px-2 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-sm text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                className="w-full h-8 px-2 rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-sm text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] cursor-pointer"
               >
                 <option value="card">Card (Container)</option>
                 <option value="section">Section</option>
@@ -153,11 +153,11 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
               </select>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--md-line-subtle)]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-line-subtle)]">
               <button
                 type="button"
                 onClick={onCloseSaveDialog}
-                className="px-3 py-1.5 text-sm text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] rounded-[var(--md-radius-sm)] transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-2)] rounded-[var(--radius-sm)] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -165,7 +165,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                 type="button"
                 onClick={onSaveUnit}
                 disabled={!newUnitName.trim()}
-                className="px-3 py-1.5 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-sm font-semibold rounded-[var(--radius-sm)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Save Unit
               </button>

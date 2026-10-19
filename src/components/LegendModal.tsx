@@ -27,10 +27,10 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <DialogHeader className="h-12 px-4 border-b border-[var(--md-border)] flex flex-row items-center justify-between space-y-0">
+        <DialogHeader className="h-12 px-4 border-b border-[var(--color-line-subtle)] flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-[var(--md-accent)]" />
-            <DialogTitle className="text-sm font-semibold text-[var(--md-text-bold)]">
+            <BookOpen size={16} className="text-[var(--color-accent)]" />
+            <DialogTitle className="text-sm font-semibold text-[var(--color-ink-primary)]">
               MarkDraw Semantic Legend
             </DialogTitle>
           </div>
@@ -46,7 +46,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
             >
               {copied ? (
                 <>
-                  <Check size={14} className="text-[var(--md-accent)]" />
+                  <Check size={14} className="text-[var(--color-accent)]" />
                   <span>Copied</span>
                 </>
               ) : (
@@ -60,7 +60,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
         </DialogHeader>
 
         <div className="p-4 overflow-y-auto max-h-[calc(85vh-48px)]">
-          <pre className="text-sm font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text bg-[var(--md-surface-raised)] p-3 rounded-[var(--md-radius-md)] border border-[var(--md-border)]">
+          <pre className="text-sm font-mono leading-relaxed text-[var(--color-ink-secondary)] whitespace-pre-wrap select-text bg-[var(--color-surface-raised)] p-3 rounded-[var(--radius-md)] border border-[var(--color-line-subtle)]">
             {SEMANTIC_LEGEND_MARKDOWN}
           </pre>
         </div>

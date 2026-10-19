@@ -197,21 +197,21 @@ export const ChipsOverlay: React.FC<ChipsOverlayProps> = ({
                 }}
                 className={`h-5 px-1.5 flex items-center gap-1 text-sm font-medium rounded-sm border cursor-pointer select-none transition-colors ${
                   chip.isUntagged
-                    ? 'border-dashed border-[var(--md-line-strong)] bg-[var(--md-surface-1)] text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)]'
-                    : 'border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-3)]'
+                    ? 'border-dashed border-[var(--color-line-strong)] bg-[var(--color-surface-1)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)]'
+                    : 'border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-3)]'
                 } ${
-                  chip.isSelected ? 'ring-2 ring-[var(--md-accent)]' : ''
+                  chip.isSelected ? 'ring-2 ring-[var(--color-accent)]' : ''
                 }`}
                 title={chip.type ? `Type: ${chip.type}` : 'Untagged'}
               >
                 {TypeIcon ? (
-                  <TypeIcon size={12} className="shrink-0 text-[var(--md-ink-muted)]" />
+                  <TypeIcon size={12} className="shrink-0 text-[var(--color-ink-muted)]" />
                 ) : chip.type ? (
-                  <span className="font-mono text-sm text-[var(--md-ink-muted)]">
+                  <span className="font-mono text-sm text-[var(--color-ink-muted)]">
                     {chip.type.slice(0, 3)}
                   </span>
                 ) : (
-                  <span className="font-bold text-sm text-[var(--md-ink-muted)]">?</span>
+                  <span className="font-bold text-sm text-[var(--color-ink-muted)]">?</span>
                 )}
                 <span className="max-w-20 truncate">{displayText}</span>
               </button>
@@ -220,12 +220,12 @@ export const ChipsOverlay: React.FC<ChipsOverlayProps> = ({
                 <button
                   type="button"
                   onClick={(e) => handleCopy(e, chip.shapeId)}
-                  className="hidden group-hover:flex items-center gap-1 h-5 px-1.5 text-sm font-medium rounded-sm border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-3)] transition-colors cursor-pointer shadow-sm"
+                  className="hidden group-hover:flex items-center gap-1 h-5 px-1.5 text-sm font-medium rounded-sm border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-3)] transition-colors cursor-pointer shadow-sm"
                   title="Copy contract"
                   aria-label="Copy contract"
                 >
                   {copiedRootId === chip.shapeId ? (
-                    <Check size={11} className="text-[var(--md-success)]" />
+                    <Check size={11} className="text-[var(--color-success)]" />
                   ) : (
                     <Copy size={11} />
                   )}

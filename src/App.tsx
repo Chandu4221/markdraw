@@ -302,7 +302,7 @@ export const App: React.FC = () => {
   return (
     <ErrorBoundary getRecoverySnapshot={getRecoverySnapshot}>
       <CompilationOptionsContext.Provider value={{ options, setOptions: handleOptionsChange }}>
-        <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--md-bg)] text-[var(--md-text)] font-sans antialiased">
+        <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--color-surface-0)] text-[var(--color-ink-secondary)] font-sans antialiased">
           {/* Top Application Header */}
           <AppHeader
             activeDoc={activeDoc}
@@ -340,7 +340,7 @@ export const App: React.FC = () => {
             <div className="flex-1 flex h-full overflow-hidden relative" ref={splitAreaRef}>
               {/* Canvas Container */}
               <div
-                className="h-full relative overflow-hidden bg-[var(--md-bg)] flex-1 min-w-0 flex"
+                className="h-full relative overflow-hidden bg-[var(--color-surface-0)] flex-1 min-w-0 flex"
                 onTransitionEnd={() => {
                   window.dispatchEvent(new Event('resize'));
                 }}
@@ -371,8 +371,8 @@ export const App: React.FC = () => {
 
                   {/* Toast Message */}
                   {toastMessage && (
-                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] text-sm text-[var(--md-text-bold)] shadow-[var(--md-shadow-lg)] animate-in fade-in-0 duration-150">
-                      <AlertCircle size={16} className="text-[var(--md-accent)]" />
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-ink-primary)] shadow-[var(--shadow-lg)] animate-in fade-in-0 duration-150">
+                      <AlertCircle size={16} className="text-[var(--color-accent)]" />
                       <span>{toastMessage}</span>
                     </div>
                   )}
@@ -429,16 +429,16 @@ export const App: React.FC = () => {
                 aria-orientation="vertical"
                 aria-label="Resize canvas and output panels"
                 tabIndex={isRightPanelOpen ? 0 : -1}
-                className={`w-1.5 h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
+                className={`w-1.5 h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--color-accent)] transition-[opacity,width] duration-200 select-none ${
                   isRightPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
                 } ${
-                  activeDrag === 'right' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
+                  activeDrag === 'right' ? 'bg-[var(--color-accent)]' : 'bg-transparent'
                 }`}
                 onMouseDown={isRightPanelOpen ? startResizingRight : undefined}
                 onDoubleClick={() => setCanvasPercent(55)}
                 title="Drag to resize (Double-click to reset 55/45)"
               >
-                <div className="w-px h-full bg-[var(--md-border)] group-hover:bg-transparent" />
+                <div className="w-px h-full bg-[var(--color-line-subtle)] group-hover:bg-transparent" />
               </div>
 
               {/* Right Pane: Live Reactive Output */}

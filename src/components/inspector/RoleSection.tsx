@@ -146,27 +146,27 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
         type="button"
         id="accordion-header-semantics"
         onClick={onToggle}
-        className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--md-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
+        className="w-full h-8 px-3 flex items-center justify-between text-left hover:bg-[var(--color-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset transition-colors cursor-pointer select-none group"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          <Tag size={15} className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] shrink-0 transition-colors" />
-          <span className="text-sm font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
+          <Tag size={15} className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-primary)] shrink-0 transition-colors" />
+          <span className="text-sm font-semibold tracking-wider uppercase text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-primary)] transition-colors whitespace-nowrap shrink-0">
             Semantic Role
           </span>
           {currentRole && (
-            <span className="px-2 py-0.5 text-sm font-mono font-semibold bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-[var(--md-ink-primary)] rounded truncate max-w-24">
+            <span className="px-2 py-0.5 text-sm font-mono font-semibold bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-ink-primary)] rounded truncate max-w-24">
               {currentRole}
             </span>
           )}
         </div>
-        <div className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors shrink-0">
+        <div className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-primary)] transition-colors shrink-0">
           {isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
         </div>
       </button>
 
       {isOpen && (
-        <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface-1)]">
+        <div className="p-3 pt-2 space-y-3 bg-[var(--color-surface-1)]">
           {/* Current Role & Search Dropdown */}
           <RolePickerDropdown
             currentRole={currentRole}
@@ -178,7 +178,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
 
           {/* Accessible Label / AccName Input */}
           <div className="space-y-1">
-            <label htmlFor="inspector-accname-input" className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
+            <label htmlFor="inspector-accname-input" className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)] cursor-pointer">
               Label / AccName
             </label>
             <Input
@@ -194,7 +194,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
           {/* Parent Container Selector */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label htmlFor="inspector-parent-select" className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
+              <label htmlFor="inspector-parent-select" className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)] cursor-pointer">
                 Parent Container
               </label>
               {firstMeta?.parentId && (
@@ -211,7 +211,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               id="inspector-parent-select"
               value={firstMeta?.parentId || ''}
               onChange={(e) => handleSetParent(e.target.value || null)}
-              className="w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2.5 text-sm text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+              className="w-full h-8 rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] px-2.5 text-sm text-[var(--color-ink-primary)] hover:border-[var(--color-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] transition-colors cursor-pointer"
             >
               <option value="">Auto (Infer from AABB bounds)</option>
               {potentialParents.map((p) => {
@@ -229,8 +229,8 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
 
           {/* Allowed Behavior Flags */}
           {roleDef && roleDef.flags && roleDef.flags.length > 0 && (
-            <div className="space-y-1.5 pt-1 border-t border-[var(--md-line-subtle)]">
-              <label className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)]">
+            <div className="space-y-1.5 pt-1 border-t border-[var(--color-line-subtle)]">
+              <label className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
                 Behaviors
               </label>
               <div className="flex flex-wrap gap-1">
@@ -241,10 +241,10 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
                       key={flag}
                       type="button"
                       onClick={() => handleToggleBehavior(flag)}
-                      className={`px-2 py-1 text-sm font-medium rounded-[var(--md-radius-sm)] transition-colors cursor-pointer border ${
+                      className={`px-2 py-1 text-sm font-medium rounded-[var(--radius-sm)] transition-colors cursor-pointer border ${
                         isActive
-                          ? 'bg-[var(--md-accent)] text-white border-[var(--md-accent)]'
-                          : 'bg-[var(--md-surface-2)] text-[var(--md-ink-muted)] border-[var(--md-line-subtle)] hover:text-[var(--md-ink-primary)]'
+                          ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                          : 'bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] border-[var(--color-line-subtle)] hover:text-[var(--color-ink-primary)]'
                       }`}
                     >
                       {isActive ? '✓ ' : ''}
@@ -266,26 +266,26 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
           />
 
           {/* Style Note */}
-          <div className="space-y-1 pt-1 border-t border-[var(--md-line-subtle)]">
-            <label className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] flex items-center gap-1 cursor-pointer">
-              <StickyNote size={14} className="text-[var(--md-ink-muted)]" />
+          <div className="space-y-1 pt-1 border-t border-[var(--color-line-subtle)]">
+            <label className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)] flex items-center gap-1 cursor-pointer">
+              <StickyNote size={14} className="text-[var(--color-ink-muted)]" />
               <span>Style Note (Non-binding)</span>
             </label>
             <textarea
               value={firstMeta?.props?.note || ''}
               onChange={(e) => handleUpdateProp('note', e.target.value || undefined)}
               placeholder="e.g. skeleton state on mount, dark card border..."
-              className="w-full h-14 p-2 text-sm rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] resize-none transition-colors"
+              className="w-full h-14 p-2 text-sm rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] hover:border-[var(--color-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] resize-none transition-colors"
             />
           </div>
 
           {/* Unit Save Gesture (Multi-select) */}
           {count > 1 && (
-            <div className="pt-2 border-t border-[var(--md-line-subtle)]">
+            <div className="pt-2 border-t border-[var(--color-line-subtle)]">
               <button
                 type="button"
                 onClick={onSaveUnitGesture}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-sm font-semibold rounded-[var(--md-radius-sm)] border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-sm font-semibold rounded-[var(--radius-sm)] border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 transition-colors cursor-pointer"
               >
                 <Box size={15} className="shrink-0" />
                 <span>Save {count} shapes as Unit...</span>

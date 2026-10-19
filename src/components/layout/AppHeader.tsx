@@ -71,15 +71,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenOnboarding
 }) => {
   return (
-    <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
+    <header className="h-11 px-3 border-b border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] flex items-center justify-between shrink-0 select-none z-20">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-sm bg-[var(--md-text-bold)] text-[var(--md-bg)] text-sm font-bold flex items-center justify-center">
+        <div className="w-6 h-6 rounded-sm bg-[var(--color-ink-primary)] text-[var(--color-surface-0)] text-sm font-bold flex items-center justify-center">
           MD
         </div>
-        <span className="text-sm font-bold tracking-tight text-[var(--md-text-bold)]">
+        <span className="text-sm font-bold tracking-tight text-[var(--color-ink-primary)]">
           MarkDraw
         </span>
-        <span className="text-sm font-mono px-2 py-0.5 rounded-sm bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border border-[var(--md-border)]">
+        <span className="text-sm font-mono px-2 py-0.5 rounded-sm bg-[var(--color-surface-raised)] text-[var(--color-ink-muted)] border border-[var(--color-line-subtle)]">
           v{MARKDRAW_VERSION}
         </span>
         <span
@@ -106,12 +106,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
       <div className="flex items-center gap-2">
         {/* Layout Presets */}
-        <div className="flex items-center gap-0.5 p-0.5 rounded-sm bg-[var(--md-bg)] border border-[var(--md-border)]">
+        <div className="flex items-center gap-0.5 p-0.5 rounded-sm bg-[var(--color-surface-0)] border border-[var(--color-line-subtle)]">
           <button
             className={`px-2 py-0.5 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
               !isRightPanelOpen
-                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                ? 'bg-[var(--color-surface-raised)] text-[var(--color-ink-primary)] shadow-xs'
+                : 'text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]'
             }`}
             onClick={() => setIsRightPanelOpen(false)}
             title="Canvas Fullscreen Focus"
@@ -122,8 +122,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             className={`px-2 py-0.5 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
               isRightPanelOpen && Math.round(canvasPercent) === 75
-                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                ? 'bg-[var(--color-surface-raised)] text-[var(--color-ink-primary)] shadow-xs'
+                : 'text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]'
             }`}
             onClick={() => {
               setIsRightPanelOpen(true);
@@ -137,8 +137,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             className={`px-2 py-0.5 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
               isRightPanelOpen && Math.round(canvasPercent) === 50
-                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                ? 'bg-[var(--color-surface-raised)] text-[var(--color-ink-primary)] shadow-xs'
+                : 'text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]'
             }`}
             onClick={() => {
               setIsRightPanelOpen(true);
@@ -152,8 +152,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             className={`px-2 py-0.5 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
               isRightPanelOpen && Math.round(canvasPercent) === 35
-                ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
-                : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
+                ? 'bg-[var(--color-surface-raised)] text-[var(--color-ink-primary)] shadow-xs'
+                : 'text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]'
             }`}
             onClick={() => {
               setIsRightPanelOpen(true);
@@ -167,18 +167,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
 
         {/* Header Stats */}
-        <div className="hidden md:flex items-center gap-1.5 text-sm text-[var(--md-text-muted)] px-2">
-          <span>Elements: <strong className="text-[var(--md-text-bold)] font-mono">{elementCount}</strong></span>
+        <div className="hidden md:flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] px-2">
+          <span>Elements: <strong className="text-[var(--color-ink-primary)] font-mono">{elementCount}</strong></span>
           {compileDuration !== null && (
             <>
-              <span className="text-[var(--md-border)]">|</span>
-              <span className="font-mono text-sm text-[var(--md-accent)]" title="Compiler Execution Time">
+              <span className="text-[var(--color-line-subtle)]">|</span>
+              <span className="font-mono text-sm text-[var(--color-accent)]" title="Compiler Execution Time">
                 ⚡ {compileDuration}ms
               </span>
             </>
           )}
-          <span className="text-[var(--md-border)]">|</span>
-          <span>Roles: <strong className="text-[var(--md-text-bold)] font-mono">{roleCount}</strong></span>
+          <span className="text-[var(--color-line-subtle)]">|</span>
+          <span>Roles: <strong className="text-[var(--color-ink-primary)] font-mono">{roleCount}</strong></span>
         </div>
 
         {onOpenOnboarding && (

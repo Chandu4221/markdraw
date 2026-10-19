@@ -3,20 +3,20 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-95',
+  'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-ring)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-95',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--md-text-bold)] text-[var(--md-bg)] hover:bg-[var(--md-neutral-7)] hover:text-[var(--md-neutral-0)] shadow-sm font-semibold',
+          'bg-[var(--color-ink-primary)] text-[var(--color-surface-0)] hover:bg-[var(--color-surface-4)] hover:text-[var(--color-surface-0)] shadow-sm font-semibold',
         outline:
-          'border border-[var(--md-border)] bg-transparent text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] hover:border-[var(--md-border-strong)]',
+          'border border-[var(--color-line-subtle)] bg-transparent text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink-primary)] hover:border-[var(--color-line-strong)]',
         secondary:
-          'bg-[var(--md-surface-raised)] text-[var(--md-text)] hover:bg-[var(--md-neutral-3)] hover:text-[var(--md-text-bold)] border border-[var(--md-border)] hover:border-[var(--md-border-strong)] font-medium',
+          'bg-[var(--color-surface-2)] text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-3)] hover:text-[var(--color-ink-primary)] border border-[var(--color-line-subtle)] hover:border-[var(--color-line-strong)] font-medium',
         ghost:
-          'text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)]',
+          'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink-primary)]',
         accent:
-          'bg-[var(--md-accent-subtle)] text-[var(--md-accent)] border border-[var(--md-accent)] font-semibold hover:bg-[var(--md-accent)] hover:text-white hover:border-[var(--md-accent)]',
+          'bg-[var(--color-accent-subtle)] text-[var(--color-accent)] border border-[var(--color-accent)] font-semibold hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)]',
         brand:
           'bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white shadow-xs border border-[var(--color-line-subtle)] font-medium',
         primary:

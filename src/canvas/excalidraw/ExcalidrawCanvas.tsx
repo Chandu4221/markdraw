@@ -105,10 +105,10 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
                 <button
                   type="button"
                   onClick={onToggleInspector}
-                  className={`h-9 px-3 rounded-[var(--md-radius-sm)] border text-sm font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
+                  className={`h-9 px-3 rounded-[var(--radius-sm)] border text-sm font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
                     isInspectorOpen
-                      ? 'bg-[var(--md-accent)] text-white border-[var(--md-accent)]'
-                      : 'bg-[var(--md-surface-raised)] text-[var(--md-text)] border-[var(--md-border)] hover:bg-[var(--md-surface-2)] hover:border-[var(--md-border-strong)]'
+                      ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                      : 'bg-[var(--color-surface-raised)] text-[var(--color-ink-secondary)] border-[var(--color-line-subtle)] hover:bg-[var(--color-surface-2)] hover:border-[var(--color-line-strong)]'
                   }`}
                   title={isInspectorOpen ? 'Collapse Semantics Inspector (Alt+I)' : 'Open Semantics Inspector (Alt+I)'}
                   aria-label={isInspectorOpen ? 'Collapse Semantics Inspector (Alt+I)' : 'Open Semantics Inspector (Alt+I)'}
@@ -116,7 +116,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
                   <Tag size={15} />
                   <span>Inspector</span>
                   {selectedIds.length > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-[var(--md-accent)] text-white">
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-[var(--color-accent)] text-white">
                       {selectedIds.length}
                     </span>
                   )}

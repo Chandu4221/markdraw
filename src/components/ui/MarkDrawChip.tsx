@@ -20,39 +20,39 @@ const CATEGORY_COLOR_STYLES: Record<
   { bg: string; text: string; border: string }
 > = {
   structure: {
-    bg: 'bg-[var(--md-role-structure-bg)]',
-    text: 'text-[var(--md-role-structure)]',
-    border: 'border-[var(--md-role-structure)]/30'
+    bg: 'bg-[var(--color-role-structure-bg)]',
+    text: 'text-[var(--color-role-structure)]',
+    border: 'border-[var(--color-role-structure)]/30'
   },
   content: {
-    bg: 'bg-[var(--md-role-content-bg)]',
-    text: 'text-[var(--md-role-content)]',
-    border: 'border-[var(--md-role-content)]/30'
+    bg: 'bg-[var(--color-role-content-bg)]',
+    text: 'text-[var(--color-role-content)]',
+    border: 'border-[var(--color-role-content)]/30'
   },
   interaction: {
-    bg: 'bg-[var(--md-role-interaction-bg)]',
-    text: 'text-[var(--md-role-interaction)]',
-    border: 'border-[var(--md-role-interaction)]/30'
+    bg: 'bg-[var(--color-role-interaction-bg)]',
+    text: 'text-[var(--color-role-interaction)]',
+    border: 'border-[var(--color-role-interaction)]/30'
   },
   navigation: {
-    bg: 'bg-[var(--md-role-nav-bg)]',
-    text: 'text-[var(--md-role-nav)]',
-    border: 'border-[var(--md-role-nav)]/30'
+    bg: 'bg-[var(--color-role-nav-bg)]',
+    text: 'text-[var(--color-role-nav)]',
+    border: 'border-[var(--color-role-nav)]/30'
   },
   feedback: {
-    bg: 'bg-[var(--md-role-feedback-bg)]',
-    text: 'text-[var(--md-role-feedback)]',
-    border: 'border-[var(--md-role-feedback)]/30'
+    bg: 'bg-[var(--color-role-feedback-bg)]',
+    text: 'text-[var(--color-role-feedback)]',
+    border: 'border-[var(--color-role-feedback)]/30'
   },
   utility: {
-    bg: 'bg-[var(--md-role-utility-bg)]',
-    text: 'text-[var(--md-role-utility)]',
-    border: 'border-[var(--md-role-utility)]/30'
+    bg: 'bg-[var(--color-role-utility-bg)]',
+    text: 'text-[var(--color-role-utility)]',
+    border: 'border-[var(--color-role-utility)]/30'
   },
   platform: {
-    bg: 'bg-[var(--md-role-platform-bg)]',
-    text: 'text-[var(--md-role-platform)]',
-    border: 'border-[var(--md-role-platform)]/30'
+    bg: 'bg-[var(--color-role-platform-bg)]',
+    text: 'text-[var(--color-role-platform)]',
+    border: 'border-[var(--color-role-platform)]/30'
   }
 };
 
@@ -88,7 +88,7 @@ export const MarkDrawChip: React.FC<MarkDrawChipProps> = ({
       'bg-[var(--color-type-structure)]/15 text-[var(--color-type-structure)] border border-[var(--color-type-structure)]/30 font-mono font-bold';
   } else if (variant === 'untagged') {
     variantClasses =
-      'bg-[var(--md-untagged-chip-bg)] text-[var(--md-untagged-chip-text)] border border-dashed border-[var(--md-line-subtle)]';
+      'bg-[var(--color-untagged-chip-bg)] text-[var(--color-untagged-chip-text)] border border-dashed border-[var(--color-line-subtle)]';
   } else if (variant === 'lint') {
     variantClasses =
       'bg-[var(--color-warning)]/15 text-[var(--color-warning)] border border-[var(--color-warning)]/30';

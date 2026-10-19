@@ -118,7 +118,7 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex h-8 items-center gap-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-sm font-medium text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] transition-colors cursor-pointer select-none"
+            className="flex h-8 items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] px-2.5 text-sm font-medium text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-ring)] transition-colors cursor-pointer select-none"
             onDoubleClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -128,9 +128,9 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
             title="Click to switch/manage documents · Double-click to rename"
             aria-label="Click to switch or manage documents, double-click to rename"
           >
-            <FileText size={15} className="text-[var(--md-text-muted)]" />
+            <FileText size={15} className="text-[var(--color-ink-muted)]" />
             <span className="max-w-36 truncate text-sm">{activeDoc.name}</span>
-            <ChevronDown size={14} className="text-[var(--md-text-muted)] opacity-70" />
+            <ChevronDown size={14} className="text-[var(--color-ink-muted)] opacity-70" />
           </button>
         </DropdownMenuTrigger>
 
@@ -229,10 +229,10 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
               return (
                 <div
                   key={doc.id}
-                  className={`group flex items-center justify-between rounded-[var(--md-radius-sm)] px-2 py-1.5 text-sm cursor-pointer transition-colors ${
+                  className={`group flex items-center justify-between rounded-[var(--radius-sm)] px-2 py-1.5 text-sm cursor-pointer transition-colors ${
                     isActive
-                      ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] font-medium'
-                      : 'text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
+                      ? 'bg-[var(--color-surface-raised)] text-[var(--color-ink-primary)] font-medium'
+                      : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-raised)]'
                   }`}
                   onClick={() => {
                     if (!isActive) {
@@ -243,18 +243,18 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
                 >
                   <div className="flex flex-col min-w-0 pr-2">
                     <span className="truncate">{doc.name}</span>
-                    <span className="text-sm text-[var(--md-text-subtle)]">
+                    <span className="text-sm text-[var(--color-ink-muted)]">
                       {formatDate(doc.updatedAt)}
                     </span>
                   </div>
 
                   <div className="flex items-center shrink-0">
                     {isActive ? (
-                      <Check size={15} className="text-[var(--md-accent)]" />
+                      <Check size={15} className="text-[var(--color-accent)]" />
                     ) : docs.length > 1 ? (
                       <button
                         type="button"
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[var(--md-text-subtle)] hover:text-[var(--md-danger)] hover:bg-[var(--md-surface-raised)] rounded focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-danger)] transition-all cursor-pointer"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-[var(--color-ink-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-surface-raised)] rounded focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-danger)] transition-all cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (confirm(`Delete "${doc.name}"? This cannot be undone.`)) {
