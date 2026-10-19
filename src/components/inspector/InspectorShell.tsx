@@ -28,11 +28,7 @@ export interface InspectorShellProps {
   units?: UnitDefinition[];
   onUnitsChange?: (units: UnitDefinition[]) => void;
   options?: Required<CompilationOptions>;
-  onOptionsChange?: (
-    newOptsOrUpdater:
-      | Required<CompilationOptions>
-      | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)
-  ) => void;
+  onOptionsChange?: (newOpts: Required<CompilationOptions> | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)) => void;
   isMobile?: boolean;
   hideHeader?: boolean;
   isSimulating?: boolean;
@@ -117,6 +113,12 @@ export const InspectorShell = memo(function InspectorShell({
 
   const activeSelectedIds = selectedIds !== undefined ? selectedIds : internalSelectedIds;
 
+  useEffect(() => {
+    if (activeSelectedIds.length > 0 && panelRef.current) {
+      panelRef.current.scrollTop = 0;
+    }
+  }, [activeSelectedIds]);
+
   const selectedShapes = useMemo(() => {
     if (activeSelectedIds.length === 0) return [];
     const idSet = new Set(activeSelectedIds);
@@ -183,13 +185,11 @@ export const InspectorShell = memo(function InspectorShell({
   };
 
   const handleUpdateOption = (key: keyof CompilationOptions, value: unknown) => {
-    if (!effectiveSetOptions) return;
-    effectiveSetOptions((prev) => ({ ...prev, [key]: value }));
+    effectiveSetOptions?.((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleResetOptions = () => {
-    if (!effectiveSetOptions) return;
-    effectiveSetOptions((prev) => ({
+    effectiveSetOptions?.((prev) => ({
       ...prev,
       containmentThreshold: 0.85, rowClusterThreshold: 16, gridBandThreshold: 32,
       sizeBucketTolerance: 2, alignTolerance: 3, includeTimestamp: false,

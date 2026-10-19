@@ -88,6 +88,7 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
 
       <button
         type="button"
+        role="combobox"
         aria-label="Semantic role selection"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}

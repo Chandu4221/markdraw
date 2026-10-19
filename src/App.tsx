@@ -8,11 +8,13 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CompilationOptionsContext } from './core/CompilationOptionsContext';
 import { ALL_ROLES } from './annotation/roles';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Tag, ChevronRight } from 'lucide-react';
 import { AppHeader } from './components/layout';
 import { OnboardingModal } from './components/modals/OnboardingModal';
 import { StarterTemplate } from './canvas/templates/starterTemplates';
 import { OutputPanel, OutputTab, OutputDisplayMode } from './components/output';
+import { InspectorShell } from './components/inspector/InspectorShell';
+import { getShapeMeta } from './annotation/shapeMeta';
 import {
   useDocumentManagement,
   usePanelResize,
@@ -100,12 +102,37 @@ export const App: React.FC = () => {
     handleImportFile
   } = useDocumentManagement({ editorRef, showToast });
 
+  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
+  const [simulationRootId, setSimulationRootId] = useState<string | null>(null);
+
+  const handleToggleSimulate = useCallback(async () => {
+    if (!driver || selectedIds.length === 0) return;
+    const shape = await driver.getShape(selectedIds[0]);
+    if (!shape) return;
+    const meta = getShapeMeta(shape);
+    if (meta?.role === 'page' && meta.props?.behaviors?.includes('responsive')) {
+      setSimulationRootId((prev) => (prev ? null : shape.id));
+    }
+  }, [driver, selectedIds]);
+
+  // Auto-open Inspector and scroll to top whenever a shape is selected
+  useEffect(() => {
+    if (selectedIds.length > 0) {
+      setIsInspectorOpen(true);
+      const inspectorEl = document.querySelector('[data-testid="markdraw-docked-inspector"] .overflow-y-auto');
+      if (inspectorEl) {
+        inspectorEl.scrollTop = 0;
+      }
+    }
+  }, [selectedIds]);
+
   // Global Shortcuts Hook
   useGlobalShortcuts({
     editorRef,
     setIsRightPanelOpen,
     setIsShortcutsOpen,
-    showToast
+    showToast,
+    setIsInspectorOpen
   });
 
   // Onboarding Modal State (§11)
@@ -261,6 +288,8 @@ export const App: React.FC = () => {
             toggleTheme={toggleTheme}
             onSelectTemplate={handleSelectTemplate}
             onOpenOnboarding={() => setIsOnboardingOpen(true)}
+            isInspectorOpen={isInspectorOpen}
+            setIsInspectorOpen={setIsInspectorOpen}
           />
 
           {/* Main Workspace */}
@@ -289,8 +318,14 @@ export const App: React.FC = () => {
                     theme={theme}
                     showRoleChips={showRoleChips}
                     selectedIds={selectedIds}
-                    options={options}
-                    onOptionsChange={handleOptionsChange}
+                    isInspectorOpen={isInspectorOpen}
+                    onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
+                    simulationRootId={simulationRootId}
+                    onCloseSimulation={() => setSimulationRootId(null)}
+                    onChipClick={(id) => {
+                      driver?.setSelection([id]);
+                      setIsInspectorOpen(true);
+                    }}
                     onCopyContract={() => showToast('Copied contract to clipboard')}
                   />
 
@@ -302,6 +337,50 @@ export const App: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Docked Semantics Inspector (§1.2 & §2.1) */}
+                {isInspectorOpen && (
+                  <aside
+                    role="complementary"
+                    aria-label="Semantics Inspector"
+                    className="w-[300px] h-full border-l border-[var(--md-border)] bg-[var(--md-surface)] flex flex-col shrink-0 overflow-hidden z-10 select-text"
+                    data-testid="markdraw-docked-inspector"
+                  >
+                    <div className="h-10 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface-raised)] flex items-center justify-between shrink-0 select-none">
+                      <div className="flex items-center gap-1.5 font-sans text-sm font-bold text-[var(--md-text-bold)]">
+                        <Tag size={16} className="text-[var(--md-accent)]" />
+                        <span>Inspector</span>
+                        {selectedIds.length > 0 && (
+                          <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-blue-600 text-white">
+                            {selectedIds.length}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsInspectorOpen(false)}
+                        className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer"
+                        title="Collapse Inspector (Alt+I)"
+                        aria-label="Collapse Inspector"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      <InspectorShell
+                        selectedIds={selectedIds}
+                        driver={driver}
+                        units={options.units}
+                        onUnitsChange={(u) => handleOptionsChange((prev) => ({ ...prev, units: u }))}
+                        options={options}
+                        onOptionsChange={handleOptionsChange}
+                        hideHeader={true}
+                        isSimulating={Boolean(simulationRootId)}
+                        onToggleSimulate={handleToggleSimulate}
+                      />
+                    </div>
+                  </aside>
+                )}
               </div>
 
               {/* Split Resizer Divider */}
@@ -347,6 +426,7 @@ export const App: React.FC = () => {
                 onSelectShape={(id) => {
                   driver?.setSelection([id]);
                   driver?.panTo(id);
+                  setIsInspectorOpen(true);
                 }}
               />
             </div>

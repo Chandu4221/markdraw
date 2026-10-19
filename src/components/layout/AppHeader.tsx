@@ -11,7 +11,8 @@ import {
   Moon,
   PanelRightClose,
   PanelRightOpen,
-  HelpCircle
+  HelpCircle,
+  Tag
 } from 'lucide-react';
 
 export interface AppHeaderProps {
@@ -26,6 +27,8 @@ export interface AppHeaderProps {
   onImportFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isRightPanelOpen: boolean;
   setIsRightPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isInspectorOpen?: boolean;
+  setIsInspectorOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   canvasPercent: number;
   setCanvasPercent: (pct: number) => void;
   elementCount: number;
@@ -52,6 +55,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onImportFile,
   isRightPanelOpen,
   setIsRightPanelOpen,
+  isInspectorOpen,
+  setIsInspectorOpen,
   canvasPercent,
   setCanvasPercent,
   elementCount,
@@ -227,6 +232,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </Button>
+
+        {setIsInspectorOpen && (
+          <Button
+            variant={isInspectorOpen ? 'accent' : 'ghost'}
+            size="icon"
+            onClick={() => setIsInspectorOpen((prev) => !prev)}
+            title={isInspectorOpen ? 'Collapse Semantics Inspector (Alt+I)' : 'Open Semantics Inspector (Alt+I)'}
+            aria-label={isInspectorOpen ? 'Collapse Semantics Inspector (Alt+I)' : 'Open Semantics Inspector (Alt+I)'}
+          >
+            <Tag size={15} />
+          </Button>
+        )}
 
         <Button
           variant={isRightPanelOpen ? 'accent' : 'ghost'}

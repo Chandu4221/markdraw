@@ -8,14 +8,14 @@ This audit documents which components exist, their definitions and import paths,
 
 | Component / Feature | Defining File | Imported By | App Reachability | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **`InspectorShell`** | `src/components/inspector/InspectorShell.tsx` | `UnifiedInspectorPanel.tsx`, `index.ts` | **None** — not rendered in `App.tsx` or `ExcalidrawCanvas.tsx` | ❌ **NOT WIRED** |
-| **`CanvasOverviewSection`** | `src/components/inspector/CanvasOverviewSection.tsx` | `InspectorShell.tsx` | Not reachable (child of `InspectorShell`) | ❌ **NOT WIRED** |
-| **`RoleSection`** | `src/components/inspector/RoleSection.tsx` | `InspectorShell.tsx` | Not reachable (child of `InspectorShell`) | ❌ **NOT WIRED** |
-| **`StyleSection`** | `src/components/inspector/StyleSection.tsx` | `InspectorShell.tsx` | Not reachable (child of `InspectorShell`) | ❌ **NOT WIRED** |
-| **`RolePanel`** | `src/components/RolePanel.tsx` | None | Deprecated alias of `UnifiedInspectorPanel` | ❌ **NOT WIRED** |
-| **`RoleChipsOverlay`** | `src/annotation/RoleChipsOverlay.tsx` | `ExcalidrawCanvas.tsx` | Rendered inside `ExcalidrawCanvas`, but `showRoleChips` setter missing in `App.tsx` | ⚠️ **PARTIALLY WIRED** (Chips render, toggle broken) |
+| **`InspectorShell`** | `src/components/inspector/InspectorShell.tsx` | `App.tsx`, `index.ts` | Docked panel in `App.tsx` between Canvas and Output; toggled via Alt+I, Header & Toolbar | ✅ **WIRED** |
+| **`CanvasOverviewSection`** | `src/components/inspector/CanvasOverviewSection.tsx` | `InspectorShell.tsx` | Rendered when 0 shapes selected; shows coverage and root frame shortcuts | ✅ **WIRED** |
+| **`RoleSection`** | `src/components/inspector/RoleSection.tsx` | `InspectorShell.tsx` | Rendered when 1+ shapes selected; shows role dropdown, label, hierarchy, responsive | ✅ **WIRED** |
+| **`StyleSection`** | `src/components/inspector/StyleSection.tsx` | `InspectorShell.tsx` | Rendered inside `InspectorShell` | ✅ **WIRED** |
+| **`RolePanel`** | `src/components/RolePanel.tsx` | None | Deprecated alias of `UnifiedInspectorPanel` | ℹ️ **ALIASED** |
+| **`RoleChipsOverlay`** | `src/annotation/RoleChipsOverlay.tsx` | `ExcalidrawCanvas.tsx` | Rendered inside `ExcalidrawCanvas`, `showRoleChips` toggle and setter wired in `App.tsx` and `SettingsModal` | ✅ **WIRED** |
 | **Coverage Indicator** | `src/components/output/OutputPanel.tsx` | `App.tsx` | Rendered in `OutputPanel` compile header; calculated in `useCompilation.ts` | ✅ **WIRED** |
-| **Clickable Lint Rows** | `src/components/output/OutputPanel.tsx` | `App.tsx` | Rendered in `OutputPanel`; triggers `panTo` and `setSelection` via `handleLintClick` | ✅ **WIRED** |
+| **Clickable Lint Rows** | `src/components/output/OutputPanel.tsx` | `App.tsx` | Rendered in `OutputPanel`; triggers `panTo`, `setSelection`, and opens inspector via `handleLintClick` | ✅ **WIRED** |
 | **`OnboardingModal`** | `src/components/modals/OnboardingModal.tsx` | `App.tsx` | Rendered in `App.tsx`; triggers on first load & header button | ✅ **WIRED** |
 | **Starter Templates** | `src/canvas/templates/starterTemplates.ts` | `DocumentMenu.tsx`, `App.tsx` | Rendered in `DocumentMenu` dropdown; stamped via `handleSelectTemplate` | ✅ **WIRED** |
 | **Output Panel Tabs** | `src/components/output/OutputPanel.tsx` | `App.tsx` | Rendered in `OutputPanel` (spec, grid, ascii, json) | ✅ **WIRED** |

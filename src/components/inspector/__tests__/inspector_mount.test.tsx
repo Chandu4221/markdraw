@@ -137,6 +137,8 @@ describe('Inspector Mount & Wiring (§1.2)', () => {
     );
 
     expect(html).toContain('Semantic Role');
+    expect(html).toContain('role="combobox"');
+    expect(html).toContain('aria-label="Semantic role selection"');
     expect(html).toContain('button');
     expect(html).toContain('Submit Form');
     expect(html).toContain('Parent Container');

@@ -55,9 +55,9 @@ export class ExcalidrawDriver implements CanvasDriver {
     this.selectionListeners = [];
   }
 
-  private handleSceneChange(
+  public handleSceneChange(
     elements: readonly ExcalidrawElement[],
-    state: AppState
+    state?: AppState
   ): void {
     const currentNonDeleted = new Map<string, ExcalidrawElement>();
     for (const el of elements) {
@@ -110,8 +110,9 @@ export class ExcalidrawDriver implements CanvasDriver {
     }
 
     // Selection changes
+    const selectedMap = state?.selectedElementIds ?? this.api.getAppState()?.selectedElementIds ?? {};
     const currentSelected = new Set(
-      Object.keys(state.selectedElementIds || {}).filter((id) => state.selectedElementIds[id])
+      Object.keys(selectedMap).filter((id) => selectedMap[id])
     );
 
     let selectionChanged = currentSelected.size !== this.previousSelectedIds.size;
@@ -282,6 +283,13 @@ export class ExcalidrawDriver implements CanvasDriver {
 
   onSelectionChanged(cb: (ids: string[]) => void): Unsubscribe {
     this.selectionListeners.push(cb);
+    try {
+      const state = this.api.getAppState();
+      const current = Object.keys(state?.selectedElementIds || {}).filter(
+        (id) => state.selectedElementIds[id]
+      );
+      cb(current);
+    } catch {}
     return () => {
       this.selectionListeners = this.selectionListeners.filter((l) => l !== cb);
     };

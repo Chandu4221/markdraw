@@ -6,13 +6,15 @@ export interface UseGlobalShortcutsProps {
   setIsRightPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsShortcutsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showToast: (msg: string) => void;
+  setIsInspectorOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function useGlobalShortcuts({
   editorRef,
   setIsRightPanelOpen,
   setIsShortcutsOpen,
-  showToast
+  showToast,
+  setIsInspectorOpen
 }: UseGlobalShortcutsProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,8 +24,13 @@ export function useGlobalShortcuts({
         activeEl?.tagName === 'TEXTAREA' ||
         (activeEl as HTMLElement)?.isContentEditable;
 
+      // Inspector toggle (Alt + I)
+      if (e.altKey && e.key.toLowerCase() === 'i' && !isInput) {
+        e.preventDefault();
+        setIsInspectorOpen?.((prev) => !prev);
+      }
       // Panel toggle (Ctrl/Cmd + J)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
         e.preventDefault();
         setIsRightPanelOpen((prev) => !prev);
       }
@@ -75,5 +82,5 @@ export function useGlobalShortcuts({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editorRef, setIsRightPanelOpen, setIsShortcutsOpen, showToast]);
+  }, [editorRef, setIsRightPanelOpen, setIsShortcutsOpen, showToast, setIsInspectorOpen]);
 }
