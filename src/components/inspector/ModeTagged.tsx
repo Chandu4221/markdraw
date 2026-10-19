@@ -14,9 +14,11 @@ export interface ModeTaggedProps {
   onSelectType: (type: string | null) => void;
   onUpdateName: (name: string) => void;
   onUpdateMeta: (patch: Partial<MarkDrawMeta>) => void;
+  onUpdateRootMeta?: (patch: Partial<MarkDrawMeta>) => void;
   platformProfile?: PlatformProfile | null;
   breakpoint?: Breakpoint;
   onBreakpointChange?: (bp: Breakpoint) => void;
+  initialOpenRow?: string | null;
 }
 
 export const ModeTagged: React.FC<ModeTaggedProps> = ({
@@ -27,14 +29,17 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
   onUpdateMeta,
   platformProfile,
   breakpoint = 1200,
-  onBreakpointChange
+  onBreakpointChange,
+  initialOpenRow = null
 }) => {
   const meta = parseMarkDrawMeta(shape);
   const currentType = meta.type || null;
   const currentName = shape.name || meta.props?.label || '';
 
   // Accordion state: one open at a time, ALL CLOSED by default (§3.1, §3.3)
-  const [openRow, setOpenRow] = useState<'responsive' | 'behavior' | 'advanced' | null>(null);
+  const [openRow, setOpenRow] = useState<'responsive' | 'behavior' | 'advanced' | null>(
+    (initialOpenRow as any) || null
+  );
 
   const toggleRow = (row: 'responsive' | 'behavior' | 'advanced') => {
     setOpenRow((prev) => (prev === row ? null : row));

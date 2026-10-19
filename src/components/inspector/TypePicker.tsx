@@ -15,6 +15,7 @@ export interface TypePickerProps {
   platformProfile?: PlatformProfile | null;
   disabled?: boolean;
   className?: string;
+  defaultOpen?: boolean;
 }
 
 const CATEGORY_ORDER: Array<{ key: TypeCategory; label: string }> = [
@@ -31,9 +32,10 @@ export const TypePicker: React.FC<TypePickerProps> = ({
   onSelectType,
   platformProfile,
   disabled = false,
-  className
+  className,
+  defaultOpen = false
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     structure: true,
