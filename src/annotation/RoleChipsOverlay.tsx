@@ -275,13 +275,14 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
                 <button
                   type="button"
                   onClick={(e) => handleCopyContract(e, chip.shapeId)}
-                  className="px-1.5 py-0.5 text-[9px] font-semibold bg-[var(--md-surface-raised)] border border-[var(--md-border-strong)] text-[var(--md-text)] rounded-[3px] hover:bg-blue-600 hover:text-white hover:border-blue-700 transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                  className="px-2 py-0.5 text-sm font-semibold bg-[var(--md-surface-raised)] border border-[var(--md-border-strong)] text-[var(--md-text)] rounded-[3px] hover:bg-blue-600 hover:text-white hover:border-blue-700 transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
                   title="Copy lean contract for this root frame"
+                  aria-label="Copy lean contract for this root frame"
                 >
                   {copiedRootId === chip.shapeId ? (
-                    <Check size={10} className="text-green-500" />
+                    <Check size={12} className="text-green-500" />
                   ) : (
-                    <Copy size={10} />
+                    <Copy size={12} />
                   )}
                   <span>Copy</span>
                 </button>

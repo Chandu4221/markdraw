@@ -103,7 +103,7 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
         <Input
           ref={inputRef}
           type="text"
-          className="h-7 w-48 text-xs font-medium"
+          className="h-8 w-48 text-sm font-medium"
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           onBlur={handleCommitRename}
@@ -118,7 +118,7 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex h-7 items-center gap-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-xs font-medium text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] transition-colors cursor-pointer select-none"
+            className="flex h-8 items-center gap-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface)] px-2.5 text-sm font-medium text-[var(--md-text)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] transition-colors cursor-pointer select-none"
             onDoubleClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -126,10 +126,11 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
               setIsEditing(true);
             }}
             title="Click to switch/manage documents · Double-click to rename"
+            aria-label="Click to switch or manage documents, double-click to rename"
           >
-            <FileText size={13} className="text-[var(--md-text-muted)]" />
-            <span className="max-w-[140px] truncate text-xs">{activeDoc.name}</span>
-            <ChevronDown size={12} className="text-[var(--md-text-muted)] opacity-70" />
+            <FileText size={15} className="text-[var(--md-text-muted)]" />
+            <span className="max-w-[140px] truncate text-sm">{activeDoc.name}</span>
+            <ChevronDown size={14} className="text-[var(--md-text-muted)] opacity-70" />
           </button>
         </DropdownMenuTrigger>
 
@@ -206,11 +207,11 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
                 onSelectTemplate?.(tpl);
               }}
             >
-              <div className="flex items-center gap-2 font-medium text-xs">
-                <Sparkles size={12} className="text-[var(--color-accent)]" />
+              <div className="flex items-center gap-2 font-medium text-sm">
+                <Sparkles size={14} className="text-[var(--color-accent)]" />
                 <span>{tpl.name}</span>
               </div>
-              <span className="text-[10px] text-[var(--color-ink-muted)]">
+              <span className="text-sm text-[var(--color-ink-muted)]">
                 {tpl.description}
               </span>
             </DropdownMenuItem>
@@ -228,7 +229,7 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
               return (
                 <div
                   key={doc.id}
-                  className={`group flex items-center justify-between rounded-[var(--md-radius-sm)] px-2 py-1.5 text-xs cursor-pointer transition-colors ${
+                  className={`group flex items-center justify-between rounded-[var(--md-radius-sm)] px-2 py-1.5 text-sm cursor-pointer transition-colors ${
                     isActive
                       ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] font-medium'
                       : 'text-[var(--md-text)] hover:bg-[var(--md-surface-raised)]'
@@ -242,14 +243,14 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
                 >
                   <div className="flex flex-col min-w-0 pr-2">
                     <span className="truncate">{doc.name}</span>
-                    <span className="text-[10px] text-[var(--md-text-subtle)]">
+                    <span className="text-sm text-[var(--md-text-subtle)]">
                       {formatDate(doc.updatedAt)}
                     </span>
                   </div>
 
                   <div className="flex items-center shrink-0">
                     {isActive ? (
-                      <Check size={13} className="text-[var(--md-accent)]" />
+                      <Check size={15} className="text-[var(--md-accent)]" />
                     ) : docs.length > 1 ? (
                       <button
                         type="button"
@@ -261,8 +262,9 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
                           }
                         }}
                         title="Delete document"
+                        aria-label={`Delete document ${doc.name}`}
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={14} />
                       </button>
                     ) : null}
                   </div>

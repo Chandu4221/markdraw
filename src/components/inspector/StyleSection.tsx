@@ -17,7 +17,7 @@ export const StyleSection: React.FC<StyleSectionProps> = ({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer select-none"
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer select-none"
         aria-expanded={isOpen}
       >
         <span className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
@@ -30,7 +30,7 @@ export const StyleSection: React.FC<StyleSectionProps> = ({
       </button>
 
       {isOpen && (
-        <div className="p-2 border-t border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] text-xs text-[var(--color-ink-muted)]">
+        <div className="p-2 border-t border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] text-sm text-[var(--md-ink-muted)]">
           <span>Styles managed via canvas tool settings</span>
         </div>
       )}

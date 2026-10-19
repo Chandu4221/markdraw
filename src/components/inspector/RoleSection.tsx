@@ -150,18 +150,18 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          <Tag size={13} className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] shrink-0 transition-colors" />
-          <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
+          <Tag size={15} className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] shrink-0 transition-colors" />
+          <span className="text-sm font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
             Semantic Role
           </span>
           {currentRole && (
-            <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-[var(--md-ink-primary)] rounded truncate max-w-[100px]">
+            <span className="px-2 py-0.5 text-sm font-mono font-semibold bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-[var(--md-ink-primary)] rounded truncate max-w-[100px]">
               {currentRole}
             </span>
           )}
         </div>
         <div className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors shrink-0">
-          {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          {isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
         </div>
       </button>
 
@@ -178,7 +178,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
 
           {/* Accessible Label / AccName Input */}
           <div className="space-y-1">
-            <label htmlFor="inspector-accname-input" className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
+            <label htmlFor="inspector-accname-input" className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
               Label / AccName
             </label>
             <Input
@@ -187,21 +187,21 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               value={firstMeta?.props?.label || ''}
               onChange={(e) => handleUpdateProp('label', e.target.value || undefined)}
               placeholder='e.g. "Submit Form", "Main Navigation"...'
-              className="h-8 text-xs font-sans"
+              className="h-8 text-sm font-sans"
             />
           </div>
 
           {/* Parent Container Selector */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label htmlFor="inspector-parent-select" className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
+              <label htmlFor="inspector-parent-select" className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
                 Parent Container
               </label>
               {firstMeta?.parentId && (
                 <button
                   type="button"
                   onClick={() => handleSetParent(null)}
-                  className="text-[11px] font-medium text-blue-500 hover:underline cursor-pointer"
+                  className="text-sm font-medium text-blue-500 hover:underline cursor-pointer"
                 >
                   Auto (Geometry)
                 </button>
@@ -211,7 +211,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               id="inspector-parent-select"
               value={firstMeta?.parentId || ''}
               onChange={(e) => handleSetParent(e.target.value || null)}
-              className="w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2.5 text-xs text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+              className="w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2.5 text-sm text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
             >
               <option value="">Auto (Infer from AABB bounds)</option>
               {potentialParents.map((p) => {
@@ -230,7 +230,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
           {/* Allowed Behavior Flags */}
           {roleDef && roleDef.flags && roleDef.flags.length > 0 && (
             <div className="space-y-1.5 pt-1 border-t border-[var(--md-line-subtle)]">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)]">
+              <label className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)]">
                 Behaviors
               </label>
               <div className="flex flex-wrap gap-1">
@@ -241,7 +241,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
                       key={flag}
                       type="button"
                       onClick={() => handleToggleBehavior(flag)}
-                      className={`px-2 py-1 text-[11px] font-medium rounded-[var(--md-radius-sm)] transition-colors cursor-pointer border ${
+                      className={`px-2 py-1 text-sm font-medium rounded-[var(--md-radius-sm)] transition-colors cursor-pointer border ${
                         isActive
                           ? 'bg-[var(--md-accent)] text-white border-[var(--md-accent)]'
                           : 'bg-[var(--md-surface-2)] text-[var(--md-ink-muted)] border-[var(--md-line-subtle)] hover:text-[var(--md-ink-primary)]'
@@ -267,15 +267,15 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
 
           {/* Style Note */}
           <div className="space-y-1 pt-1 border-t border-[var(--md-line-subtle)]">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] flex items-center gap-1 cursor-pointer">
-              <StickyNote size={12} className="text-[var(--md-ink-muted)]" />
+            <label className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] flex items-center gap-1 cursor-pointer">
+              <StickyNote size={14} className="text-[var(--md-ink-muted)]" />
               <span>Style Note (Non-binding)</span>
             </label>
             <textarea
               value={firstMeta?.props?.note || ''}
               onChange={(e) => handleUpdateProp('note', e.target.value || undefined)}
               placeholder="e.g. skeleton state on mount, dark card border..."
-              className="w-full h-14 p-2 text-xs rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] resize-none transition-colors"
+              className="w-full h-14 p-2 text-sm rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] resize-none transition-colors"
             />
           </div>
 
@@ -285,9 +285,9 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               <button
                 type="button"
                 onClick={onSaveUnitGesture}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-[var(--md-radius-sm)] border border-purple-500/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-sm font-semibold rounded-[var(--md-radius-sm)] border border-purple-500/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors cursor-pointer"
               >
-                <Box size={14} className="shrink-0" />
+                <Box size={15} className="shrink-0" />
                 <span>Save {count} shapes as Unit...</span>
               </button>
             </div>

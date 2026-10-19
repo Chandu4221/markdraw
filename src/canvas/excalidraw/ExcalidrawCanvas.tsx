@@ -201,7 +201,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
           className="markdraw-inspector-sidebar"
         >
           <Sidebar.Header className="markdraw-sidebar-header">
-            <div className="flex items-center gap-2 min-w-0 font-mono text-xs">
+            <div className="flex items-center gap-2 min-w-0 font-mono text-sm">
               {selectedShapes.length === 0 ? (
                 <span className="font-semibold font-sans text-[var(--md-ink-primary)]">
                   Canvas Overview

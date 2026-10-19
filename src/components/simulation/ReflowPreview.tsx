@@ -108,16 +108,16 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
 
       {/* Floating Simulation Toolbar (Interactive) */}
       <div
-        className="absolute pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--md-line-strong)] bg-[var(--md-surface-1)] shadow-2xl backdrop-blur-md transition-all text-xs"
+        className="absolute pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--md-line-strong)] bg-[var(--md-surface-1)] shadow-2xl backdrop-blur-md transition-all text-sm"
         style={{ // v5-token-exception: dynamic screen bounds positioning
           left: Math.max(16, rootScreenX),
           top: Math.max(16, rootScreenY - 50)
         }}
       >
         <span className="font-semibold text-[var(--md-ink-primary)] flex items-center gap-1">
-          <Smartphone size={13} className="text-[var(--md-accent)]" />
+          <Smartphone size={15} className="text-[var(--md-accent)]" />
           <span>Simulate:</span>
-          <span className="font-mono text-xs font-bold text-[var(--md-accent)]">{simWidth}px</span>
+          <span className="font-mono text-sm font-bold text-[var(--md-accent)]">{simWidth}px</span>
         </span>
 
         {/* Width Slider (375 - 1200) */}
@@ -129,6 +129,7 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           onChange={(e) => setSimWidth(Number(e.target.value))}
           className="w-28 h-1.5 accent-[var(--md-accent)] cursor-ew-resize"
           title={`Simulated width: ${simWidth}px (breakpoint: ${defaultBreakpoint}px)`}
+          aria-label="Simulated viewport width"
         />
 
         {/* Preset Buttons */}
@@ -136,45 +137,48 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           <button
             type="button"
             onClick={() => setSimWidth(375)}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 rounded text-sm font-medium transition-colors cursor-pointer ${
               simWidth === 375
                 ? 'bg-[var(--md-accent)] text-white'
                 : 'bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)]'
             }`}
             title="Mobile (375px)"
+            aria-label="Simulate Mobile (375px)"
           >
-            <Smartphone size={11} className="inline mr-0.5" /> 375
+            <Smartphone size={13} className="inline mr-0.5" /> 375
           </button>
           <button
             type="button"
             onClick={() => setSimWidth(768)}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 rounded text-sm font-medium transition-colors cursor-pointer ${
               simWidth === 768
                 ? 'bg-[var(--md-accent)] text-white'
                 : 'bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)]'
             }`}
             title="Tablet (768px)"
+            aria-label="Simulate Tablet (768px)"
           >
-            <Tablet size={11} className="inline mr-0.5" /> 768
+            <Tablet size={13} className="inline mr-0.5" /> 768
           </button>
           <button
             type="button"
             onClick={() => setSimWidth(1200)}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 rounded text-sm font-medium transition-colors cursor-pointer ${
               simWidth === 1200
                 ? 'bg-[var(--md-accent)] text-white'
                 : 'bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)]'
             }`}
             title="Desktop (1200px)"
+            aria-label="Simulate Desktop (1200px)"
           >
-            <Monitor size={11} className="inline mr-0.5" /> 1200
+            <Monitor size={13} className="inline mr-0.5" /> 1200
           </button>
         </div>
 
         {/* Suggestions chip */}
         {suggestions.length > 0 && (
-          <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded">
-            <Lightbulb size={11} />
+          <span className="flex items-center gap-1 text-sm text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded">
+            <Lightbulb size={13} />
             <span>{suggestions[0]}</span>
           </span>
         )}
@@ -185,8 +189,9 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           onClick={onClose}
           className="p-1 rounded-full text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer ml-1"
           title="Exit simulation"
+          aria-label="Exit simulation"
         >
-          <X size={14} />
+          <X size={15} />
         </button>
       </div>
 
@@ -260,11 +265,11 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           >
             <div className="flex items-center justify-between gap-1">
               <MarkDrawChip variant={role ? 'role' : 'untagged'} role={role || undefined} category={cat} label={role || 'box'} size="sm" />
-              <span className="text-[9px] font-mono text-[var(--md-ink-muted)] truncate max-w-[80px]">#{node.shapeId.slice(0, 5)}</span>
+              <span className="text-sm font-mono text-[var(--md-ink-muted)] truncate max-w-[80px]">#{node.shapeId.slice(0, 5)}</span>
             </div>
 
             {originalShape?.text ? (
-              <div className="text-[11px] font-sans text-[var(--md-ink-primary)] truncate mt-1">{originalShape.text}</div>
+              <div className="text-sm font-sans text-[var(--md-ink-primary)] truncate mt-1">{originalShape.text}</div>
             ) : role === 'para' ? (
               <div className="space-y-1 my-auto opacity-40">
                 <div className="h-1.5 bg-[var(--md-ink-muted)] rounded w-full" />

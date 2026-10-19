@@ -42,16 +42,16 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
               variant="outline"
               size="sm"
               onClick={handleCopy}
-              className="h-7 gap-1.5 text-xs"
+              className="h-8 gap-1.5 text-sm"
             >
               {copied ? (
                 <>
-                  <Check size={12} className="text-[var(--md-accent)]" />
+                  <Check size={14} className="text-[var(--md-accent)]" />
                   <span>Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy size={12} />
+                  <Copy size={14} />
                   <span>Copy Legend</span>
                 </>
               )}
@@ -60,7 +60,7 @@ export const LegendModal: React.FC<LegendModalProps> = ({ isOpen, onClose }) => 
         </DialogHeader>
 
         <div className="p-4 overflow-y-auto max-h-[calc(85vh-48px)]">
-          <pre className="text-xs font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text bg-[var(--md-surface-raised)] p-3 rounded-[var(--md-radius-md)] border border-[var(--md-border)]">
+          <pre className="text-sm font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text bg-[var(--md-surface-raised)] p-3 rounded-[var(--md-radius-md)] border border-[var(--md-border)]">
             {SEMANTIC_LEGEND_MARKDOWN}
           </pre>
         </div>

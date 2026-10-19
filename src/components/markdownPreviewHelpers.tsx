@@ -39,7 +39,7 @@ export function tokenizeBracketNotation(
 
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[11px] bg-[var(--color-accent-subtle)] border border-[var(--color-line-subtle)] ${
+      className={`inline-flex items-center px-1.5 py-0.5 rounded font-mono text-sm bg-[var(--color-accent-subtle)] border border-[var(--color-line-subtle)] ${
         shapeIdHint && onSelectShape ? 'cursor-pointer hover:border-[var(--color-accent)]' : ''
       }`}
       onClick={shapeIdHint && onSelectShape ? () => onSelectShape(shapeIdHint) : undefined}
@@ -79,12 +79,12 @@ export function renderFormattedCell(
           const shapeId = isId ? seg.slice(1) : undefined;
           return (
             <React.Fragment key={sIdx}>
-              {sIdx > 0 && <span className="text-[var(--color-ink-muted)] text-[10px]">›</span>}
+              {sIdx > 0 && <span className="text-[var(--color-ink-muted)] text-sm">›</span>}
               <button
                 type="button"
                 disabled={!isId || !onSelectShape}
                 onClick={isId && shapeId && onSelectShape ? () => onSelectShape(shapeId) : undefined}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-medium transition-colors ${
+                className={`px-1.5 py-0.5 rounded text-sm font-mono font-medium transition-colors ${
                   isRoot
                     ? 'bg-[var(--color-surface-2)] text-[var(--color-ink-muted)]'
                     : isId
@@ -111,7 +111,7 @@ export function renderFormattedCell(
   // 3. Semantics Column (e.g. <Header>, <Page>, <Button>)
   if (hLower.includes('semantics') || (trimmed.startsWith('<') && trimmed.endsWith('>'))) {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-sm bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
         {trimmed}
       </span>
     );
@@ -126,7 +126,7 @@ export function renderFormattedCell(
     if (trimmed === 'nested') colorClass = 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
 
     return (
-      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${colorClass}`}>
+      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-sm font-medium ${colorClass}`}>
         {trimmed}
       </span>
     );
@@ -137,9 +137,9 @@ export function renderFormattedCell(
     const isRow = trimmed.includes('Row');
     const isCol = trimmed.includes('Column');
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-ink-primary)]">
-        {isRow && <ArrowRight size={10} className="text-blue-500" />}
-        {isCol && <ArrowDown size={10} className="text-emerald-500" />}
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-sm font-medium bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-ink-primary)]">
+        {isRow && <ArrowRight size={14} className="text-blue-500" />}
+        {isCol && <ArrowDown size={14} className="text-emerald-500" />}
         <span>{trimmed}</span>
       </span>
     );
@@ -171,7 +171,7 @@ export function renderFormattedCell(
           return (
             <span
               key={tIdx}
-              className={`px-1.5 py-0.5 rounded border text-[10px] font-mono ${badgeColor}`}
+              className={`px-1.5 py-0.5 rounded border text-sm font-mono ${badgeColor}`}
             >
               {tok}
             </span>
@@ -208,7 +208,7 @@ export function renderInlineFormatting(
       parts.push(
         <code
           key={match.index}
-          className="px-1 py-0.5 rounded bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-accent)] font-mono text-[11px]"
+          className="px-1 py-0.5 rounded bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-accent)] font-mono text-sm"
         >
           {token.slice(1, -1)}
         </code>

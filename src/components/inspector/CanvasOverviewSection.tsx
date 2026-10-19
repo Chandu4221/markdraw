@@ -24,21 +24,21 @@ export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
   return (
     <div className="p-3 space-y-3 bg-[var(--md-surface-1)]">
       {/* Empty State Banner */}
-      <div className="p-2.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-center text-xs text-[var(--md-ink-muted)]">
+      <div className="p-2.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-center text-sm text-[var(--md-ink-muted)]">
         Select a shape to tag it
       </div>
 
       {/* Stats Summary */}
-      <div className="flex items-center justify-between p-2.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-xs">
+      <div className="flex items-center justify-between p-2.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-sm">
         <div className="flex items-center gap-1.5 text-[var(--md-ink-primary)] font-medium">
-          <Tag size={13} className="text-[var(--md-accent)]" />
+          <Tag size={14} className="text-[var(--md-accent)]" />
           <span>Tagged Coverage:</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="font-mono font-bold text-[var(--md-ink-primary)]">
             {taggedCount} / {shapes.length}
           </span>
-          <span className="text-[10px] text-[var(--md-ink-muted)] font-mono">
+          <span className="text-sm text-[var(--md-ink-muted)] font-mono">
             ({untaggedCount} untagged)
           </span>
         </div>
@@ -47,7 +47,7 @@ export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
       {/* Root frames list */}
       {rootFrames.length > 0 && (
         <div className="space-y-1.5 pt-1 border-t border-[var(--md-line-subtle)]">
-          <span className="text-[11px] uppercase font-semibold text-[var(--md-ink-muted)] tracking-wider block">
+          <span className="text-sm uppercase font-semibold text-[var(--md-ink-muted)] tracking-wider block">
             Root Frames ({rootFrames.length})
           </span>
           <div className="space-y-1">
@@ -57,12 +57,20 @@ export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
               return (
                 <div
                   key={f.id}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      driver?.setSelection([f.id]);
+                    }
+                  }}
                   onClick={() => driver?.setSelection([f.id])}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] hover:bg-[var(--md-surface-3)] cursor-pointer text-xs group transition-colors"
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] hover:bg-[var(--md-surface-3)] cursor-pointer text-sm group transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)]"
                 >
                   <span className="font-medium text-[var(--md-ink-primary)] truncate">{name}</span>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] text-[var(--md-ink-muted)] font-mono">
+                    <span className="text-sm text-[var(--md-ink-muted)] font-mono">
                       {meta?.role || 'page'}
                     </span>
                     <button
@@ -75,9 +83,9 @@ export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
                       className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--md-accent)] hover:bg-[var(--md-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
                     >
                       {copiedFrameId === f.id ? (
-                        <Check size={12} className="text-green-500" />
+                        <Check size={14} className="text-green-500" />
                       ) : (
-                        <Copy size={12} />
+                        <Copy size={14} />
                       )}
                     </button>
                   </div>

@@ -66,21 +66,21 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
         <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.category} className="space-y-1.5">
-              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
+              <h4 className="text-sm font-semibold uppercase tracking-wider text-[var(--md-text-muted)]">
                 {group.category}
               </h4>
               <div className="divide-y divide-[var(--md-border)] rounded-[var(--md-radius-md)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] overflow-hidden">
                 {group.items.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between px-3 py-2 text-xs"
+                    className="flex items-center justify-between px-3 py-2 text-sm"
                   >
                     <span className="text-[var(--md-text)]">{item.description}</span>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
                       {item.keys.map((k, ki) => (
                         <kbd
                           key={ki}
-                          className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-mono font-medium rounded border border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-bold)] shadow-xs"
+                          className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-sm font-mono font-medium rounded border border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-bold)] shadow-xs"
                         >
                           {k}
                         </kbd>

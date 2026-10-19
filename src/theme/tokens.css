@@ -54,7 +54,11 @@
   --radius-xl: var(--md-radius-xl);
   --radius-full: 9999px;
 
-  /* Typography */
+  /* Typography - Minimum font size is 14px */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
   --font-sans: var(--md-font-sans);
   --font-mono: var(--md-font-mono);
 
@@ -110,21 +114,21 @@
   --md-untagged-chip-bg: rgba(100, 116, 139, 0.15);
   --md-untagged-chip-text: #94a3b8;
 
-  /* Role Category Colors (Dark) */
-  --md-role-structure: #a78bfa;
-  --md-role-structure-bg: rgba(167, 139, 250, 0.15);
-  --md-role-content: #38bdf8;
-  --md-role-content-bg: rgba(56, 189, 248, 0.15);
-  --md-role-interaction: #60a5fa;
-  --md-role-interaction-bg: rgba(96, 165, 250, 0.15);
-  --md-role-nav: #34d399;
-  --md-role-nav-bg: rgba(52, 211, 153, 0.15);
-  --md-role-feedback: #f87171;
-  --md-role-feedback-bg: rgba(248, 113, 113, 0.15);
-  --md-role-utility: #94a3b8;
-  --md-role-utility-bg: rgba(100, 116, 139, 0.15);
-  --md-role-platform: #c084fc;
-  --md-role-platform-bg: rgba(192, 132, 252, 0.15);
+  /* Role Category Colors (Dark - High Contrast WCAG 2.1 AA/AAA >= 4.5:1) */
+  --md-role-structure: #c4b5fd;
+  --md-role-structure-bg: rgba(196, 181, 253, 0.15);
+  --md-role-content: #7dd3fc;
+  --md-role-content-bg: rgba(125, 211, 252, 0.15);
+  --md-role-interaction: #93c5fd;
+  --md-role-interaction-bg: rgba(147, 197, 253, 0.15);
+  --md-role-nav: #6ee7b7;
+  --md-role-nav-bg: rgba(110, 231, 183, 0.15);
+  --md-role-feedback: #fca5a5;
+  --md-role-feedback-bg: rgba(252, 165, 165, 0.15);
+  --md-role-utility: #cbd5e1;
+  --md-role-utility-bg: rgba(203, 213, 225, 0.15);
+  --md-role-platform: #d8b4fe;
+  --md-role-platform-bg: rgba(216, 180, 254, 0.15);
 
   /* Backward Compatibility Mappings */
   --md-bg: var(--md-surface-0);
@@ -164,7 +168,7 @@
 
   --md-ink-primary: #0f172a;
   --md-ink-secondary: #1e293b;
-  --md-ink-muted: #64748b;
+  --md-ink-muted: #475569;
 
   --md-line-subtle: #e2e8f0;
   --md-line-strong: #cbd5e1;
@@ -175,29 +179,29 @@
   --md-accent-subtle: rgba(37, 99, 235, 0.1);
   --md-accent-ring: rgba(37, 99, 235, 0.35);
 
-  --md-danger: #dc2626;
-  --md-success: #059669;
+  --md-danger: #b91c1c;
+  --md-success: #047857;
 
-  --md-role-chip-bg: rgba(37, 99, 235, 0.12);
+  --md-role-chip-bg: rgba(29, 78, 216, 0.10);
   --md-role-chip-text: #1d4ed8;
   --md-untagged-chip-bg: rgba(148, 163, 184, 0.15);
-  --md-untagged-chip-text: #64748b;
+  --md-untagged-chip-text: #475569;
 
-  /* Role Category Colors (Light) */
-  --md-role-structure: #7c3aed;
-  --md-role-structure-bg: rgba(124, 58, 237, 0.12);
-  --md-role-content: #0284c7;
-  --md-role-content-bg: rgba(2, 132, 199, 0.12);
-  --md-role-interaction: #2563eb;
-  --md-role-interaction-bg: rgba(37, 99, 235, 0.12);
-  --md-role-nav: #059669;
-  --md-role-nav-bg: rgba(5, 150, 105, 0.12);
-  --md-role-feedback: #dc2626;
-  --md-role-feedback-bg: rgba(220, 38, 38, 0.12);
-  --md-role-utility: #64748b;
-  --md-role-utility-bg: rgba(100, 116, 139, 0.12);
-  --md-role-platform: #9333ea;
-  --md-role-platform-bg: rgba(147, 51, 234, 0.12);
+  /* Role Category Colors (Light - High Contrast WCAG 2.1 AA/AAA >= 4.5:1) */
+  --md-role-structure: #6d28d9;
+  --md-role-structure-bg: rgba(109, 40, 217, 0.10);
+  --md-role-content: #0369a1;
+  --md-role-content-bg: rgba(3, 105, 161, 0.10);
+  --md-role-interaction: #1d4ed8;
+  --md-role-interaction-bg: rgba(29, 78, 216, 0.10);
+  --md-role-nav: #065f46;
+  --md-role-nav-bg: rgba(6, 95, 70, 0.10);
+  --md-role-feedback: #b91c1c;
+  --md-role-feedback-bg: rgba(185, 28, 28, 0.10);
+  --md-role-utility: #334155;
+  --md-role-utility-bg: rgba(51, 65, 85, 0.10);
+  --md-role-platform: #7e22ce;
+  --md-role-platform-bg: rgba(126, 34, 206, 0.10);
 
   /* Backward Compatibility Mappings */
   --md-bg: var(--md-surface-0);
@@ -226,7 +230,7 @@
 
     --md-ink-primary: #0f172a;
     --md-ink-secondary: #1e293b;
-    --md-ink-muted: #64748b;
+    --md-ink-muted: #475569;
 
     --md-line-subtle: #e2e8f0;
     --md-line-strong: #cbd5e1;
@@ -237,29 +241,29 @@
     --md-accent-subtle: rgba(37, 99, 235, 0.1);
     --md-accent-ring: rgba(37, 99, 235, 0.35);
 
-    --md-danger: #dc2626;
-    --md-success: #059669;
+    --md-danger: #b91c1c;
+    --md-success: #047857;
 
-    --md-role-chip-bg: rgba(37, 99, 235, 0.12);
+    --md-role-chip-bg: rgba(29, 78, 216, 0.10);
     --md-role-chip-text: #1d4ed8;
     --md-untagged-chip-bg: rgba(148, 163, 184, 0.15);
-    --md-untagged-chip-text: #64748b;
+    --md-untagged-chip-text: #475569;
 
-    /* Role Category Colors (Light) */
-    --md-role-structure: #7c3aed;
-    --md-role-structure-bg: rgba(124, 58, 237, 0.12);
-    --md-role-content: #0284c7;
-    --md-role-content-bg: rgba(2, 132, 199, 0.12);
-    --md-role-interaction: #2563eb;
-    --md-role-interaction-bg: rgba(37, 99, 235, 0.12);
-    --md-role-nav: #059669;
-    --md-role-nav-bg: rgba(5, 150, 105, 0.12);
-    --md-role-feedback: #dc2626;
-    --md-role-feedback-bg: rgba(220, 38, 38, 0.12);
-    --md-role-utility: #64748b;
-    --md-role-utility-bg: rgba(100, 116, 139, 0.12);
-    --md-role-platform: #9333ea;
-    --md-role-platform-bg: rgba(147, 51, 234, 0.12);
+    /* Role Category Colors (Light - High Contrast WCAG 2.1 AA/AAA >= 4.5:1) */
+    --md-role-structure: #6d28d9;
+    --md-role-structure-bg: rgba(109, 40, 217, 0.10);
+    --md-role-content: #0369a1;
+    --md-role-content-bg: rgba(3, 105, 161, 0.10);
+    --md-role-interaction: #1d4ed8;
+    --md-role-interaction-bg: rgba(29, 78, 216, 0.10);
+    --md-role-nav: #065f46;
+    --md-role-nav-bg: rgba(6, 95, 70, 0.10);
+    --md-role-feedback: #b91c1c;
+    --md-role-feedback-bg: rgba(185, 28, 28, 0.10);
+    --md-role-utility: #334155;
+    --md-role-utility-bg: rgba(51, 65, 85, 0.10);
+    --md-role-platform: #7e22ce;
+    --md-role-platform-bg: rgba(126, 34, 206, 0.10);
 
     --md-bg: var(--md-surface-0);
     --md-surface: var(--md-surface-1);

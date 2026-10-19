@@ -21,8 +21,8 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
 
   return (
     <div className="space-y-1.5 pt-1 border-t border-[var(--md-line-subtle)]">
-      <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] flex items-center gap-1 cursor-pointer">
-        <Smartphone size={12} className="text-[var(--md-ink-muted)]" />
+      <label className="text-sm font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] flex items-center gap-1 cursor-pointer">
+        <Smartphone size={14} className="text-[var(--md-ink-muted)]" />
         <span>Responsive</span>
       </label>
 
@@ -30,14 +30,14 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
         <div className="space-y-2">
           {/* Mobile visibility */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--md-ink-muted)] w-14 shrink-0">Mobile:</span>
+            <span className="text-sm text-[var(--md-ink-muted)] w-16 shrink-0">Mobile:</span>
             <select
               value={currentResponsive?.smVisible || 'visible'}
               onChange={(e) => {
                 const val = e.target.value as RoleResponsive['smVisible'];
                 onUpdateResponsive(val === 'visible' && !currentResponsive?.primary && !currentResponsive?.smFullWidth ? null : { smVisible: val });
               }}
-              className="flex-1 h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2 text-xs text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+              className="flex-1 h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2 text-sm text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
             >
               <option value="visible">Visible on Mobile</option>
               <option value="hidden">Hidden on Mobile</option>
@@ -49,14 +49,14 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
 
           {/* Tablet reflow */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--md-ink-muted)] w-14 shrink-0">Tablet:</span>
+            <span className="text-sm text-[var(--md-ink-muted)] w-16 shrink-0">Tablet:</span>
             <select
               value={currentResponsive?.tablet || 'maintain'}
               onChange={(e) => {
                 const val = e.target.value as RoleResponsive['tablet'];
                 onUpdateResponsive({ tablet: val });
               }}
-              className="flex-1 h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2 text-xs text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
+              className="flex-1 h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2 text-sm text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
             >
               <option value="maintain">Maintain Layout</option>
               <option value="stack">Stack Vertically</option>
@@ -66,7 +66,7 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
 
           {/* Quick flags */}
           <div className="flex items-center gap-3 pt-0.5">
-            <label className="flex items-center gap-1.5 text-xs text-[var(--md-ink-primary)] cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-sm text-[var(--md-ink-primary)] cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={Boolean(currentResponsive?.primary)}
@@ -75,7 +75,7 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
               />
               <span>Primary</span>
             </label>
-            <label className="flex items-center gap-1.5 text-xs text-[var(--md-ink-primary)] cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-sm text-[var(--md-ink-primary)] cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={Boolean(currentResponsive?.smFullWidth)}
@@ -88,7 +88,7 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
           {/* Simulate Responsive Toggle */}
           {onToggleSimulate && (
             <div className="flex items-center justify-between pt-1.5 border-t border-[var(--md-line-subtle)]">
-              <span className="text-xs font-medium text-[var(--md-ink-primary)]">
+              <span className="text-sm font-medium text-[var(--md-ink-primary)]">
                 Simulate responsive
               </span>
               <button
@@ -99,6 +99,7 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
                 }`}
                 role="switch"
                 aria-checked={isSimulating}
+                aria-label="Simulate responsive layout"
               >
                 <span
                   className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
@@ -110,7 +111,7 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
           )}
         </div>
       ) : (
-        <div className="text-[11px] text-[var(--md-ink-muted)] italic py-1">
+        <div className="text-sm text-[var(--md-ink-muted)] italic py-1">
           Enable Responsive on the root page first.
         </div>
       )}

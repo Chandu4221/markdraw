@@ -42,25 +42,25 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          <Box size={13} className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] shrink-0 transition-colors" />
-          <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
+          <Box size={14} className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] shrink-0 transition-colors" />
+          <span className="text-sm font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
             Custom Units
           </span>
           {units.length > 0 && (
-            <span className="px-1.5 py-0.2 text-[9px] font-mono font-medium text-[var(--md-ink-muted)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] rounded shrink-0">
+            <span className="px-1.5 py-0.5 text-sm font-mono font-medium text-[var(--md-ink-muted)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] rounded shrink-0">
               {units.length}
             </span>
           )}
         </div>
         <div className="text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors shrink-0">
-          {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </div>
       </button>
 
       {isOpen && (
         <div className="p-3 pt-2 space-y-2 bg-[var(--md-surface-1)]">
           {units.length === 0 ? (
-            <div className="text-[11px] text-[var(--md-ink-muted)] italic py-1 leading-normal">
+            <div className="text-sm text-[var(--md-ink-muted)] italic py-1 leading-normal">
               Multi-select shapes on canvas to save them as reusable units.
             </div>
           ) : (
@@ -68,11 +68,11 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
               {units.map((u) => (
                 <div
                   key={u.id}
-                  className="flex items-center justify-between p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] hover:bg-[var(--md-surface-3)] transition-colors text-xs"
+                  className="flex items-center justify-between p-2 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] hover:bg-[var(--md-surface-3)] transition-colors text-sm"
                 >
                   <div className="min-w-0 pr-2">
                     <div className="font-semibold text-[var(--md-ink-primary)] truncate">{u.name}</div>
-                    <div className="text-[10px] text-[var(--md-ink-muted)] font-mono">
+                    <div className="text-sm text-[var(--md-ink-muted)] font-mono">
                       Base: {u.baseRole} • {u.memberRoles?.length || 0} items
                     </div>
                   </div>
@@ -80,16 +80,17 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => onStampUnit(u)}
-                      className="px-2.5 py-1 text-xs font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition-colors cursor-pointer"
                     >
                       Stamp
                     </button>
                     <button
                       type="button"
+                      aria-label={`Delete custom unit ${u.name}`}
                       onClick={(e) => onDeleteUnit(u.id, e)}
                       className="p-1 rounded text-[var(--md-ink-muted)] hover:text-red-500 hover:bg-[var(--md-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition-colors cursor-pointer"
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -111,14 +112,14 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[var(--md-line-subtle)] pb-2">
-              <div className="flex items-center gap-1.5 font-bold text-xs text-[var(--md-ink-primary)]">
+              <div className="flex items-center gap-1.5 font-bold text-sm text-[var(--md-ink-primary)]">
                 <Box size={14} className="text-purple-500" />
                 <span>Save as Custom Unit</span>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[var(--md-ink-muted)] uppercase tracking-wider block">
+              <label className="text-sm font-semibold text-[var(--md-ink-muted)] uppercase tracking-wider block">
                 Unit Name
               </label>
               <input
@@ -131,18 +132,18 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                   if (e.key === 'Enter') onSaveUnit();
                   if (e.key === 'Escape') onCloseSaveDialog();
                 }}
-                className="w-full h-8 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-xs text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)]"
+                className="w-full h-8 px-2.5 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-sm text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[var(--md-ink-muted)] uppercase tracking-wider block">
+              <label className="text-sm font-semibold text-[var(--md-ink-muted)] uppercase tracking-wider block">
                 Base Spec Role
               </label>
               <select
                 value={newUnitBaseRole}
                 onChange={(e) => onNewUnitBaseRoleChange(e.target.value as RoleName)}
-                className="w-full h-8 px-2 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-xs text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] cursor-pointer"
+                className="w-full h-8 px-2 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-2)] text-sm text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] cursor-pointer"
               >
                 <option value="card">Card (Container)</option>
                 <option value="section">Section</option>
@@ -156,7 +157,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
               <button
                 type="button"
                 onClick={onCloseSaveDialog}
-                className="px-3 py-1.5 text-xs text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] rounded-[var(--md-radius-sm)] transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-sm text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] rounded-[var(--md-radius-sm)] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -164,7 +165,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                 type="button"
                 onClick={onSaveUnit}
                 disabled={!newUnitName.trim()}
-                className="px-3 py-1.5 text-xs font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Save Unit
               </button>

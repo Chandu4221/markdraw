@@ -296,8 +296,8 @@ export const App: React.FC = () => {
 
                   {/* Toast Message */}
                   {toastMessage && (
-                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] text-xs text-[var(--md-text-bold)] shadow-[var(--md-shadow-lg)] animate-in fade-in-0 duration-150">
-                      <AlertCircle size={14} className="text-[var(--md-accent)]" />
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] text-sm text-[var(--md-text-bold)] shadow-[var(--md-shadow-lg)] animate-in fade-in-0 duration-150">
+                      <AlertCircle size={16} className="text-[var(--md-accent)]" />
                       <span>{toastMessage}</span>
                     </div>
                   )}

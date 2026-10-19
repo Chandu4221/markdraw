@@ -68,17 +68,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header className="h-11 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface)] flex items-center justify-between shrink-0 select-none z-20">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-[5px] bg-[var(--md-text-bold)] text-[var(--md-bg)] text-xs font-bold flex items-center justify-center">
+        <div className="w-6 h-6 rounded-[5px] bg-[var(--md-text-bold)] text-[var(--md-bg)] text-sm font-bold flex items-center justify-center">
           MD
         </div>
-        <span className="text-xs font-bold tracking-tight text-[var(--md-text-bold)]">
+        <span className="text-sm font-bold tracking-tight text-[var(--md-text-bold)]">
           MarkDraw
         </span>
-        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border border-[var(--md-border)]">
+        <span className="text-sm font-mono px-2 py-0.5 rounded-[4px] bg-[var(--md-surface-raised)] text-[var(--md-text-muted)] border border-[var(--md-border)]">
           v{MARKDRAW_VERSION}
         </span>
         <span
-          className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[var(--color-surface-2)] text-[var(--color-accent)] border border-[var(--color-line-subtle)]"
+          className="text-sm font-mono px-2 py-0.5 rounded-[4px] bg-[var(--color-surface-2)] text-[var(--color-accent)] border border-[var(--color-line-subtle)]"
           title="MarkDraw v5 is powered by the vendor-neutral @excalidraw/excalidraw (MIT) engine"
         >
           Excalidraw (MIT)
@@ -103,7 +103,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         {/* Layout Presets */}
         <div className="flex items-center gap-0.5 p-0.5 rounded-[var(--md-radius-sm)] bg-[var(--md-bg)] border border-[var(--md-border)]">
           <button
-            className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
               !isRightPanelOpen
                 ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
                 : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -115,7 +115,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             Canvas Full
           </button>
           <button
-            className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
               isRightPanelOpen && Math.round(canvasPercent) === 75
                 ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
                 : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -130,7 +130,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             Canvas 75%
           </button>
           <button
-            className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
               isRightPanelOpen && Math.round(canvasPercent) === 50
                 ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
                 : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -145,7 +145,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             50 / 50
           </button>
           <button
-            className={`px-2 py-0.5 text-[11px] font-medium rounded-[4px] transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
               isRightPanelOpen && Math.round(canvasPercent) === 35
                 ? 'bg-[var(--md-surface-raised)] text-[var(--md-text-bold)] shadow-xs'
                 : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -162,12 +162,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
 
         {/* Header Stats */}
-        <div className="hidden md:flex items-center gap-1.5 text-xs text-[var(--md-text-muted)] px-2">
+        <div className="hidden md:flex items-center gap-1.5 text-sm text-[var(--md-text-muted)] px-2">
           <span>Elements: <strong className="text-[var(--md-text-bold)] font-mono">{elementCount}</strong></span>
           {compileDuration !== null && (
             <>
               <span className="text-[var(--md-border)]">|</span>
-              <span className="font-mono text-[11px] text-[var(--md-accent)]" title="Compiler Execution Time">
+              <span className="font-mono text-sm text-[var(--md-accent)]" title="Compiler Execution Time">
                 ⚡ {compileDuration}ms
               </span>
             </>

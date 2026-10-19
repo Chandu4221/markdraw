@@ -202,7 +202,7 @@ export const InspectorShell = memo(function InspectorShell({
       ref={panelRef}
       role="complementary"
       aria-label="Inspector and Document Settings"
-      className={`markdraw-unified-inspector h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] text-xs text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col ${
+      className={`markdraw-unified-inspector h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] text-sm text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col ${
         hideHeader ? 'w-full border-none' : 'w-[300px] border-l border-[var(--md-line-subtle)]'
       }`}
       data-ismobile={isMobile}
@@ -215,7 +215,7 @@ export const InspectorShell = memo(function InspectorShell({
       {!hideHeader && (
         <div className="h-9 px-3 border-b border-[var(--md-line-subtle)] flex items-center justify-between bg-[var(--md-surface-1)] shrink-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs font-semibold text-[var(--md-ink-primary)] truncate">
+            <span className="text-sm font-semibold text-[var(--md-ink-primary)] truncate">
               {count === 0
                 ? 'Inspector & Canvas'
                 : count === 1
@@ -225,7 +225,7 @@ export const InspectorShell = memo(function InspectorShell({
                 : `${count} shapes selected`}
             </span>
             {count > 0 && currentUnitId && (
-              <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-purple-600 text-white rounded shrink-0">
+              <span className="px-1.5 py-0.2 text-sm font-mono font-bold bg-purple-600 text-white rounded shrink-0">
                 UNIT
               </span>
             )}
@@ -237,7 +237,7 @@ export const InspectorShell = memo(function InspectorShell({
             aria-label={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
             aria-expanded={!isCollapsed}
           >
-            {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           </button>
         </div>
       )}

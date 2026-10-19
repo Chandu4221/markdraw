@@ -76,8 +76,8 @@ export const MarkDrawChip: React.FC<MarkDrawChipProps> = ({
 
   const sizeClasses =
     size === 'sm'
-      ? 'px-1.5 py-0.5 text-[10px] leading-tight'
-      : 'px-2 py-0.5 text-[11px] leading-normal';
+      ? 'px-2 py-0.5 text-sm leading-tight'
+      : 'px-2.5 py-1 text-sm leading-normal';
 
   let variantClasses = '';
   if (variant === 'role') {
