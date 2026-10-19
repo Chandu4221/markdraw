@@ -5,14 +5,16 @@ import { CanvasShape } from '../canvas/port/CanvasShape';
 import { getShapeMeta } from './shapeMeta';
 import { MarkDrawCompiler } from '../core/compiler';
 import { canvasShapesToCompilerShapes } from '../hooks/useCompilation';
+import { Editor } from '../core/types';
 
 interface RoleChipsOverlayProps {
   driver?: CanvasDriver | null;
-  editor?: any | null;
+  editor?: Editor | null;
   showChips?: boolean;
   showUntagged?: boolean;
   onChipClick?: (shapeId: string) => void;
   onCopyContract?: (shapeId: string, contractText: string) => void;
+  initialShapes?: CanvasShape[];
 }
 
 interface ChipItem {
@@ -36,11 +38,12 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
   showChips = true,
   showUntagged = false,
   onChipClick,
-  onCopyContract
+  onCopyContract,
+  initialShapes
 }) => {
   const [, setTick] = useState(0);
   const [copiedRootId, setCopiedRootId] = useState<string | null>(null);
-  const [driverShapes, setDriverShapes] = useState<CanvasShape[]>([]);
+  const [driverShapes, setDriverShapes] = useState<CanvasShape[]>(initialShapes || []);
   const [driverSelection, setDriverSelection] = useState<string[]>([]);
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
 
@@ -94,7 +97,7 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
   if (driver) {
     for (const shape of driverShapes) {
       if (shape.kind === 'arrow' || shape.kind === 'line') continue;
-      const meta = shape.meta?.markdraw as any;
+      const meta = getShapeMeta(shape);
       const hasRole = Boolean(meta && meta.role);
       if (!hasRole && !showUntagged) continue;
 
@@ -113,7 +116,7 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
 
       chips.push({
         shapeId: shape.id,
-        label: meta?.props?.label || meta?.role || shape.name || 'untagged',
+        label: meta?.role || (shape.kind === 'frame' ? shape.name || 'page' : 'untagged'),
         isUnit: Boolean(meta?.unitId),
         isUntagged: !hasRole,
         isRoot: shape.kind === 'frame' || meta?.role === 'page',
@@ -172,7 +175,7 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
 
   const handleCopyContract = async (e: React.MouseEvent, shapeId: string) => {
     e.stopPropagation();
-    let compilerShapes: any[] = [];
+    let compilerShapes: Parameters<typeof MarkDrawCompiler.compile>[0] = [];
     if (driver) {
       compilerShapes = canvasShapesToCompilerShapes(driverShapes);
     } else if (editor) {
