@@ -16,6 +16,8 @@ import { OutputPanel, OutputTab, OutputDisplayMode } from './components/output';
 import { InspectorShell } from './components/inspector/InspectorShell';
 import { getShapeMeta } from './annotation/shapeMeta';
 import { migrateLocalStorageRoleKeys } from './annotation/storageMigration';
+import { Breakpoint } from './components/ui/BreakpointSwitch';
+import { CanvasShape } from './canvas/port/CanvasShape';
 import {
   useDocumentManagement,
   usePanelResize,
@@ -104,17 +106,53 @@ export const App: React.FC = () => {
   } = useDocumentManagement({ editorRef, showToast });
 
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
-  const [simulationRootId, setSimulationRootId] = useState<string | null>(null);
+  const [breakpoint, setBreakpoint] = useState<Breakpoint>(1200);
+  const [shapes, setShapes] = useState<CanvasShape[]>([]);
 
-  const handleToggleSimulate = useCallback(async () => {
-    if (!driver || selectedIds.length === 0) return;
-    const shape = await driver.getShape(selectedIds[0]);
-    if (!shape) return;
-    const meta = getShapeMeta(shape);
-    if (meta?.role === 'page' && meta.props?.behaviors?.includes('responsive')) {
-      setSimulationRootId((prev) => (prev ? null : shape.id));
+  useEffect(() => {
+    if (!driver) return;
+    const updateShapes = async () => {
+      try {
+        const list = await driver.listShapes();
+        setShapes(list);
+      } catch {}
+    };
+    updateShapes();
+    const unsub = driver.onShapesChanged(updateShapes);
+    return () => unsub();
+  }, [driver]);
+
+  const responsiveRootId = React.useMemo(() => {
+    if (selectedIds.length > 0) {
+      const sel = shapes.find((s) => s.id === selectedIds[0]);
+      if (sel) {
+        let curr = sel;
+        const visited = new Set<string>();
+        while (curr.parentId && !visited.has(curr.id)) {
+          visited.add(curr.id);
+          const p = shapes.find((s) => s.id === curr.parentId);
+          if (!p) break;
+          curr = p;
+        }
+        const m = getShapeMeta(curr);
+        if (
+          (m?.type === 'page' || curr.kind === 'frame') &&
+          (m?.flags?.includes('responsive') || m?.props?.behaviors?.includes('responsive'))
+        ) {
+          return curr.id;
+        }
+      }
     }
-  }, [driver, selectedIds]);
+    const page = shapes.find((s) => {
+      if (s.parentId) return false;
+      const m = getShapeMeta(s);
+      return (
+        (m?.type === 'page' || s.kind === 'frame') &&
+        (m?.flags?.includes('responsive') || m?.props?.behaviors?.includes('responsive'))
+      );
+    });
+    return page ? page.id : null;
+  }, [selectedIds, shapes]);
 
   // Auto-open Inspector and scroll to top whenever a shape is selected
   useEffect(() => {
@@ -322,8 +360,8 @@ export const App: React.FC = () => {
                     selectedIds={selectedIds}
                     isInspectorOpen={isInspectorOpen}
                     onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
-                    simulationRootId={simulationRootId}
-                    onCloseSimulation={() => setSimulationRootId(null)}
+                    breakpoint={breakpoint}
+                    simulationRootId={responsiveRootId}
                     onChipClick={(id) => {
                       driver?.setSelection([id]);
                       setIsInspectorOpen(true);
@@ -345,12 +383,12 @@ export const App: React.FC = () => {
                   <aside
                     role="complementary"
                     aria-label="Semantics Inspector"
-                    className="w-72 h-full border-l border-[var(--md-border)] bg-[var(--md-surface)] flex flex-col shrink-0 overflow-hidden z-10 select-text"
+                    className="w-72 h-full border-l border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] flex flex-col shrink-0 overflow-hidden z-10 select-text"
                     data-testid="markdraw-docked-inspector"
                   >
-                    <div className="h-10 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface-raised)] flex items-center justify-between shrink-0 select-none">
-                      <div className="flex items-center gap-1.5 font-sans text-sm font-bold text-[var(--md-text-bold)]">
-                        <Tag size={16} className="text-[var(--md-accent)]" />
+                    <div className="h-10 px-3 border-b border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] flex items-center justify-between shrink-0 select-none">
+                      <div className="flex items-center gap-1.5 font-sans text-sm font-bold text-[var(--color-ink-primary)]">
+                        <Tag size={16} className="text-[var(--color-accent)]" />
                         <span>Inspector</span>
                         {selectedIds.length > 0 && (
                           <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-[var(--color-accent)] text-white">
@@ -361,7 +399,7 @@ export const App: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsInspectorOpen(false)}
-                        className="p-1 rounded text-[var(--md-text-muted)] hover:text-[var(--md-text-bold)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer"
+                        className="p-1 rounded text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                         title="Collapse Inspector (Alt+I)"
                         aria-label="Collapse Inspector"
                       >
@@ -377,8 +415,8 @@ export const App: React.FC = () => {
                         options={options}
                         onOptionsChange={handleOptionsChange}
                         hideHeader={true}
-                        isSimulating={Boolean(simulationRootId)}
-                        onToggleSimulate={handleToggleSimulate}
+                        breakpoint={breakpoint}
+                        onBreakpointChange={setBreakpoint}
                       />
                     </div>
                   </aside>

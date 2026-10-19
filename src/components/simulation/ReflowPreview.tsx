@@ -1,29 +1,34 @@
 // src/components/simulation/ReflowPreview.tsx
-// Non-destructive responsive reflow ghost overlay (§4.2)
+// Non-destructive responsive reflow ghost overlay (§4.2, §4.3)
 import React, { useState, useEffect, useMemo } from 'react';
 import { CanvasDriver } from '../../canvas/port/CanvasDriver';
 import { CanvasShape, Viewport } from '../../canvas/port/CanvasShape';
 import { computeReflow } from '../../core/reflow';
 import { MarkDrawChip } from '../ui/MarkDrawChip';
-import { ROLE_DEFINITIONS, RoleName } from '../../annotation/roles';
-import { Smartphone, Tablet, Monitor, X, Lightbulb } from 'lucide-react';
+import { Breakpoint } from '../ui/BreakpointSwitch';
 
 export interface ReflowPreviewProps {
   rootId: string;
   driver?: CanvasDriver | null;
-  onClose: () => void;
-  defaultBreakpoint?: number;
+  breakpoint: Breakpoint;
+  initialShapes?: CanvasShape[];
 }
 
 export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
   rootId,
   driver,
-  onClose,
-  defaultBreakpoint = 768
+  breakpoint,
+  initialShapes
 }) => {
-  const [shapes, setShapes] = useState<CanvasShape[]>([]);
-  const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
-  const [simWidth, setSimWidth] = useState<number>(375); // Default mobile 375px
+  const [shapes, setShapes] = useState<CanvasShape[]>(initialShapes || []);
+  const [viewport, setViewport] = useState<Viewport>(() => {
+    if (driver) {
+      try {
+        return driver.getViewport();
+      } catch {}
+    }
+    return { x: 0, y: 0, zoom: 1 };
+  });
 
   useEffect(() => {
     if (!driver) return;
@@ -70,166 +75,75 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
 
   // Compute pure reflow
   const reflowResult = useMemo(() => {
-    if (subtree.length === 0) return { nodes: [] };
+    if (subtree.length === 0 || breakpoint === 1200) return { nodes: [] };
     return computeReflow({
       shapes: subtree,
-      width: simWidth,
-      defaultBreakpoint
+      width: breakpoint,
+      defaultBreakpoint: 768
     });
-  }, [subtree, simWidth, defaultBreakpoint]);
+  }, [subtree, breakpoint]);
 
-  if (!driver || !rootShape || subtree.length === 0) {
+  if (!driver || !rootShape || subtree.length === 0 || breakpoint === 1200) {
     return null;
   }
 
   const zoom = viewport.zoom;
-  const rootScreenX = (rootShape.bounds.x + viewport.x) * zoom;
-  const rootScreenY = (rootShape.bounds.y + viewport.y) * zoom;
+  const rootScreenX = rootShape.bounds.x * zoom + viewport.x;
+  const rootScreenY = rootShape.bounds.y * zoom + viewport.y;
   const rootScreenW = rootShape.bounds.w * zoom;
   const rootScreenH = rootShape.bounds.h * zoom;
+  const breakpointScreenW = breakpoint * zoom;
 
   const shapeMap = new Map(subtree.map((s) => [s.id, s]));
-  const suggestions = reflowResult.nodes
-    .filter((n) => n.suggestion)
-    .map((n) => n.suggestion!);
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
-      {/* Background Dimmer: Dims canvas behind simulation */}
+    <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden font-sans select-none" data-testid="reflow-preview">
+      {/* Root Container Tint and Dashed Guideline at Breakpoint Width (§4.3) */}
       <div
-        className="absolute transition-all duration-150 pointer-events-none bg-black/75"
-        style={{ // v5-token-exception: dynamic viewport rect positioning
+        className="absolute pointer-events-none overflow-hidden"
+        style={{ // v5-token-exception: simulation overlay positions (4.3)
           left: rootScreenX,
           top: rootScreenY,
-          width: Math.max(rootScreenW, simWidth * zoom),
+          width: rootScreenW,
           height: rootScreenH
         }}
-      />
-
-      {/* Floating Simulation Toolbar (Interactive) */}
-      <div
-        className="absolute pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--md-line-strong)] bg-[var(--md-surface-1)] shadow-2xl backdrop-blur-md transition-all text-sm"
-        style={{ // v5-token-exception: dynamic screen bounds positioning
-          left: Math.max(16, rootScreenX),
-          top: Math.max(16, rootScreenY - 50)
-        }}
       >
-        <span className="font-semibold text-[var(--md-ink-primary)] flex items-center gap-1">
-          <Smartphone size={15} className="text-[var(--md-accent)]" />
-          <span>Simulate:</span>
-          <span className="font-mono text-sm font-bold text-[var(--md-accent)]">{simWidth}px</span>
-        </span>
-
-        {/* Width Slider (375 - 1200) */}
-        <input
-          type="range"
-          min="375"
-          max="1200"
-          value={simWidth}
-          onChange={(e) => setSimWidth(Number(e.target.value))}
-          className="w-28 h-1.5 accent-[var(--md-accent)] cursor-ew-resize"
-          title={`Simulated width: ${simWidth}px (breakpoint: ${defaultBreakpoint}px)`}
-          aria-label="Simulated viewport width"
-        />
-
-        {/* Preset Buttons */}
-        <div className="flex items-center gap-1 border-l border-[var(--md-line-subtle)] pl-2">
-          <button
-            type="button"
-            onClick={() => setSimWidth(375)}
-            className={`px-2 py-0.5 rounded text-sm font-medium transition-colors cursor-pointer ${
-              simWidth === 375
-                ? 'bg-[var(--md-accent)] text-white'
-                : 'bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)]'
-            }`}
-            title="Mobile (375px)"
-            aria-label="Simulate Mobile (375px)"
-          >
-            <Smartphone size={13} className="inline mr-0.5" /> 375
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimWidth(768)}
-            className={`px-2 py-0.5 rounded text-sm font-medium transition-colors cursor-pointer ${
-              simWidth === 768
-                ? 'bg-[var(--md-accent)] text-white'
-                : 'bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)]'
-            }`}
-            title="Tablet (768px)"
-            aria-label="Simulate Tablet (768px)"
-          >
-            <Tablet size={13} className="inline mr-0.5" /> 768
-          </button>
-          <button
-            type="button"
-            onClick={() => setSimWidth(1200)}
-            className={`px-2 py-0.5 rounded text-sm font-medium transition-colors cursor-pointer ${
-              simWidth === 1200
-                ? 'bg-[var(--md-accent)] text-white'
-                : 'bg-[var(--md-surface-2)] text-[var(--md-ink-secondary)] hover:text-[var(--md-ink-primary)]'
-            }`}
-            title="Desktop (1200px)"
-            aria-label="Simulate Desktop (1200px)"
-          >
-            <Monitor size={13} className="inline mr-0.5" /> 1200
-          </button>
-        </div>
-
-        {/* Suggestions chip */}
-        {suggestions.length > 0 && (
-          <span className="flex items-center gap-1 text-sm text-[var(--color-warning)] bg-[var(--color-warning)]/15 border border-[var(--color-warning)]/30 px-2 py-0.5 rounded">
-            <Lightbulb size={13} />
-            <span>{suggestions[0]}</span>
-          </span>
-        )}
-
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded-full text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer ml-1"
-          title="Exit simulation"
-          aria-label="Exit simulation"
+        <div
+          className="absolute top-0 bottom-0 left-0 bg-[var(--color-accent)]/10 border-r-2 border-dashed border-[var(--color-accent)] pointer-events-none transition-all duration-150"
+          style={{ // v5-token-exception: simulation overlay positions (4.3)
+            width: breakpointScreenW
+          }}
         >
-          <X size={15} />
-        </button>
+          <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[var(--color-surface-1)] border border-[var(--color-line-subtle)] text-sm font-mono font-semibold text-[var(--color-accent)] shadow-xs">
+            {breakpoint}
+          </div>
+        </div>
       </div>
 
-      {/* Ghost Preview Rectangles */}
+      {/* Ghost Preview Rectangles for Reflowed Elements (§4.3) */}
       {reflowResult.nodes.map((node) => {
-        const isRoot = node.shapeId === rootId;
+        if (node.shapeId === rootId) return null;
         const originalShape = shapeMap.get(node.shapeId);
         const role = node.role;
-        const roleDef = role ? ROLE_DEFINITIONS[role as RoleName] : null;
-        const cat = roleDef?.category || 'utility';
 
-        const screenX = (node.x + viewport.x) * zoom;
-        const screenY = (node.y + viewport.y) * zoom;
-        const screenW = node.w * zoom;
-        const screenH = node.h * zoom;
-
-        if (isRoot) {
-          return (
-            <div
-              key={node.shapeId}
-              className="absolute pointer-events-none rounded-[var(--md-radius-md)] border-2 border-[var(--md-accent)] shadow-xl bg-[var(--color-surface-0)]/40"
-              style={{ left: screenX, top: screenY, width: screenW, height: screenH }} // v5-token-exception: dynamic simulation geometry
-            >
-              <div className="absolute top-1.5 right-2 text-sm font-mono font-semibold text-[var(--md-accent)]">
-                {simWidth}px viewport
-              </div>
-            </div>
-          );
-        }
+        const nodeScreenX = node.x * zoom + viewport.x;
+        const nodeScreenY = node.y * zoom + viewport.y;
+        const nodeScreenW = node.w * zoom;
+        const nodeScreenH = node.h * zoom;
 
         if (node.state === 'hidden') {
           return (
             <div
               key={node.shapeId}
-              className="absolute pointer-events-none rounded border border-dashed border-[var(--md-line-strong)] opacity-30 flex items-center justify-center p-1 bg-[var(--color-surface-2)]/50"
-              style={{ left: screenX, top: screenY, width: screenW, height: screenH }} // v5-token-exception: dynamic simulation geometry
+              className="absolute pointer-events-none rounded border border-dashed border-[var(--color-line-strong)] opacity-40 flex items-center justify-center p-1 bg-[var(--color-surface-2)]/60"
+              style={{ // v5-token-exception: simulation overlay positions (4.3)
+                left: nodeScreenX,
+                top: nodeScreenY,
+                width: nodeScreenW,
+                height: nodeScreenH
+              }}
             >
-              <span className="text-sm font-mono text-[var(--md-ink-muted)]">[hidden]</span>
+              <span className="text-sm font-mono text-[var(--color-ink-muted)]">[hidden]</span>
             </div>
           );
         }
@@ -238,10 +152,15 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           return (
             <div
               key={node.shapeId}
-              className="absolute pointer-events-none rounded border border-[var(--md-accent)] bg-[var(--md-surface-2)] shadow-md flex items-center justify-between px-2"
-              style={{ left: screenX, top: screenY, width: screenW, height: screenH }} // v5-token-exception: dynamic simulation geometry
+              className="absolute pointer-events-none rounded border border-[var(--color-accent)] bg-[var(--color-surface-1)] shadow-md flex items-center justify-between px-2"
+              style={{ // v5-token-exception: simulation overlay positions (4.3)
+                left: nodeScreenX,
+                top: nodeScreenY,
+                width: nodeScreenW,
+                height: nodeScreenH
+              }}
             >
-              <span className="text-sm font-semibold text-[var(--md-accent)]">
+              <span className="text-sm font-semibold text-[var(--color-accent)]">
                 {node.collapseKind === 'hamburger' ? '☰ Menu' : node.collapseKind === 'bottom-bar' ? '⬇ Bottom Bar' : '⊞ Drawer Rail'}
               </span>
               <MarkDrawChip variant="role" role={role || undefined} label={`${role || 'nav'} (${node.collapseKind})`} size="sm" />
@@ -249,33 +168,25 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           );
         }
 
-        // Normal state
+        // Normal reflowed / wrapped node
         return (
           <div
             key={node.shapeId}
-            className="absolute pointer-events-none rounded border transition-all duration-100 flex flex-col justify-between p-1.5 overflow-hidden shadow-xs"
-            style={{ // v5-token-exception: dynamic simulation geometry
-              left: screenX,
-              top: screenY,
-              width: screenW,
-              height: screenH,
-              borderColor: `var(--color-role-${cat})`,
-              backgroundColor: `var(--color-role-${cat}-bg)`
+            className="absolute pointer-events-none rounded border border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] transition-all duration-100 flex flex-col justify-between p-1.5 overflow-hidden shadow-xs"
+            style={{ // v5-token-exception: simulation overlay positions (4.3)
+              left: nodeScreenX,
+              top: nodeScreenY,
+              width: nodeScreenW,
+              height: nodeScreenH
             }}
           >
             <div className="flex items-center justify-between gap-1">
-              <MarkDrawChip variant={role ? 'role' : 'untagged'} role={role || undefined} category={cat} label={role || 'box'} size="sm" />
-              <span className="text-sm font-mono text-[var(--md-ink-muted)] truncate max-w-20">#{node.shapeId.slice(0, 5)}</span>
+              <MarkDrawChip variant={role ? 'role' : 'untagged'} role={role || undefined} label={role || 'box'} size="sm" />
+              <span className="text-sm font-mono text-[var(--color-ink-muted)] truncate max-w-20">#{node.shapeId.slice(0, 5)}</span>
             </div>
-
-            {originalShape?.text ? (
-              <div className="text-sm font-sans text-[var(--md-ink-primary)] truncate mt-1">{originalShape.text}</div>
-            ) : role === 'para' ? (
-              <div className="space-y-1 my-auto opacity-40">
-                <div className="h-1.5 bg-[var(--md-ink-muted)] rounded w-full" />
-                <div className="h-1.5 bg-[var(--md-ink-muted)] rounded w-3/4" />
-              </div>
-            ) : null}
+            {originalShape?.text && (
+              <div className="text-sm font-sans text-[var(--color-ink-primary)] truncate mt-1">{originalShape.text}</div>
+            )}
           </div>
         );
       })}

@@ -7,6 +7,7 @@ import { CanvasDriver } from '../port/CanvasDriver';
 import { ExcalidrawDriver } from './ExcalidrawDriver';
 import { ChipsOverlay } from '../../annotation/ChipsOverlay';
 import { ReflowPreview } from '../../components/simulation/ReflowPreview';
+import { Breakpoint } from '../../components/ui/BreakpointSwitch';
 import { Tag } from 'lucide-react';
 
 export interface ExcalidrawCanvasProps {
@@ -21,6 +22,7 @@ export interface ExcalidrawCanvasProps {
   selectedIds?: string[];
   isInspectorOpen?: boolean;
   onToggleInspector?: () => void;
+  breakpoint?: Breakpoint;
   simulationRootId?: string | null;
   onCloseSimulation?: () => void;
 }
@@ -36,8 +38,8 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
   selectedIds = [],
   isInspectorOpen = true,
   onToggleInspector,
-  simulationRootId = null,
-  onCloseSimulation
+  breakpoint = 1200,
+  simulationRootId = null
 }) => {
   const driverRef = useRef<ExcalidrawDriver | null>(null);
   const [driverState, setDriverState] = useState<CanvasDriver | null>(null);
@@ -136,8 +138,8 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
       />
       <ChipsOverlay
         driver={driverState}
-        showChips={showRoleChips && !simulationRootId}
-        showUntagged={showUntaggedChips && !simulationRootId}
+        showChips={showRoleChips && breakpoint === 1200}
+        showUntagged={showUntaggedChips && breakpoint === 1200}
         onChipClick={(shapeId) => {
           if (!isInspectorOpen && onToggleInspector) {
             onToggleInspector();
@@ -146,12 +148,11 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         }}
         onCopyContract={onCopyContract}
       />
-      {simulationRootId && (
+      {simulationRootId && breakpoint !== 1200 && (
         <ReflowPreview
           rootId={simulationRootId}
           driver={driverState}
-          onClose={onCloseSimulation || (() => {})}
-          defaultBreakpoint={768}
+          breakpoint={breakpoint}
         />
       )}
     </div>
