@@ -2,9 +2,9 @@ name: CI & Architecture Enforcement
 
 on:
   push:
-    branches: [ main, v4-annotation, v5, v5-canvas-adapter ]
+    branches: [ main, v4-annotation, v5, v5-canvas-adapter, v5.1-fix-integrate, v5.2-ux-hardening, v6, v6-production ]
   pull_request:
-    branches: [ main, v4-annotation, v5, v5-canvas-adapter ]
+    branches: [ main, v4-annotation, v5, v5-canvas-adapter, v5.1-fix-integrate, v5.2-ux-hardening, v6, v6-production ]
   workflow_dispatch:
 
 jobs:
@@ -26,6 +26,9 @@ jobs:
       - name: Typecheck
         run: npx tsc -b
 
+      - name: Lint Codebase
+        run: npm run lint
+
       - name: Run Test Suite
         run: npx vitest run
 
@@ -37,6 +40,12 @@ jobs:
 
       - name: Enforce File Size Limits
         run: node scripts/check-file-size.mjs
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright Smoke Test
+        run: npx playwright test e2e/smoke.spec.ts
 
       - name: Production Build
         run: npm run build

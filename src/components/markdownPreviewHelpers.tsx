@@ -199,15 +199,24 @@ export function renderInlineFormatting(
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      parts.push(
+        <React.Fragment key={`t-${lastIndex}`}>
+          {text.slice(lastIndex, match.index)}
+        </React.Fragment>
+      );
     }
     const token = match[0];
+    const key = `k-${match.index}`;
     if (token.startsWith('[') && token.endsWith(']')) {
-      parts.push(tokenizeBracketNotation(token, onSelectShape));
+      parts.push(
+        <React.Fragment key={key}>
+          {tokenizeBracketNotation(token, onSelectShape)}
+        </React.Fragment>
+      );
     } else if (token.startsWith('`') && token.endsWith('`')) {
       parts.push(
         <code
-          key={match.index}
+          key={key}
           className="px-1 py-0.5 rounded bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-accent)] font-mono text-sm"
         >
           {token.slice(1, -1)}
@@ -215,18 +224,22 @@ export function renderInlineFormatting(
       );
     } else if (token.startsWith('**') && token.endsWith('**')) {
       parts.push(
-        <strong key={match.index} className="font-semibold text-[var(--color-ink-primary)]">
+        <strong key={key} className="font-semibold text-[var(--color-ink-primary)]">
           {token.slice(2, -2)}
         </strong>
       );
     } else if (token.startsWith('*') && token.endsWith('*')) {
-      parts.push(<em key={match.index}>{token.slice(1, -1)}</em>);
+      parts.push(<em key={key}>{token.slice(1, -1)}</em>);
     }
     lastIndex = regex.lastIndex;
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    parts.push(
+      <React.Fragment key={`t-${lastIndex}`}>
+        {text.slice(lastIndex)}
+      </React.Fragment>
+    );
   }
 
   return parts.length > 0 ? parts : text;
