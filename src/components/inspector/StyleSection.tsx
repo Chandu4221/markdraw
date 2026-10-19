@@ -4,7 +4,7 @@ import { Palette, ChevronDown, ChevronRight } from 'lucide-react';
 interface StyleSectionProps {
   isOpen: boolean;
   onToggle: () => void;
-  styles: any;
+  styles?: Record<string, unknown> | null;
 }
 
 export const StyleSection: React.FC<StyleSectionProps> = ({

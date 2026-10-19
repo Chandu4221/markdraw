@@ -1,27 +1,31 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Tag,
   ChevronDown,
   ChevronRight,
-  Sparkles,
-  Smartphone,
   StickyNote,
   Box
 } from 'lucide-react';
 import {
   ROLE_DEFINITIONS,
-  RoleName,
-  RoleCategory,
-  searchRoles
+  RoleName
 } from '../../annotation/roles';
-import { getShapeMeta, updateShapeMeta, suggestRoleForShape } from '../../annotation/shapeMeta';
-import { RoleResponsive } from '../../annotation/types';
-import { Editor, TLShape } from '../../core/types';
+import {
+  getShapeMeta,
+  updateDriverShapeMeta,
+  suggestRoleForShape
+} from '../../annotation/shapeMeta';
+import { RoleResponsive, JsonValue } from '../../annotation/types';
+import { CanvasShape } from '../../canvas/port/CanvasShape';
+import { CanvasDriver } from '../../canvas/port/CanvasDriver';
 import { Input } from '@/components/ui/input';
+import { ResponsiveSection } from './ResponsiveSection';
+import { RolePickerDropdown } from './RolePickerDropdown';
 
 interface RoleSectionProps {
-  selectedShapes: TLShape[];
-  editor: Editor;
+  selectedShapes: CanvasShape[];
+  allShapes: CanvasShape[];
+  driver: CanvasDriver;
   isOpen: boolean;
   onToggle: () => void;
   onSaveUnitGesture: () => void;
@@ -29,66 +33,83 @@ interface RoleSectionProps {
 
 export const RoleSection: React.FC<RoleSectionProps> = ({
   selectedShapes,
-  editor,
+  allShapes,
+  driver,
   isOpen,
   onToggle,
   onSaveUnitGesture
 }) => {
-  const [roleSearch, setRoleSearch] = useState('');
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
-
   const count = selectedShapes.length;
   const firstShape = selectedShapes[0];
   const firstMeta = firstShape ? getShapeMeta(firstShape) : null;
   const currentRole = firstMeta?.role;
 
   const potentialParents = useMemo(() => {
-    const all = editor.getCurrentPageShapes();
     const selectedIds = new Set(selectedShapes.map((s) => s.id));
-    return all.filter((s: TLShape) => !selectedIds.has(s.id));
-  }, [editor, selectedShapes]);
+    return allShapes.filter((s) => !selectedIds.has(s.id));
+  }, [allShapes, selectedShapes]);
 
   const suggestedRole = useMemo(() => {
     if (count === 1 && firstShape) {
-      return suggestRoleForShape(firstShape, editor);
+      return suggestRoleForShape(firstShape);
     }
     return null;
-  }, [count, firstShape, editor]);
+  }, [count, firstShape]);
 
-  const filteredGroupedRoles = useMemo(() => {
-    const matched = searchRoles(roleSearch);
-    const groups: Record<RoleCategory, typeof matched> = {
-      structure: [],
-      content: [],
-      interaction: [],
-      navigation: [],
-      feedback: [],
-      utility: []
+  const hasResponsiveRoot = useMemo(() => {
+    if (!firstShape) return false;
+
+    const isResponsivePage = (s: CanvasShape): boolean => {
+      const meta = getShapeMeta(s);
+      if (!meta || meta.role !== 'page') return false;
+      const behaviors = meta.props?.behaviors || [];
+      return behaviors.includes('responsive');
     };
-    matched.forEach((r) => {
-      if (groups[r.category]) {
-        groups[r.category].push(r);
+
+    if (isResponsivePage(firstShape)) return true;
+
+    // Follow parentId chain
+    let currentParentId = firstMeta?.parentId || firstShape.parentId;
+    const visited = new Set<string>();
+    if (firstShape.id) visited.add(firstShape.id);
+
+    while (currentParentId && !visited.has(currentParentId)) {
+      visited.add(currentParentId);
+      const parentShape = allShapes.find((s) => s.id === currentParentId);
+      if (!parentShape) break;
+      if (isResponsivePage(parentShape)) return true;
+      const pMeta = getShapeMeta(parentShape);
+      currentParentId = pMeta?.parentId || parentShape.parentId;
+    }
+
+    // Geometric fallback
+    const { x, y, w, h } = firstShape.bounds;
+    for (const s of allShapes) {
+      if (s.id !== firstShape.id && isResponsivePage(s)) {
+        const sb = s.bounds;
+        if (x >= sb.x && y >= sb.y && x + w <= sb.x + sb.w && y + h <= sb.y + sb.h) {
+          return true;
+        }
       }
-    });
-    return groups;
-  }, [roleSearch]);
+    }
+
+    return false;
+  }, [firstShape, firstMeta, allShapes]);
 
   const handleAssignRole = (role: RoleName | null) => {
     const shapeIds = selectedShapes.map((s) => s.id);
-    updateShapeMeta(editor, shapeIds, { role });
-    setIsRoleDropdownOpen(false);
-    setRoleSearch('');
+    void updateDriverShapeMeta(driver, shapeIds, { role });
   };
 
-  const handleUpdateProp = (key: string, value: any) => {
+  const handleUpdateProp = (key: string, value: JsonValue | undefined) => {
     const shapeIds = selectedShapes.map((s) => s.id);
-    updateShapeMeta(editor, shapeIds, {
+    void updateDriverShapeMeta(driver, shapeIds, {
       props: { [key]: value }
     });
   };
 
   const handleToggleBehavior = (behavior: string) => {
-    const currentFlags: string[] = (firstMeta?.props as any)?.behaviors || [];
+    const currentFlags: string[] = firstMeta?.props?.behaviors || [];
     const nextFlags = currentFlags.includes(behavior)
       ? currentFlags.filter((f) => f !== behavior)
       : [...currentFlags, behavior];
@@ -98,13 +119,13 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
 
   const handleSetParent = (parentId: string | null) => {
     const shapeIds = selectedShapes.map((s) => s.id);
-    updateShapeMeta(editor, shapeIds, { parentId });
+    void updateDriverShapeMeta(driver, shapeIds, { parentId });
   };
 
   const handleUpdateResponsive = (patch: Partial<RoleResponsive> | null) => {
     const shapeIds = selectedShapes.map((s) => s.id);
     if (patch === null) {
-      updateShapeMeta(editor, shapeIds, { responsive: null });
+      void updateDriverShapeMeta(driver, shapeIds, { responsive: null });
     } else {
       const existing: RoleResponsive = firstMeta?.responsive || {
         order: 'auto',
@@ -113,14 +134,14 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
         smFullWidth: false,
         tablet: 'maintain'
       };
-      updateShapeMeta(editor, shapeIds, {
+      void updateDriverShapeMeta(driver, shapeIds, {
         responsive: { ...existing, ...patch }
       });
     }
   };
 
   const roleDef = currentRole ? ROLE_DEFINITIONS[currentRole as RoleName] : null;
-  const activeFlags: string[] = (firstMeta?.props as any)?.behaviors || [];
+  const activeFlags: string[] = firstMeta?.props?.behaviors || [];
 
   return (
     <div>
@@ -150,105 +171,12 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
       {isOpen && (
         <div className="p-3 pt-2 space-y-3 bg-[var(--md-surface-1)]">
           {/* Current Role & Search Dropdown */}
-          <div className="space-y-1 relative">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] cursor-pointer">
-                Role
-              </label>
-              {currentRole && (
-                <button
-                  type="button"
-                  onClick={() => handleAssignRole(null)}
-                  className="text-[11px] font-medium text-red-500 hover:underline cursor-pointer"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
-              className="w-full h-8 px-2.5 flex items-center justify-between rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] hover:border-[var(--md-line-strong)] text-left text-xs text-[var(--md-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
-            >
-              <span className="truncate">
-                {currentRole ? (
-                  <span className="font-semibold text-[var(--md-ink-primary)]">
-                    {currentRole}{' '}
-                    <span className="font-normal text-[var(--md-ink-muted)]">
-                      ({roleDef?.category})
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-[var(--md-ink-muted)] italic">
-                    Assign a semantic role...
-                  </span>
-                )}
-              </span>
-              <ChevronDown size={13} className="text-[var(--md-ink-muted)] shrink-0 ml-1" />
-            </button>
-
-            {/* Role Picker Dropdown Menu */}
-            {isRoleDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-[var(--md-radius-md)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] shadow-xl p-1.5 space-y-1 max-h-64 overflow-y-auto">
-                <Input
-                  type="text"
-                  placeholder="Search 31 roles or aliases..."
-                  value={roleSearch}
-                  onChange={(e) => setRoleSearch(e.target.value)}
-                  className="h-7 text-xs mb-1"
-                  autoFocus
-                />
-
-                {Object.entries(filteredGroupedRoles).map(([cat, roles]) => {
-                  if (roles.length === 0) return null;
-                  return (
-                    <div key={cat} className="space-y-0.5">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--md-ink-muted)] px-2 pt-1.5">
-                        {cat}
-                      </div>
-                      {roles.map((r) => (
-                        <button
-                          key={r.name}
-                          type="button"
-                          onClick={() => handleAssignRole(r.name)}
-                          className={`w-full flex items-center justify-between px-2 py-1.5 text-left rounded-[var(--md-radius-sm)] text-xs transition-colors cursor-pointer ${
-                            currentRole === r.name
-                              ? 'bg-[var(--md-accent)] text-white font-semibold'
-                              : 'hover:bg-[var(--md-surface-2)] text-[var(--md-ink-primary)]'
-                          }`}
-                        >
-                          <span>{r.name}</span>
-                          {r.aliases.length > 0 && (
-                            <span className={`text-[10px] truncate max-w-[100px] ${currentRole === r.name ? 'text-white/80' : 'text-[var(--md-ink-muted)]'}`}>
-                              {r.aliases.slice(0, 2).join(', ')}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Suggestions */}
-          {!currentRole && suggestedRole && (
-            <div className="space-y-1">
-              <div className="text-[11px] font-semibold text-[var(--md-ink-muted)] flex items-center gap-1">
-                <Sparkles size={12} className="text-amber-500 shrink-0" />
-                <span>Suggested Role</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleAssignRole(suggestedRole)}
-                className="px-2.5 py-1 text-xs font-semibold rounded-[var(--md-radius-sm)] border border-blue-500/40 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors cursor-pointer"
-              >
-                +{suggestedRole}
-              </button>
-            </div>
-          )}
+          <RolePickerDropdown
+            currentRole={currentRole}
+            roleDef={roleDef}
+            suggestedRole={suggestedRole}
+            onAssignRole={handleAssignRole}
+          />
 
           {/* Accessible Label / AccName Input */}
           <div className="space-y-1">
@@ -288,10 +216,10 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               className="w-full h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2.5 text-xs text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
             >
               <option value="">Auto (Infer from AABB bounds)</option>
-              {potentialParents.map((p: TLShape) => {
+              {potentialParents.map((p) => {
                 const meta = getShapeMeta(p);
-                const role = meta?.role || p.type;
-                const label = (p.props as any)?.name || meta?.props?.label || p.id.slice(-6);
+                const role = meta?.role || p.kind;
+                const label = p.name || meta?.props?.label || p.id.slice(-6);
                 return (
                   <option key={p.id} value={p.id}>
                     {role} — &quot;{label}&quot;
@@ -330,30 +258,12 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
             </div>
           )}
 
-          {/* Responsive Props */}
-          <div className="space-y-1.5 pt-1 border-t border-[var(--md-line-subtle)]">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--md-ink-muted)] flex items-center gap-1 cursor-pointer">
-              <Smartphone size={12} className="text-[var(--md-ink-muted)]" />
-              <span>Responsive</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[var(--md-ink-muted)]">Mobile:</span>
-              <select
-                value={firstMeta?.responsive?.smVisible || 'visible'}
-                onChange={(e) => {
-                  const val = e.target.value as any;
-                  handleUpdateResponsive(val === 'visible' ? null : { smVisible: val });
-                }}
-                className="flex-1 h-8 rounded-[var(--md-radius-sm)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] px-2.5 text-xs text-[var(--md-ink-primary)] hover:border-[var(--md-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
-              >
-                <option value="visible">Visible on Mobile</option>
-                <option value="hidden">Hidden on Mobile</option>
-                <option value="collapse:drawer">Collapse to Drawer</option>
-                <option value="collapse:bottom-bar">Collapse to Bottom Bar</option>
-                <option value="collapse:hamburger">Collapse to Hamburger</option>
-              </select>
-            </div>
-          </div>
+          {/* Responsive Props Section */}
+          <ResponsiveSection
+            firstMeta={firstMeta}
+            hasResponsiveRoot={hasResponsiveRoot}
+            onUpdateResponsive={handleUpdateResponsive}
+          />
 
           {/* Style Note */}
           <div className="space-y-1 pt-1 border-t border-[var(--md-line-subtle)]">

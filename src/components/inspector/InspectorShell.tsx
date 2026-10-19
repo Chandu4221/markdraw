@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { TLShape, Editor } from '../../core/types';
+import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { getShapeMeta } from '../../annotation/shapeMeta';
 import { MarkDrawCompiler } from '../../core/compiler';
@@ -9,32 +8,53 @@ import {
   saveStoredUnit,
   deleteStoredUnit,
   createUnitDefinition,
-  stampUnit
+  stampUnitWithDriver
 } from '../../annotation/units';
 import { RoleName } from '../../annotation/roles';
 import { useCompilationOptions } from '../../core/CompilationOptionsContext';
+import { CompilationOptions } from '../../core/types';
+import { CanvasDriver } from '../../canvas/port/CanvasDriver';
+import { CanvasShape } from '../../canvas/port/CanvasShape';
+import { canvasShapesToCompilerShapes } from '../../hooks/useCompilation';
 import { RoleSection } from './RoleSection';
 import { StyleSection } from './StyleSection';
 import { CompilerSettingsSection } from './CompilerSettingsSection';
 import { UnitSection } from './UnitSection';
 import { CanvasOverviewSection } from './CanvasOverviewSection';
 
-export interface TLUiStylePanelProps {
+export interface InspectorShellProps {
+  selectedIds?: string[];
+  driver?: CanvasDriver | null;
+  units?: UnitDefinition[];
+  onUnitsChange?: (units: UnitDefinition[]) => void;
+  options?: Required<CompilationOptions>;
+  onOptionsChange?: (
+    newOptsOrUpdater:
+      | Required<CompilationOptions>
+      | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)
+  ) => void;
   isMobile?: boolean;
 }
 
-export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiStylePanelProps = {}) {
-  const editor: Editor = null;
-  const styles: any = null;
+export const InspectorShell = memo(function InspectorShell({
+  selectedIds,
+  driver = null,
+  units,
+  onUnitsChange,
+  options: propOptions,
+  onOptionsChange: propOnOptionsChange,
+  isMobile
+}: InspectorShellProps = {}) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   const compilationCtx = useCompilationOptions();
-  const options = compilationCtx?.options;
-  const setOptions = compilationCtx?.setOptions;
+  const effectiveOptions = propOptions || compilationCtx?.options;
+  const effectiveSetOptions = propOnOptionsChange || compilationCtx?.setOptions;
 
-  const [selectedShapes, setSelectedShapes] = useState<TLShape[]>([]);
+  const [allShapes, setAllShapes] = useState<CanvasShape[]>([]);
+  const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [storedUnits, setStoredUnits] = useState<UnitDefinition[]>([]);
+  const [storedUnits, setStoredUnits] = useState<UnitDefinition[]>(() => units || getStoredUnits());
   const [showSaveUnitDialog, setShowSaveUnitDialog] = useState(false);
   const [newUnitName, setNewUnitName] = useState('');
   const [newUnitBaseRole, setNewUnitBaseRole] = useState<RoleName>('card');
@@ -64,81 +84,84 @@ export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiSty
     });
   };
 
-  const refreshUnits = () => {
-    setStoredUnits(getStoredUnits());
-  };
-
-  useEffect(() => {
-    refreshUnits();
-  }, []);
-
-  const handlePointerOut = useCallback(() => {
-    if (!isMobile && editor) {
-      editor.updateInstanceState({ isChangingStyle: false });
+  const refreshShapes = useCallback(async () => {
+    if (!driver) {
+      setAllShapes([]);
+      return;
     }
-  }, [editor, isMobile]);
+    const s = await driver.listShapes();
+    setAllShapes(s);
+  }, [driver]);
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape' && panelRef.current?.contains(document.activeElement)) {
-        event.stopPropagation();
-        editor.getContainer().focus();
-      }
-    }
-    const el = panelRef.current;
-    el?.addEventListener('keydown', handleKeyDown, { capture: true });
-    return () => {
-      el?.removeEventListener('keydown', handleKeyDown, { capture: true });
-    };
-  }, [editor]);
+    void refreshShapes();
+    if (!driver) return;
+    const unsub = driver.onShapesChanged(() => {
+      void refreshShapes();
+    });
+    return unsub;
+  }, [driver, refreshShapes]);
 
   useEffect(() => {
-    if (!editor) return;
-    const updateSelection = () => {
-      setSelectedShapes(editor.getSelectedShapes());
-    };
-    updateSelection();
-    return editor.store.listen(updateSelection);
-  }, [editor]);
+    if (!driver) return;
+    const unsub = driver.onSelectionChanged((ids) => {
+      setInternalSelectedIds(ids);
+    });
+    return unsub;
+  }, [driver]);
 
-  const count = selectedShapes.length;
+  useEffect(() => {
+    if (units) setStoredUnits(units);
+  }, [units]);
+
+  const activeSelectedIds = selectedIds !== undefined ? selectedIds : internalSelectedIds;
+
+  const selectedShapes = useMemo(() => {
+    if (activeSelectedIds.length === 0) return [];
+    const idSet = new Set(activeSelectedIds);
+    return allShapes.filter((s) => idSet.has(s.id));
+  }, [allShapes, activeSelectedIds]);
+
+  const count = activeSelectedIds.length;
   const firstShape = selectedShapes[0];
   const firstMeta = firstShape ? getShapeMeta(firstShape) : null;
   const currentRole = firstMeta?.role;
   const currentUnitId = firstMeta?.unitId;
 
   const handleSaveUnit = () => {
-    if (!editor || !newUnitName.trim() || selectedShapes.length === 0) return;
+    if (!newUnitName.trim() || selectedShapes.length === 0) return;
     const unit = createUnitDefinition(newUnitName.trim(), newUnitBaseRole, selectedShapes);
     saveStoredUnit(unit);
-    refreshUnits();
+    const updated = getStoredUnits();
+    setStoredUnits(updated);
+    onUnitsChange?.(updated);
     setShowSaveUnitDialog(false);
     setNewUnitName('');
   };
 
-  const handleStampUnit = (unit: UnitDefinition) => {
-    if (!editor) return;
+  const handleStampUnit = async (unit: UnitDefinition) => {
+    if (!driver) return;
     const offset = { x: stampOffsetCount * 20, y: stampOffsetCount * 20 };
     setStampOffsetCount((prev) => (prev + 1) % 10);
-    const groupId = stampUnit(editor, unit, offset);
-    if (groupId) {
-      editor.setSelectedShapes([groupId as any]);
-    }
+    await stampUnitWithDriver(driver, unit, offset);
   };
 
   const handleDeleteUnit = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     deleteStoredUnit(id);
-    refreshUnits();
+    const updated = getStoredUnits();
+    setStoredUnits(updated);
+    onUnitsChange?.(updated);
   };
 
-  const handleCopyFrameContract = (frameId: string) => {
-    if (!editor) return;
-    const all = editor.getCurrentPageShapes();
+  const handleCopyFrameContract = async (frameId: string) => {
+    if (!driver) return;
+    const all = await driver.listShapes();
     const descendants: string[] = [];
     const findChildren = (pid: string) => {
       for (const s of all) {
-        if (s.parentId === pid || getShapeMeta(s)?.parentId === pid) {
+        const meta = getShapeMeta(s);
+        if (s.parentId === pid || meta?.parentId === pid) {
           descendants.push(s.id);
           findChildren(s.id);
         }
@@ -146,25 +169,26 @@ export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiSty
     };
     findChildren(frameId);
     const scopeIds = [frameId, ...descendants];
-    const frame = editor.getShape(frameId as any);
-    const frameName = (frame?.props as any)?.name || 'Page';
-    const res = MarkDrawCompiler.compile(all, editor, {
-      ...(options || {}),
+    const frame = all.find((s) => s.id === frameId);
+    const frameName = frame?.name || getShapeMeta(frame || {})?.props?.label || 'Page';
+    const compilerShapes = canvasShapesToCompilerShapes(all);
+    const res = MarkDrawCompiler.compile(compilerShapes, null, {
+      ...(effectiveOptions || {}),
       scope: { shapeIds: scopeIds, scopeName: frameName }
     });
-    navigator.clipboard.writeText(res.markdownSpec);
+    await navigator.clipboard.writeText(res.markdownSpec);
     setCopiedFrameId(frameId);
     setTimeout(() => setCopiedFrameId(null), 2000);
   };
 
-  const handleUpdateOption = (key: any, value: any) => {
-    if (!setOptions) return;
-    setOptions((prev) => ({ ...prev, [key]: value }));
+  const handleUpdateOption = (key: keyof CompilationOptions, value: unknown) => {
+    if (!effectiveSetOptions) return;
+    effectiveSetOptions((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleResetOptions = () => {
-    if (!setOptions) return;
-    setOptions((prev) => ({
+    if (!effectiveSetOptions) return;
+    effectiveSetOptions((prev) => ({
       ...prev,
       containmentThreshold: 0.85,
       rowClusterThreshold: 16,
@@ -184,9 +208,8 @@ export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiSty
       ref={panelRef}
       role="complementary"
       aria-label="Inspector and Document Settings"
-      className="tlui-style-panel tlui-style-panel__wrapper markdraw-unified-inspector !w-[300px] max-h-[calc(100vh-100px)] overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] border border-[var(--md-line-subtle)] rounded-[var(--md-radius-md)] shadow-[var(--md-shadow-lg)] text-xs text-[var(--md-ink-primary)]"
+      className="markdraw-unified-inspector w-[300px] h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] border-l border-[var(--md-line-subtle)] text-xs text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col"
       data-ismobile={isMobile}
-      onPointerLeave={handlePointerOut}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
@@ -200,8 +223,8 @@ export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiSty
               ? 'Inspector & Canvas'
               : count === 1
               ? currentRole
-                ? `${currentRole} (${firstShape.type})`
-                : `Untagged (${firstShape.type})`
+                ? `${currentRole} (${firstShape?.kind || 'shape'})`
+                : `Untagged (${firstShape?.kind || 'shape'})`
               : `${count} shapes selected`}
           </span>
           {count > 0 && currentUnitId && (
@@ -222,18 +245,20 @@ export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiSty
       </div>
 
       {!isCollapsed && (
-        <div className="divide-y divide-[var(--md-line-subtle)]">
-          {count > 0 ? (
+        <div className="flex-1 overflow-y-auto divide-y divide-[var(--md-line-subtle)]">
+          {count > 0 && driver ? (
             <RoleSection
               selectedShapes={selectedShapes}
-              editor={editor}
+              allShapes={allShapes}
+              driver={driver}
               isOpen={openSections.semantics}
               onToggle={() => toggleSection('semantics')}
               onSaveUnitGesture={() => setShowSaveUnitDialog(true)}
             />
           ) : (
             <CanvasOverviewSection
-              editor={editor}
+              shapes={allShapes}
+              driver={driver}
               onCopyFrameContract={handleCopyFrameContract}
               copiedFrameId={copiedFrameId}
             />
@@ -242,13 +267,12 @@ export const InspectorShell = memo(function InspectorShell({ isMobile }: TLUiSty
           <StyleSection
             isOpen={openSections.styles}
             onToggle={() => toggleSection('styles')}
-            styles={styles}
           />
 
           <CompilerSettingsSection
             isOpen={openSections.settings}
             onToggle={() => toggleSection('settings')}
-            options={options}
+            options={effectiveOptions}
             onUpdateOption={handleUpdateOption}
             onResetOptions={handleResetOptions}
           />

@@ -13,6 +13,7 @@ import { AppHeader } from './components/layout';
 import { OnboardingModal } from './components/modals/OnboardingModal';
 import { StarterTemplate } from './canvas/templates/starterTemplates';
 import { OutputPanel, OutputTab, OutputDisplayMode } from './components/output';
+import { InspectorShell } from './components/inspector';
 import {
   useDocumentManagement,
   usePanelResize,
@@ -67,6 +68,8 @@ export const App: React.FC = () => {
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Editor | null>(null);
   const driverRef = useRef<CanvasDriver | null>(null);
+  const [driver, setDriver] = useState<CanvasDriver | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -127,11 +130,18 @@ export const App: React.FC = () => {
     [showToast]
   );
 
-  // Canvas Role Chips Toggle
-  const [showRoleChips] = useState<boolean>(() => {
+  // Canvas Role Chips Toggle (§1.3)
+  const [showRoleChips, setShowRoleChips] = useState<boolean>(() => {
     const saved = localStorage.getItem('markdraw_show_role_chips');
     return saved !== null ? saved === 'true' : true;
   });
+
+  const handleToggleRoleChips = (show: boolean) => {
+    setShowRoleChips(show);
+    try {
+      localStorage.setItem('markdraw_show_role_chips', String(show));
+    } catch {}
+  };
 
   // Theme Management
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -262,30 +272,42 @@ export const App: React.FC = () => {
             <div className="flex-1 flex h-full overflow-hidden relative" ref={splitAreaRef}>
               {/* Canvas Container */}
               <div
-                className="h-full relative overflow-hidden bg-[var(--md-bg)] flex-1 min-w-0"
+                className="h-full relative overflow-hidden bg-[var(--md-bg)] flex-1 min-w-0 flex"
                 onTransitionEnd={() => {
                   window.dispatchEvent(new Event('resize'));
                 }}
               >
-                <ExcalidrawCanvas
-                  key={`excal_${activeDoc.id}`}
-                  persistenceKey={activeDoc.persistenceKey}
-                  onDriverReady={(driver) => {
-                    driverRef.current = driver;
-                    handleDriverReady(driver);
-                  }}
-                  theme={theme}
-                  showRoleChips={showRoleChips}
-                  onCopyContract={() => showToast('Copied contract to clipboard')}
-                />
+                <div className="flex-1 h-full relative min-w-0">
+                  <ExcalidrawCanvas
+                    key={`excal_${activeDoc.id}`}
+                    persistenceKey={activeDoc.persistenceKey}
+                    onDriverReady={(drv) => {
+                      driverRef.current = drv;
+                      setDriver(drv);
+                      handleDriverReady(drv);
+                      drv.onSelectionChanged(setSelectedIds);
+                    }}
+                    theme={theme}
+                    showRoleChips={showRoleChips}
+                    onCopyContract={() => showToast('Copied contract to clipboard')}
+                  />
 
-                {/* Toast Message */}
-                {toastMessage && (
-                  <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] text-xs text-[var(--md-text-bold)] shadow-[var(--md-shadow-lg)] animate-in fade-in-0 duration-150">
-                    <AlertCircle size={14} className="text-[var(--md-accent)]" />
-                    <span>{toastMessage}</span>
-                  </div>
-                )}
+                  {/* Toast Message */}
+                  {toastMessage && (
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 rounded-[var(--md-radius-sm)] border border-[var(--md-border)] bg-[var(--md-surface-raised)] text-xs text-[var(--md-text-bold)] shadow-[var(--md-shadow-lg)] animate-in fade-in-0 duration-150">
+                      <AlertCircle size={14} className="text-[var(--md-accent)]" />
+                      <span>{toastMessage}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Docked Inspector Shell */}
+                <InspectorShell
+                  selectedIds={selectedIds}
+                  driver={driver}
+                  options={options}
+                  onOptionsChange={handleOptionsChange}
+                />
               </div>
 
               {/* Split Resizer Divider */}
@@ -339,6 +361,8 @@ export const App: React.FC = () => {
             onClose={() => setIsSettingsOpen(false)}
             options={options}
             onChange={handleOptionsChange}
+            showRoleChips={showRoleChips}
+            onToggleRoleChips={handleToggleRoleChips}
           />
           <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
           <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />

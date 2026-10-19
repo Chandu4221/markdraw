@@ -3,6 +3,8 @@ import { TLShape, Editor, createShapeId } from '../core/types';
 import { generateShortId } from '../core/ids';
 import { getShapeMeta } from './shapeMeta';
 import { ROLE_SCHEMA_VERSION, MarkDrawMeta } from './types';
+import { CanvasShape } from '../canvas/port/CanvasShape';
+import { CanvasDriver } from '../canvas/port/CanvasDriver';
 
 export interface UnitDefinition {
   id: string;              // stable, e.g. 'u_fc1' — generateShortId-based
@@ -10,7 +12,7 @@ export interface UnitDefinition {
   tag: string;             // emitted tag e.g. "Follow Card" (name); legend shows mapping
   baseRole: string;        // MANDATORY one of ROLE_NAMES (§4) — never null
   memberRoles: string[];   // ordered composition, e.g. ['avatar','heading','button']
-  memberShapes?: TLShape[];// optional template shapes for stamping
+  memberShapes?: Array<TLShape | CanvasShape>; // optional template shapes for stamping
   createdAt: number;
   updatedAt: number;
 }
@@ -88,19 +90,27 @@ export function updateStoredUnit(unitId: string, patch: Partial<UnitDefinition>)
 export function createUnitDefinition(
   name: string,
   baseRole: string,
-  memberShapes: TLShape[]
+  memberShapes: Array<TLShape | CanvasShape>
 ): UnitDefinition {
   const shortHash = generateShortId(`unit_${name}_${Date.now()}`, new Set());
   const id = `u_${shortHash}`;
 
+  const getPos = (s: TLShape | CanvasShape) => {
+    if ('bounds' in s && s.bounds) {
+      return { x: s.bounds.x, y: s.bounds.y };
+    }
+    const tl = s as TLShape;
+    return { x: tl.x || 0, y: tl.y || 0 };
+  };
+
   // Sort top-left to bottom-right (y first, then x)
   const sorted = [...memberShapes].sort((a, b) => {
-    const aY = a.y || 0;
-    const bY = b.y || 0;
-    if (Math.abs(aY - bY) > 8) {
-      return aY - bY;
+    const aP = getPos(a);
+    const bP = getPos(b);
+    if (Math.abs(aP.y - bP.y) > 8) {
+      return aP.y - bP.y;
     }
-    return (a.x || 0) - (b.x || 0);
+    return aP.x - bP.x;
   });
 
   const memberRoles = sorted
@@ -134,7 +144,7 @@ export function createUnitDefinition(
           unitId: id
         }
       };
-      return cloned as TLShape;
+      return cloned;
     }),
     createdAt: now,
     updatedAt: now
@@ -142,7 +152,88 @@ export function createUnitDefinition(
 }
 
 /**
- * Stamps a unit copy onto the tldraw canvas.
+ * Stamps a unit copy onto the CanvasDriver canvas.
+ */
+export async function stampUnitWithDriver(
+  driver: CanvasDriver,
+  unit: UnitDefinition,
+  offset: { x: number; y: number } = { x: 0, y: 0 }
+): Promise<string | null> {
+  if (!unit.memberShapes || unit.memberShapes.length === 0) return null;
+
+  const targetX = 400 + offset.x;
+  const targetY = 300 + offset.y;
+
+  const first = unit.memberShapes[0];
+  const firstPos = 'bounds' in first && first.bounds ? { x: first.bounds.x, y: first.bounds.y } : { x: (first as TLShape).x || 0, y: (first as TLShape).y || 0 };
+  const originX = firstPos.x;
+  const originY = firstPos.y;
+
+  const newShapeIds: string[] = [];
+  for (const template of unit.memberShapes) {
+    const isCanvas = 'bounds' in template && template.bounds;
+    const tBounds = isCanvas ? (template as CanvasShape).bounds : {
+      x: (template as TLShape).x || 0,
+      y: (template as TLShape).y || 0,
+      w: typeof (template as TLShape).props?.w === 'number' ? ((template as TLShape).props.w as number) : 100,
+      h: typeof (template as TLShape).props?.h === 'number' ? ((template as TLShape).props.h as number) : 100,
+      rotation: (template as TLShape).rotation || 0
+    };
+    const kind = isCanvas ? (template as CanvasShape).kind : ((template as TLShape).type === 'text' ? 'text' : (template as TLShape).type === 'frame' ? 'frame' : 'rect');
+    const relX = tBounds.x - originX;
+    const relY = tBounds.y - originY;
+    const tMeta = getShapeMeta(template);
+    const meta: { markdraw: MarkDrawMeta } = {
+      markdraw: {
+        schema: ROLE_SCHEMA_VERSION,
+        role: tMeta?.role || 'card',
+        unitId: unit.id,
+        parentId: tMeta?.parentId ?? null,
+        responsive: tMeta?.responsive ? { ...tMeta.responsive } : null,
+        props: { ...(tMeta?.props || {}) }
+      }
+    };
+
+    const newId = await driver.createShape({
+      kind,
+      bounds: {
+        x: targetX + relX,
+        y: targetY + relY,
+        w: tBounds.w,
+        h: tBounds.h,
+        rotation: tBounds.rotation
+      },
+      parentId: null,
+      name: isCanvas ? (template as CanvasShape).name : null,
+      text: isCanvas ? (template as CanvasShape).text : (typeof (template as TLShape).props?.text === 'string' ? ((template as TLShape).props.text as string) : null),
+      arrowEndpoints: null,
+      meta
+    });
+    newShapeIds.push(newId);
+  }
+
+  const groupId = await driver.groupShapes(newShapeIds);
+  await driver.updateShape(groupId, {
+    meta: {
+      markdraw: {
+        schema: ROLE_SCHEMA_VERSION,
+        role: unit.baseRole,
+        unitId: unit.id,
+        parentId: null,
+        responsive: null,
+        props: {
+          label: unit.name
+        }
+      }
+    }
+  });
+
+  driver.setSelection([groupId]);
+  return groupId;
+}
+
+/**
+ * Stamps a unit copy onto the legacy tldraw canvas.
  */
 export function stampUnit(
   editor: Editor,
@@ -156,8 +247,9 @@ export function stampUnit(
   const targetY = center.y + offset.y;
 
   const first = unit.memberShapes[0];
-  const originX = first.x || 0;
-  const originY = first.y || 0;
+  const firstPos = 'x' in first ? { x: first.x || 0, y: first.y || 0 } : { x: (first as CanvasShape).bounds.x, y: (first as CanvasShape).bounds.y };
+  const originX = firstPos.x;
+  const originY = firstPos.y;
 
   const newShapeIds: any[] = [];
   const shapesToCreate: any[] = [];
@@ -166,8 +258,10 @@ export function stampUnit(
     const newId = createShapeId();
     newShapeIds.push(newId);
 
-    const relX = (template.x || 0) - originX;
-    const relY = (template.y || 0) - originY;
+    const tX = 'x' in template ? (template.x || 0) : (template as CanvasShape).bounds.x;
+    const tY = 'y' in template ? (template.y || 0) : (template as CanvasShape).bounds.y;
+    const relX = tX - originX;
+    const relY = tY - originY;
 
     const tMeta = getShapeMeta(template);
     const meta: { markdraw: MarkDrawMeta } = {

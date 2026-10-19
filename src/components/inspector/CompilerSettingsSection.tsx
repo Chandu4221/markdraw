@@ -8,7 +8,7 @@ interface CompilerSettingsSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   options?: Required<CompilationOptions>;
-  onUpdateOption: (key: keyof CompilationOptions, value: any) => void;
+  onUpdateOption: (key: keyof CompilationOptions, value: unknown) => void;
   onResetOptions: () => void;
 }
 

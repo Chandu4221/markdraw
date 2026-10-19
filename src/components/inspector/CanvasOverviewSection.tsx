@@ -1,34 +1,47 @@
 import React from 'react';
 import { Tag, Copy, Check } from 'lucide-react';
 import { getShapeMeta } from '../../annotation/shapeMeta';
-import { Editor, TLShape } from '../../core/types';
+import { CanvasShape } from '../../canvas/port/CanvasShape';
+import { CanvasDriver } from '../../canvas/port/CanvasDriver';
 
 interface CanvasOverviewSectionProps {
-  editor: Editor;
+  shapes: CanvasShape[];
+  driver: CanvasDriver | null;
   onCopyFrameContract: (frameId: string) => void;
   copiedFrameId: string | null;
 }
 
 export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
-  editor,
+  shapes,
+  driver,
   onCopyFrameContract,
   copiedFrameId
 }) => {
-  const allShapes = editor.getCurrentPageShapes();
-  const taggedCount = allShapes.filter((s: TLShape) => Boolean(getShapeMeta(s)?.role)).length;
-  const rootFrames = allShapes.filter((s: TLShape) => s.type === 'frame');
+  const taggedCount = shapes.filter((s) => Boolean(getShapeMeta(s)?.role)).length;
+  const untaggedCount = shapes.length - taggedCount;
+  const rootFrames = shapes.filter((s) => s.kind === 'frame');
 
   return (
     <div className="p-3 space-y-3 bg-[var(--md-surface-1)]">
+      {/* Empty State Banner */}
+      <div className="p-2.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-center text-xs text-[var(--md-ink-muted)]">
+        Select a shape to tag it
+      </div>
+
       {/* Stats Summary */}
       <div className="flex items-center justify-between p-2.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-xs">
         <div className="flex items-center gap-1.5 text-[var(--md-ink-primary)] font-medium">
           <Tag size={13} className="text-[var(--md-accent)]" />
           <span>Tagged Coverage:</span>
         </div>
-        <span className="font-mono font-bold text-[var(--md-ink-primary)]">
-          {taggedCount} / {allShapes.length}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono font-bold text-[var(--md-ink-primary)]">
+            {taggedCount} / {shapes.length}
+          </span>
+          <span className="text-[10px] text-[var(--md-ink-muted)] font-mono">
+            ({untaggedCount} untagged)
+          </span>
+        </div>
       </div>
 
       {/* Root frames list */}
@@ -38,13 +51,13 @@ export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
             Root Frames ({rootFrames.length})
           </span>
           <div className="space-y-1">
-            {rootFrames.map((f: TLShape) => {
+            {rootFrames.map((f) => {
               const meta = getShapeMeta(f);
-              const name = (f.props as any)?.name || meta?.props?.label || 'Page';
+              const name = f.name || meta?.props?.label || 'Page';
               return (
                 <div
                   key={f.id}
-                  onClick={() => editor.setSelectedShapes([f.id])}
+                  onClick={() => driver?.setSelection([f.id])}
                   className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--md-radius-sm)] bg-[var(--md-surface-2)] hover:bg-[var(--md-surface-3)] cursor-pointer text-xs group transition-colors"
                 >
                   <span className="font-medium text-[var(--md-ink-primary)] truncate">{name}</span>

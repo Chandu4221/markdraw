@@ -18,13 +18,17 @@ interface SettingsModalProps {
   onClose: () => void;
   options: Required<CompilationOptions>;
   onChange: (options: Required<CompilationOptions>) => void;
+  showRoleChips?: boolean;
+  onToggleRoleChips?: (show: boolean) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   options,
-  onChange
+  onChange,
+  showRoleChips = true,
+  onToggleRoleChips
 }) => {
 
   const handleReset = () => {
@@ -179,6 +183,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onCheckedChange={(checked) =>
                   onChange({ ...options, includeTimestamp: checked })
                 }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-[var(--md-text)]">
+                  Show Canvas Role Chips
+                </div>
+                <div className="text-[11px] text-[var(--md-text-subtle)]">
+                  Display semantic badge overlays directly on shapes
+                </div>
+              </div>
+              <Switch
+                checked={showRoleChips}
+                onCheckedChange={(checked) => onToggleRoleChips?.(checked)}
               />
             </div>
           </div>

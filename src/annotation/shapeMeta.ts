@@ -1,9 +1,20 @@
-// src/annotation/shapeMeta.ts
-import { TLShape, Editor } from '../core/types';
+import { Editor } from '../core/types';
 import { MarkDrawMeta, ROLE_SCHEMA_VERSION, createDefaultMarkDrawMeta } from './types';
 import { RoleName } from './roles';
+import { CanvasDriver } from '../canvas/port/CanvasDriver';
 
-export function getShapeMeta(shape: TLShape): MarkDrawMeta | null {
+export interface ShapeLike {
+  id?: string;
+  kind?: string;
+  type?: string;
+  name?: string | null;
+  text?: string | null;
+  props?: Record<string, unknown>;
+  bounds?: { x?: number; y?: number; w: number; h: number; rotation?: number };
+  meta?: Record<string, unknown>;
+}
+
+export function getShapeMeta(shape: { meta?: Record<string, unknown> }): MarkDrawMeta | null {
   const meta = (shape.meta as Record<string, unknown> | undefined)?.markdraw;
   if (!meta || typeof meta !== 'object') return null;
   const m = meta as Partial<MarkDrawMeta>;
@@ -11,7 +22,49 @@ export function getShapeMeta(shape: TLShape): MarkDrawMeta | null {
   return meta as MarkDrawMeta;
 }
 
-export function hasRole(shape: TLShape): boolean {
+export function parseMarkDrawMeta(shape?: { meta?: Record<string, unknown> } | null): MarkDrawMeta {
+  if (!shape) return createDefaultMarkDrawMeta();
+  return getShapeMeta(shape) || createDefaultMarkDrawMeta();
+}
+
+export function serializeMarkDrawMeta(
+  patch: Partial<MarkDrawMeta>,
+  currentMeta?: MarkDrawMeta | null
+): MarkDrawMeta {
+  const base = currentMeta || createDefaultMarkDrawMeta();
+  return {
+    ...base,
+    ...patch,
+    schema: ROLE_SCHEMA_VERSION,
+    props: {
+      ...base.props,
+      ...(patch.props || {})
+    }
+  };
+}
+
+export async function updateDriverShapeMeta(
+  driver: CanvasDriver,
+  shapeIds: string[],
+  patch: Partial<MarkDrawMeta>
+): Promise<void> {
+  for (const id of shapeIds) {
+    const shape = await driver.getShape(id);
+    if (!shape) continue;
+
+    const currentMeta = parseMarkDrawMeta(shape);
+    const updatedMeta = serializeMarkDrawMeta(patch, currentMeta);
+
+    await driver.updateShape(id, {
+      meta: {
+        ...shape.meta,
+        markdraw: updatedMeta
+      }
+    });
+  }
+}
+
+export function hasRole(shape: { meta?: Record<string, unknown> }): boolean {
   const meta = getShapeMeta(shape);
   return Boolean(meta && meta.role);
 }
@@ -21,10 +74,10 @@ export function updateShapeMeta(
   shapeIds: string[],
   patch: Partial<MarkDrawMeta>
 ): void {
-  const updates: any[] = [];
+  const updates: Array<{ id: string; type: string; meta: Record<string, unknown> }> = [];
 
   for (const id of shapeIds) {
-    const shape = editor.getShape(id as any);
+    const shape = editor.getShape(id as string);
     if (!shape) continue;
 
     const currentMeta = getShapeMeta(shape) || createDefaultMarkDrawMeta();
@@ -58,41 +111,51 @@ export function updateShapeMeta(
  * "Suggestion != assignment. The suggestion NEVER auto-assigns."
  */
 export function suggestRoleForShape(
-  shape: TLShape,
+  shape: ShapeLike,
   editor?: Editor | null
 ): RoleName | null {
   if (hasRole(shape)) return null;
 
   let w = 100;
   let h = 100;
-  if (editor && typeof editor.getShapePageBounds === 'function') {
+  if (shape.bounds && typeof shape.bounds.w === 'number' && typeof shape.bounds.h === 'number') {
+    w = shape.bounds.w;
+    h = shape.bounds.h;
+  } else if (editor && typeof editor.getShapePageBounds === 'function') {
     const b = editor.getShapePageBounds(shape);
     if (b) {
       w = b.w;
       h = b.h;
     }
-  } else if ((shape.props as any)?.w && (shape.props as any)?.h) {
-    w = (shape.props as any).w;
-    h = (shape.props as any).h;
+  } else if (shape.props && typeof shape.props.w === 'number' && typeof shape.props.h === 'number') {
+    w = shape.props.w;
+    h = shape.props.h;
   }
 
   // Frame shape
-  if (shape.type === 'frame') {
+  if (shape.kind === 'frame' || shape.type === 'frame') {
     return 'page';
   }
 
   // Text shape
-  if (shape.type === 'text') {
-    const text = ((shape.props as any)?.text || '').trim();
-    const size = (shape.props as any)?.size || 'm';
+  if (shape.kind === 'text' || shape.type === 'text') {
+    const text = typeof shape.text === 'string'
+      ? shape.text.trim()
+      : typeof shape.props?.text === 'string'
+      ? shape.props.text.trim()
+      : '';
+    const size = typeof shape.props?.size === 'string' ? shape.props.size : 'm';
     if (size === 'xl' || size === 'l' || text.length < 30) {
       return 'heading';
     }
     return 'para';
   }
 
-  // Ellipse / circle
-  if (shape.type === 'geo' && (shape.props as any)?.geo === 'ellipse') {
+  const isEllipse =
+    shape.kind === 'ellipse' ||
+    (shape.type === 'geo' && shape.props?.geo === 'ellipse');
+
+  if (isEllipse) {
     const aspect = w / (h || 1);
     if (aspect >= 0.8 && aspect <= 1.25 && w <= 120) {
       return 'avatar';
@@ -100,8 +163,11 @@ export function suggestRoleForShape(
     return 'badge';
   }
 
-  // Small button-like rectangle
-  if (shape.type === 'geo' && (shape.props as any)?.geo === 'rectangle') {
+  const isRectangle =
+    shape.kind === 'rect' ||
+    (shape.type === 'geo' && (shape.props?.geo === 'rectangle' || !shape.props?.geo));
+
+  if (isRectangle) {
     if (h >= 28 && h <= 58 && w >= 60 && w <= 260) {
       return 'button';
     }
