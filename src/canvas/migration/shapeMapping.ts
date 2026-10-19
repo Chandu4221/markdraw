@@ -11,7 +11,8 @@ export function mapTlShapeTypeToKind(shape: TLShape): ShapeKind {
   if (type === 'draw') return 'path';
   if (type === 'image') return 'image';
   if (type === 'geo') {
-    const geo = (shape.props as any)?.geo;
+    const props = shape.props as Record<string, unknown> | undefined;
+    const geo = typeof props?.geo === 'string' ? props.geo : undefined;
     if (geo === 'ellipse' || geo === 'oval') return 'ellipse';
     if (geo === 'diamond' || geo === 'rhombus') return 'diamond';
     return 'rect';
@@ -24,8 +25,9 @@ export function tlShapeToCanvasShape(shape: TLShape, editor?: Editor): CanvasSha
 
   let x = shape.x;
   let y = shape.y;
-  let w = (shape.props as any)?.w ?? 100;
-  let h = (shape.props as any)?.h ?? 100;
+  const props = shape.props as Record<string, unknown> | undefined;
+  let w = typeof props?.w === 'number' ? props.w : 100;
+  let h = typeof props?.h === 'number' ? props.h : 100;
   const rotation = shape.rotation ?? 0;
 
   if (editor) {
@@ -47,18 +49,25 @@ export function tlShapeToCanvasShape(shape: TLShape, editor?: Editor): CanvasSha
       ? null
       : shape.parentId;
 
-  const text = (shape.props as any)?.text ?? null;
-  const name = (shape.props as any)?.name ?? (shape.props as any)?.title ?? null;
+  const text = typeof props?.text === 'string' ? props.text : null;
+  const name =
+    typeof props?.name === 'string'
+      ? props.name
+      : typeof props?.title === 'string'
+      ? props.title
+      : null;
 
   let arrowEndpoints: { start: string | null; end: string | null } | null = null;
   if (shape.type === 'arrow') {
-    const start = (shape.props as any)?.start;
-    const end = (shape.props as any)?.end;
+    const start = props?.start as Record<string, unknown> | undefined;
+    const end = props?.end as Record<string, unknown> | undefined;
     arrowEndpoints = {
-      start: start?.boundShapeId ?? null,
-      end: end?.boundShapeId ?? null
+      start: typeof start?.boundShapeId === 'string' ? start.boundShapeId : null,
+      end: typeof end?.boundShapeId === 'string' ? end.boundShapeId : null
     };
   }
+
+  const meta = (shape.meta as Record<string, unknown>) || {};
 
   return {
     id: shape.id,
@@ -68,6 +77,6 @@ export function tlShapeToCanvasShape(shape: TLShape, editor?: Editor): CanvasSha
     name,
     text,
     arrowEndpoints,
-    meta: (shape.meta as Record<string, unknown>) || {}
+    meta
   };
 }
