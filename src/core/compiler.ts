@@ -103,6 +103,20 @@ export class MarkDrawCompiler {
     editor?: Editor | null,
     options?: CompilationOptions
   ): CompilationResult {
+    const rootShapeWithPlat = shapes.find((s) => (s.meta as any)?.markdraw?.platform);
+    const rootPlat = (rootShapeWithPlat?.meta as any)?.markdraw?.platform;
+    const normalizedRootPlat =
+      rootPlat === 'android' || rootPlat === 'android-material' ? 'android-material' : rootPlat;
+    const defaultPlat = normalizedRootPlat || 'web';
+
+    const resolvedPlat =
+      options?.platform ??
+      (options?.platformId
+        ? options.platformId === 'android' || options.platformId === 'android-material'
+          ? 'android-material'
+          : options.platformId
+        : defaultPlat);
+
     const opts: Required<CompilationOptions> = {
       containmentThreshold: options?.containmentThreshold ?? 0.85,
       rowClusterThreshold: options?.rowClusterThreshold ?? 16,
@@ -112,8 +126,8 @@ export class MarkDrawCompiler {
       includeTimestamp: options?.includeTimestamp ?? false,
       includeLegend: options?.includeLegend ?? false,
       pageNote: options?.pageNote ?? '',
-      platform: options?.platform ?? (options?.platformId === 'android-material' ? 'android-material' : 'web'),
-      platformId: options?.platformId ?? options?.platform ?? 'web',
+      platform: resolvedPlat as 'web' | 'android-material',
+      platformId: (options?.platformId ?? options?.platform ?? resolvedPlat) as string,
       scope: options?.scope ?? null,
       units: options?.units ?? [],
       annotationMode: options?.annotationMode ?? false

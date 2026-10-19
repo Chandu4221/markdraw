@@ -5,11 +5,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { CanvasShape } from '../../canvas/port/CanvasShape';
 import { getProfile } from '../profileLoader';
 import { searchTypes } from '../roles';
+import { resolveRootPlatform } from '../shapeMeta';
 import { TypePicker } from '../../components/inspector/TypePicker';
 import { ModeTagged } from '../../components/inspector/ModeTagged';
 
 describe('v6 Defect 3: Platform dead wiring & per-root platform resolution (§1.2.3)', () => {
-  it.fails('ModeTagged renders Platform segmented control in Advanced row with Web and Android (RED REPRO)', () => {
+  it('ModeTagged renders Platform segmented control in Advanced row with Web and Android', () => {
     const rootFrame: CanvasShape = {
       id: 'frame_android',
       kind: 'frame',
@@ -44,12 +45,7 @@ describe('v6 Defect 3: Platform dead wiring & per-root platform resolution (§1.
     expect(html).toContain('Web');
   });
 
-  it.fails('reads root platform so android root resolves TopAppBar and shows fab tile, while web root does not (RED REPRO)', async () => {
-    // Dynamic import to repro missing resolveRootPlatform helper before fix
-    const shapeMeta = await import('../shapeMeta') as any;
-    if (!shapeMeta.resolveRootPlatform) {
-      throw new Error('resolveRootPlatform is not defined on shapeMeta');
-    }
+  it('reads root platform so android root resolves TopAppBar and shows fab tile, while web root does not', () => {
 
     const androidRoot: CanvasShape = {
       id: 'frame_android_root',
@@ -120,7 +116,7 @@ describe('v6 Defect 3: Platform dead wiring & per-root platform resolution (§1.
     const allShapes = [androidRoot, childButton, webRoot, webChild];
 
     // 1. Android root platform resolution
-    const androidPlatId = shapeMeta.resolveRootPlatform(childButton, allShapes);
+    const androidPlatId = resolveRootPlatform(childButton, allShapes);
     expect(androidPlatId).toBe('android-material');
     const androidProfile = getProfile(androidPlatId);
 
@@ -140,7 +136,7 @@ describe('v6 Defect 3: Platform dead wiring & per-root platform resolution (§1.
     expect(androidPickerHtml).toContain('fab');
 
     // 2. Web root platform resolution
-    const webPlatId = shapeMeta.resolveRootPlatform(webChild, allShapes);
+    const webPlatId = resolveRootPlatform(webChild, allShapes);
     expect(webPlatId).toBe('web');
     const webProfile = getProfile(webPlatId);
 

@@ -39,7 +39,8 @@ export const TypePicker: React.FC<TypePickerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     structure: true,
-    content: true
+    content: true,
+    platform: true
   });
 
   const matchingTypes = useMemo(() => {

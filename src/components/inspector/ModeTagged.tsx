@@ -4,7 +4,7 @@ import { CanvasShape } from '../../canvas/port/CanvasShape';
 import { TypePicker } from './TypePicker';
 import { BreakpointSwitch, Breakpoint } from '../ui/BreakpointSwitch';
 import { PlatformProfile } from '../../annotation/profiles/types';
-import { parseMarkDrawMeta, MarkDrawMeta, getShapeMeta } from '../../annotation/shapeMeta';
+import { parseMarkDrawMeta, MarkDrawMeta, getShapeMeta, findRootShape } from '../../annotation/shapeMeta';
 import { TYPE_DEFINITIONS, isAllowedTypeFlag, TypeName } from '../../annotation/roles';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,7 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
   onSelectType,
   onUpdateName,
   onUpdateMeta,
+  onUpdateRootMeta,
   platformProfile,
   breakpoint = 1200,
   onBreakpointChange,
@@ -47,18 +48,19 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
 
   // Find root shape of the selected shape
   const rootShape = React.useMemo(() => {
-    let curr: CanvasShape = shape;
-    const visited = new Set<string>();
-    while (curr.parentId && !visited.has(curr.id)) {
-      visited.add(curr.id);
-      const parent = allShapes.find((s) => s.id === curr.parentId);
-      if (!parent) break;
-      curr = parent;
-    }
-    return curr;
+    return findRootShape(shape, allShapes);
   }, [shape, allShapes]);
 
   const rootMeta = parseMarkDrawMeta(rootShape);
+  const currentPlatform = rootMeta.platform || platformProfile?.id || 'web';
+  const handlePlatformChange = (newPlat: string) => {
+    if (shape.id === rootShape.id) {
+      onUpdateMeta({ platform: newPlat });
+    } else if (onUpdateRootMeta) {
+      onUpdateRootMeta({ platform: newPlat });
+    }
+  };
+
   const isRootResponsiveActive =
     (rootMeta.type === 'page' || rootShape.kind === 'frame') &&
     Boolean(rootMeta.flags?.includes('responsive'));
@@ -296,6 +298,48 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
                 </div>
                 <p className="text-sm text-[var(--color-ink-muted)]">
                   Automatic — from your frames & groups
+                </p>
+              </div>
+
+              {/* Platform segmented control: Web | Android (per-root) (§1.2.3, §2.2) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)] block select-none">
+                  Platform
+                </label>
+                <div
+                  role="group"
+                  aria-label="Platform Selection"
+                  className="flex flex-wrap items-center gap-1 p-1 bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] rounded-md"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={currentPlatform === 'web'}
+                    onClick={() => handlePlatformChange('web')}
+                    className={cn(
+                      'px-2.5 py-1 text-sm font-medium rounded transition-colors cursor-pointer select-none',
+                      currentPlatform === 'web'
+                        ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
+                        : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-3)]'
+                    )}
+                  >
+                    Web
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentPlatform === 'android-material' || currentPlatform === 'android'}
+                    onClick={() => handlePlatformChange('android-material')}
+                    className={cn(
+                      'px-2.5 py-1 text-sm font-medium rounded transition-colors cursor-pointer select-none',
+                      currentPlatform === 'android-material' || currentPlatform === 'android'
+                        ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
+                        : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-3)]'
+                    )}
+                  >
+                    Android
+                  </button>
+                </div>
+                <p className="text-sm text-[var(--color-ink-muted)]">
+                  Target platform profile for this view
                 </p>
               </div>
 

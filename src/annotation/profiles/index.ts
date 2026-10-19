@@ -7,7 +7,8 @@ export * from './types';
 
 export const PLATFORM_PROFILES: Record<string, PlatformProfile> = {
   web: webProfile as PlatformProfile,
-  'android-material': androidMaterialProfile as PlatformProfile
+  'android-material': androidMaterialProfile as PlatformProfile,
+  android: androidMaterialProfile as PlatformProfile
 };
 
 export function getPlatformProfile(id?: string): PlatformProfile {

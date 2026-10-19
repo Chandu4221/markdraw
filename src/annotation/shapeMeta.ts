@@ -2,6 +2,7 @@ import { Editor } from '../core/types';
 import { MarkDrawMeta, ROLE_SCHEMA_VERSION, createDefaultMarkDrawMeta } from './types';
 import { RoleName } from './roles';
 import { CanvasDriver } from '../canvas/port/CanvasDriver';
+import { CanvasShape } from '../canvas/port/CanvasShape';
 
 export type { MarkDrawMeta } from './types';
 
@@ -32,6 +33,38 @@ export function getShapeMeta(shape: { meta?: Record<string, unknown> }): MarkDra
 export function parseMarkDrawMeta(shape?: { meta?: Record<string, unknown> } | null): MarkDrawMeta {
   if (!shape) return createDefaultMarkDrawMeta();
   return getShapeMeta(shape) || createDefaultMarkDrawMeta();
+}
+
+/**
+ * Traverses parent references (honoring meta.markdraw.parentOverride) to locate
+ * the root container shape for a given shape.
+ */
+export function findRootShape(shape: CanvasShape, allShapes: CanvasShape[]): CanvasShape {
+  const shapeMap = new Map<string, CanvasShape>(allShapes.map((s) => [s.id, s]));
+  let curr: CanvasShape = shape;
+  const visited = new Set<string>();
+  while (curr && !visited.has(curr.id)) {
+    visited.add(curr.id);
+    const parentId = (curr.meta as any)?.markdraw?.parentOverride ?? curr.parentId;
+    if (!parentId) break;
+    const parent = shapeMap.get(parentId);
+    if (!parent) break;
+    curr = parent;
+  }
+  return curr;
+}
+
+/**
+ * Resolves the platform ID for the root containing the given shape.
+ * Defaults to 'web'. Normalizes 'android' to 'android-material'.
+ */
+export function resolveRootPlatform(shape: CanvasShape, allShapes: CanvasShape[]): string {
+  const root = findRootShape(shape, allShapes);
+  const rootMeta = parseMarkDrawMeta(root);
+  const plat = rootMeta.platform;
+  if (!plat) return 'web';
+  if (plat === 'android' || plat === 'android-material') return 'android-material';
+  return plat;
 }
 
 export function serializeMarkDrawMeta(

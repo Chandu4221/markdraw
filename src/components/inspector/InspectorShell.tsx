@@ -4,7 +4,7 @@ import { CanvasDriver } from '../../canvas/port/CanvasDriver';
 import { CanvasShape } from '../../canvas/port/CanvasShape';
 import { CompilationOptions } from '../../core/types';
 import { UnitDefinition } from '../../annotation/units';
-import { getShapeMeta, hasType, updateDriverShapeMeta, MarkDrawMeta } from '../../annotation/shapeMeta';
+import { getShapeMeta, hasType, updateDriverShapeMeta, MarkDrawMeta, findRootShape, resolveRootPlatform } from '../../annotation/shapeMeta';
 import { loadPlatformProfile } from '../../annotation/profileLoader';
 import { PlatformProfile } from '../../annotation/profiles/types';
 import { ModeCanvas } from './ModeCanvas';
@@ -43,18 +43,6 @@ export const InspectorShell: React.FC<InspectorShellProps> = ({
   const [newUnitName, setNewUnitName] = useState('');
   const [newUnitBaseRole, setNewUnitBaseRole] = useState('card');
 
-  // Load platform profile when options change
-  useEffect(() => {
-    let mounted = true;
-    const platId = options?.platformId ?? options?.platform ?? 'web';
-    loadPlatformProfile(platId).then((p) => {
-      if (mounted) setPlatformProfile(p);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [options?.platformId, options?.platform]);
-
   // Synchronize canvas shapes
   const refreshShapes = useCallback(async () => {
     if (!driver) return;
@@ -82,6 +70,20 @@ export const InspectorShell: React.FC<InspectorShellProps> = ({
     const idSet = new Set(selectedIds);
     return shapes.filter((s) => idSet.has(s.id));
   }, [shapes, selectedIds]);
+
+  // Load platform profile when selection or shapes change (§1.2.3 per-root platform)
+  useEffect(() => {
+    let mounted = true;
+    const primaryShape = selectedShapes[0];
+    const rootPlatId = primaryShape ? resolveRootPlatform(primaryShape, shapes) : null;
+    const platId = rootPlatId || options?.platformId || options?.platform || 'web';
+    loadPlatformProfile(platId).then((p) => {
+      if (mounted) setPlatformProfile(p);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedShapes, shapes, options?.platformId, options?.platform]);
 
   // Update handlers
   const handleUpdateName = async (shapeId: string, name: string) => {
@@ -205,6 +207,7 @@ export const InspectorShell: React.FC<InspectorShellProps> = ({
             onSelectType={(t) => handleSelectType(singleShape.id, t)}
             onUpdateName={(name) => handleUpdateName(singleShape.id, name)}
             onUpdateMeta={(patch) => handleUpdateMeta(singleShape.id, patch)}
+            onUpdateRootMeta={(patch) => handleUpdateMeta(findRootShape(singleShape, shapes).id, patch)}
             platformProfile={platformProfile}
             breakpoint={breakpoint}
             onBreakpointChange={onBreakpointChange}
