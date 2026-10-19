@@ -177,5 +177,29 @@ describe('v5.0 Design System & Tokens Enforcement (§4, §10)', () => {
 
     expect(styleViolations).toEqual([]);
   });
+
+  it.fails('(e) contains zero --md- token dialect usage across all src/ files (§1.2.4 RED REPRO)', () => {
+    const files = getSourceFiles();
+    const mdTokenViolations: string[] = [];
+
+    for (const f of files) {
+      const content = fs.readFileSync(f, 'utf-8');
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        if (trimmed.startsWith('//') || trimmed.startsWith('/*')) continue;
+        const window = lines.slice(Math.max(0, i - 2), Math.min(lines.length, i + 3));
+        if (window.some((w) => w.includes('v5-token-exception'))) continue;
+
+        if (line.includes('--md-')) {
+          mdTokenViolations.push(`${path.relative(process.cwd(), f)}:${i + 1} -> ${trimmed}`);
+        }
+      }
+    }
+
+    expect(mdTokenViolations).toEqual([]);
+  });
 });
+
 
