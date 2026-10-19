@@ -11,10 +11,10 @@ import {
 } from '../roles';
 
 describe('MarkDraw v4 Role Vocabulary (§4)', () => {
-  it('has exactly 31 frozen canonical roles (28 standard + 2 nav/steps + 1 group utility)', () => {
-    expect(ROLE_NAMES).toHaveLength(31);
+  it('has exactly 34 frozen canonical roles (31 standard + 3 platform roles)', () => {
+    expect(ROLE_NAMES).toHaveLength(34);
     expect(Object.isFrozen(ROLE_NAMES)).toBe(true);
-    expect(ROLE_LIST).toHaveLength(31);
+    expect(ROLE_LIST).toHaveLength(34);
     expect(Object.isFrozen(ROLE_DEFINITIONS)).toBe(true);
   });
 

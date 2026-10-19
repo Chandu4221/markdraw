@@ -32,7 +32,10 @@ export const ROLE_DEFAULT_PROPS: Record<RoleName, Record<string, unknown>> = {
   stat: {},
   steps: { options: 'Step 1, Step 2, Step 3' },
   nav: { options: 'Link 1, Link 2, Link 3' },
-  group: {}
+  group: {},
+  fab: {},
+  bottom_sheet: {},
+  scaffold: {}
 };
 
 export function getRoleDefaultProps(role: string): Record<string, unknown> {

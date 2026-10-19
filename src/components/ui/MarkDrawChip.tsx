@@ -48,6 +48,11 @@ const CATEGORY_COLOR_STYLES: Record<
     bg: 'bg-[var(--md-role-utility-bg)]',
     text: 'text-[var(--md-role-utility)]',
     border: 'border-[var(--md-role-utility)]/30'
+  },
+  platform: {
+    bg: 'bg-[var(--md-role-platform-bg)]',
+    text: 'text-[var(--md-role-platform)]',
+    border: 'border-[var(--md-role-platform)]/30'
   }
 };
 

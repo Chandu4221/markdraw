@@ -1,4 +1,5 @@
 // src/annotation/roles.ts
+import { PlatformProfile } from './profiles/types';
 
 export const ROLE_NAMES = Object.freeze([
   'page',
@@ -31,7 +32,10 @@ export const ROLE_NAMES = Object.freeze([
   'stat',
   'steps',
   'nav',
-  'group'
+  'group',
+  'fab',
+  'bottom_sheet',
+  'scaffold'
 ] as const);
 
 export type RoleName = (typeof ROLE_NAMES)[number];
@@ -43,7 +47,8 @@ export type RoleCategory =
   | 'interaction'
   | 'navigation'
   | 'feedback'
-  | 'utility';
+  | 'utility'
+  | 'platform';
 
 export interface RoleDefinition {
   name: RoleName;
@@ -270,6 +275,27 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = Object.freeze(
     decisionRule: 'invisible semantic grouping, no visual box',
     category: 'utility',
     flags: []
+  },
+  fab: {
+    name: 'fab',
+    aliases: ['floating action button', 'action button'],
+    decisionRule: 'floating action button for the primary screen action',
+    category: 'platform',
+    flags: ['extended']
+  },
+  bottom_sheet: {
+    name: 'bottom_sheet',
+    aliases: ['bottom sheet', 'modal sheet', 'sheet'],
+    decisionRule: 'bottom-anchored modal sheet',
+    category: 'platform',
+    flags: ['modal', 'persistent']
+  },
+  scaffold: {
+    name: 'scaffold',
+    aliases: ['app scaffold', 'screen scaffold'],
+    decisionRule: 'app-level layout skeleton wrapping the page',
+    category: 'platform',
+    flags: []
   }
 });
 
@@ -281,12 +307,33 @@ export function isValidRole(role: string): role is RoleName {
   return (ROLE_NAMES as readonly string[]).includes(role);
 }
 
-export function resolveAliasToRole(query: string): RoleName | null {
+export function resolveAliasToRole(query: string, profile?: PlatformProfile): RoleName | null {
   const clean = query.trim().toLowerCase();
   if (!clean) return null;
-  if (isValidRole(clean)) return clean;
+
+  if (isValidRole(clean)) {
+    const def = ROLE_DEFINITIONS[clean];
+    if (def.category === 'platform' && !profile?.extraRoles?.[clean]) {
+      return null;
+    }
+    return clean;
+  }
+
+  if (profile?.roleAliases) {
+    for (const [canonicalRole, alias] of Object.entries(profile.roleAliases)) {
+      if (
+        alias.toLowerCase() === clean ||
+        alias.toLowerCase().replace(/\s+/g, '') === clean.replace(/\s+/g, '')
+      ) {
+        if (isValidRole(canonicalRole)) return canonicalRole;
+      }
+    }
+  }
 
   for (const def of ROLE_LIST) {
+    if (def.category === 'platform' && !profile?.extraRoles?.[def.name]) {
+      continue;
+    }
     if (def.name.toLowerCase() === clean) return def.name;
     if (def.aliases.some((a) => a.toLowerCase() === clean)) {
       return def.name;
@@ -295,14 +342,39 @@ export function resolveAliasToRole(query: string): RoleName | null {
   return null;
 }
 
-export function searchRoles(query: string): RoleDefinition[] {
+export function searchRoles(query: string, profile?: PlatformProfile): RoleDefinition[] {
   const clean = query.trim().toLowerCase();
-  if (!clean) return [...ROLE_LIST];
+  const cleanCompact = clean.replace(/\s+/g, '');
 
   return ROLE_LIST.filter((def) => {
+    if (def.category === 'platform') {
+      if (!profile?.extraRoles?.[def.name]) {
+        return false;
+      }
+    }
+
+    if (!clean) return true;
+
     if (def.name.toLowerCase().includes(clean)) return true;
     if (def.aliases.some((a) => a.toLowerCase().includes(clean))) return true;
     if (def.decisionRule.toLowerCase().includes(clean)) return true;
+
+    const platAlias = profile?.roleAliases?.[def.name];
+    if (platAlias) {
+      if (
+        platAlias.toLowerCase().includes(clean) ||
+        platAlias.toLowerCase().replace(/\s+/g, '').includes(cleanCompact)
+      ) {
+        return true;
+      }
+    }
+
+    const extra = profile?.extraRoles?.[def.name];
+    if (extra) {
+      if (extra.name.toLowerCase().includes(clean)) return true;
+      if (extra.description.toLowerCase().includes(clean)) return true;
+    }
+
     return false;
   });
 }

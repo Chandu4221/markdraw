@@ -1,15 +1,6 @@
 import React, { useMemo } from 'react';
-import {
-  Tag,
-  ChevronDown,
-  ChevronRight,
-  StickyNote,
-  Box
-} from 'lucide-react';
-import {
-  ROLE_DEFINITIONS,
-  RoleName
-} from '../../annotation/roles';
+import { Tag, ChevronDown, ChevronRight, StickyNote, Box } from 'lucide-react';
+import { ROLE_DEFINITIONS, RoleName } from '../../annotation/roles';
 import {
   getShapeMeta,
   updateDriverShapeMeta,
@@ -29,6 +20,7 @@ interface RoleSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   onSaveUnitGesture: () => void;
+  platformId?: string;
 }
 
 export const RoleSection: React.FC<RoleSectionProps> = ({
@@ -37,7 +29,8 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
   driver,
   isOpen,
   onToggle,
-  onSaveUnitGesture
+  onSaveUnitGesture,
+  platformId
 }) => {
   const count = selectedShapes.length;
   const firstShape = selectedShapes[0];
@@ -176,6 +169,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
             roleDef={roleDef}
             suggestedRole={suggestedRole}
             onAssignRole={handleAssignRole}
+            platformId={platformId}
           />
 
           {/* Accessible Label / AccName Input */}

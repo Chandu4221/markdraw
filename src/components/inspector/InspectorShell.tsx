@@ -253,6 +253,7 @@ export const InspectorShell = memo(function InspectorShell({
               isOpen={openSections.semantics}
               onToggle={() => toggleSection('semantics')}
               onSaveUnitGesture={() => setShowSaveUnitDialog(true)}
+              platformId={effectiveOptions?.platformId ?? effectiveOptions?.platform ?? 'web'}
             />
           ) : (
             <CanvasOverviewSection

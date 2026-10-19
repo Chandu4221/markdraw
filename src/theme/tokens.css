@@ -44,6 +44,8 @@
   --color-role-feedback-bg: var(--md-role-feedback-bg);
   --color-role-utility: var(--md-role-utility);
   --color-role-utility-bg: var(--md-role-utility-bg);
+  --color-role-platform: var(--md-role-platform);
+  --color-role-platform-bg: var(--md-role-platform-bg);
 
   /* Radii scale: 4px base (sm: 4px, md: 6px, lg: 8px, full: 9999px) */
   --radius-sm: var(--md-radius-sm);
@@ -121,6 +123,8 @@
   --md-role-feedback-bg: rgba(248, 113, 113, 0.15);
   --md-role-utility: #94a3b8;
   --md-role-utility-bg: rgba(100, 116, 139, 0.15);
+  --md-role-platform: #c084fc;
+  --md-role-platform-bg: rgba(192, 132, 252, 0.15);
 
   /* Backward Compatibility Mappings */
   --md-bg: var(--md-surface-0);
@@ -192,6 +196,8 @@
   --md-role-feedback-bg: rgba(220, 38, 38, 0.12);
   --md-role-utility: #64748b;
   --md-role-utility-bg: rgba(100, 116, 139, 0.12);
+  --md-role-platform: #9333ea;
+  --md-role-platform-bg: rgba(147, 51, 234, 0.12);
 
   /* Backward Compatibility Mappings */
   --md-bg: var(--md-surface-0);
@@ -252,6 +258,8 @@
     --md-role-feedback-bg: rgba(220, 38, 38, 0.12);
     --md-role-utility: #64748b;
     --md-role-utility-bg: rgba(100, 116, 139, 0.12);
+    --md-role-platform: #9333ea;
+    --md-role-platform-bg: rgba(147, 51, 234, 0.12);
 
     --md-bg: var(--md-surface-0);
     --md-surface: var(--md-surface-1);

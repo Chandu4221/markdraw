@@ -6,6 +6,8 @@ import {
   RoleDefinition,
   searchRoles
 } from '../../annotation/roles';
+import { getProfile } from '../../annotation/profileLoader';
+import { useCompilationOptions } from '../../core/CompilationOptionsContext';
 import { Input } from '@/components/ui/input';
 
 export interface RolePickerDropdownProps {
@@ -13,26 +15,44 @@ export interface RolePickerDropdownProps {
   roleDef?: RoleDefinition | null;
   suggestedRole: RoleName | null;
   onAssignRole: (role: RoleName | null) => void;
+  platformId?: string;
 }
 
 export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
   currentRole,
   roleDef,
   suggestedRole,
-  onAssignRole
+  onAssignRole,
+  platformId
 }) => {
   const [roleSearch, setRoleSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
+  const compilationCtx = useCompilationOptions();
+  const effectivePlatformId =
+    platformId ??
+    compilationCtx?.options?.platformId ??
+    compilationCtx?.options?.platform ??
+    'web';
+
+  const profile = useMemo(() => {
+    try {
+      return getProfile(effectivePlatformId);
+    } catch {
+      return undefined;
+    }
+  }, [effectivePlatformId]);
+
   const filteredGroupedRoles = useMemo(() => {
-    const matched = searchRoles(roleSearch);
+    const matched = searchRoles(roleSearch, profile);
     const groups: Record<RoleCategory, typeof matched> = {
       structure: [],
       content: [],
       interaction: [],
       navigation: [],
       feedback: [],
-      utility: []
+      utility: [],
+      platform: []
     };
     matched.forEach((r) => {
       if (groups[r.category]) {
@@ -40,7 +60,7 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
       }
     });
     return groups;
-  }, [roleSearch]);
+  }, [roleSearch, profile]);
 
   const handleSelectRole = (role: RoleName | null) => {
     onAssignRole(role);
@@ -72,12 +92,17 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
       >
         <span className="truncate">
           {currentRole ? (
-            <span className="font-semibold text-[var(--md-ink-primary)]">
-              {currentRole}{' '}
-              <span className="font-normal text-[var(--md-ink-muted)]">
-                ({roleDef?.category})
-              </span>
-            </span>
+            (() => {
+              const displayLabel = profile?.roleAliases?.[currentRole] ?? currentRole;
+              return (
+                <span className="font-semibold text-[var(--md-ink-primary)]">
+                  {displayLabel}{' '}
+                  <span className="font-normal text-[var(--md-ink-muted)]">
+                    ({displayLabel !== currentRole ? currentRole : roleDef?.category})
+                  </span>
+                </span>
+              );
+            })()
           ) : (
             <span className="text-[var(--md-ink-muted)] italic">
               Assign a semantic role...
@@ -92,7 +117,11 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
         <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-[var(--md-radius-md)] border border-[var(--md-line-subtle)] bg-[var(--md-surface-1)] shadow-xl p-1.5 space-y-1 max-h-64 overflow-y-auto">
           <Input
             type="text"
-            placeholder="Search 31 roles or aliases..."
+            placeholder={
+              profile && profile.id !== 'web'
+                ? `Search ${profile.displayName} roles...`
+                : 'Search roles or aliases...'
+            }
             value={roleSearch}
             onChange={(e) => setRoleSearch(e.target.value)}
             className="h-7 text-xs mb-1"
@@ -104,27 +133,49 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
             return (
               <div key={cat} className="space-y-0.5">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--md-ink-muted)] px-2 pt-1.5">
-                  {cat}
+                  {cat === 'platform' ? 'Platform roles' : cat}
                 </div>
-                {roles.map((r) => (
-                  <button
-                    key={r.name}
-                    type="button"
-                    onClick={() => handleSelectRole(r.name)}
-                    className={`w-full flex items-center justify-between px-2 py-1.5 text-left rounded-[var(--md-radius-sm)] text-xs transition-colors cursor-pointer ${
-                      currentRole === r.name
-                        ? 'bg-[var(--md-accent)] text-white font-semibold'
-                        : 'hover:bg-[var(--md-surface-2)] text-[var(--md-ink-primary)]'
-                    }`}
-                  >
-                    <span>{r.name}</span>
-                    {r.aliases.length > 0 && (
-                      <span className={`text-[10px] truncate max-w-[100px] ${currentRole === r.name ? 'text-white/80' : 'text-[var(--md-ink-muted)]'}`}>
-                        {r.aliases.slice(0, 2).join(', ')}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {roles.map((r) => {
+                  const displayLabel = profile?.roleAliases?.[r.name] ?? r.name;
+                  return (
+                    <button
+                      key={r.name}
+                      type="button"
+                      onClick={() => handleSelectRole(r.name)}
+                      className={`w-full flex items-center justify-between px-2 py-1.5 text-left rounded-[var(--md-radius-sm)] text-xs transition-colors cursor-pointer ${
+                        currentRole === r.name
+                          ? 'bg-[var(--md-accent)] text-white font-semibold'
+                          : 'hover:bg-[var(--md-surface-2)] text-[var(--md-ink-primary)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span>{displayLabel}</span>
+                        {displayLabel !== r.name && (
+                          <span
+                            className={`text-[10px] ${
+                              currentRole === r.name
+                                ? 'text-white/80'
+                                : 'text-[var(--md-ink-muted)]'
+                            }`}
+                          >
+                            ({r.name})
+                          </span>
+                        )}
+                      </div>
+                      {r.aliases.length > 0 && (
+                        <span
+                          className={`text-[10px] truncate max-w-[100px] ${
+                            currentRole === r.name
+                              ? 'text-white/80'
+                              : 'text-[var(--md-ink-muted)]'
+                          }`}
+                        >
+                          {r.aliases.slice(0, 2).join(', ')}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             );
           })}
