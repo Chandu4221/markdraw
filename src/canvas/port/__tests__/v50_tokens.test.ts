@@ -29,11 +29,17 @@ describe('v5.0 Design System & Tokens Enforcement (§4, §10)', () => {
     expect(tokensContent).toContain('--color-danger');
     expect(tokensContent).toContain('--color-success');
 
-    // Chip grammar
+    // Chip grammar & Role Category colors (§2.2, §4.2)
     expect(tokensContent).toContain('--color-role-chip-bg');
     expect(tokensContent).toContain('--color-role-chip-text');
     expect(tokensContent).toContain('--color-untagged-chip-bg');
     expect(tokensContent).toContain('--color-untagged-chip-text');
+    expect(tokensContent).toContain('--color-role-structure');
+    expect(tokensContent).toContain('--color-role-content');
+    expect(tokensContent).toContain('--color-role-interaction');
+    expect(tokensContent).toContain('--color-role-nav');
+    expect(tokensContent).toContain('--color-role-feedback');
+    expect(tokensContent).toContain('--color-role-utility');
   });
 
   it('declares standard radii and motion tokens', () => {
@@ -69,8 +75,6 @@ describe('v5.0 Design System & Tokens Enforcement (§4, §10)', () => {
       const lines = content.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        // Allow MarkdownPreview test table or documentation comments
-        if (f.endsWith('MarkdownPreview.tsx') && line.includes('#8ac')) continue;
         if (line.includes('//') && (line.includes('color') || line.includes('hex'))) continue;
         const matches = line.match(hexRegex);
         if (matches) {
@@ -80,6 +84,40 @@ describe('v5.0 Design System & Tokens Enforcement (§4, §10)', () => {
     }
 
     expect(hexViolations).toEqual([]);
+  });
+
+  it('contains zero inline style= in components without v5-token-exception comment', () => {
+    const componentsDir = path.resolve(process.cwd(), 'src/components');
+    const files: string[] = [];
+
+    function scan(dir: string) {
+      for (const item of fs.readdirSync(dir)) {
+        const full = path.join(dir, item);
+        if (fs.statSync(full).isDirectory()) {
+          if (item !== '__tests__') scan(full);
+        } else if (full.endsWith('.tsx') || full.endsWith('.ts')) {
+          files.push(full);
+        }
+      }
+    }
+    scan(componentsDir);
+
+    const styleViolations: string[] = [];
+    for (const f of files) {
+      const content = fs.readFileSync(f, 'utf-8');
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes('style=') && !line.includes('// v5-token-exception:')) {
+          const prevLine = i > 0 ? lines[i - 1] : '';
+          if (!prevLine.includes('// v5-token-exception:')) {
+            styleViolations.push(`${path.relative(process.cwd(), f)}:${i + 1} -> ${line.trim()}`);
+          }
+        }
+      }
+    }
+
+    expect(styleViolations).toEqual([]);
   });
 });
 

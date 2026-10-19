@@ -277,6 +277,7 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
         ref={fileInputRef}
         type="file"
         accept=".json,.markdraw.json"
+        // v5-token-exception: hidden file input
         style={{ display: 'none' }}
         onChange={onImportFile}
       />

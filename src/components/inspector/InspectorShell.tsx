@@ -34,6 +34,7 @@ export interface InspectorShellProps {
       | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)
   ) => void;
   isMobile?: boolean;
+  hideHeader?: boolean;
 }
 
 export const InspectorShell = memo(function InspectorShell({
@@ -43,7 +44,8 @@ export const InspectorShell = memo(function InspectorShell({
   onUnitsChange,
   options: propOptions,
   onOptionsChange: propOnOptionsChange,
-  isMobile
+  isMobile,
+  hideHeader = false
 }: InspectorShellProps = {}) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -190,16 +192,9 @@ export const InspectorShell = memo(function InspectorShell({
     if (!effectiveSetOptions) return;
     effectiveSetOptions((prev) => ({
       ...prev,
-      containmentThreshold: 0.85,
-      rowClusterThreshold: 16,
-      gridBandThreshold: 32,
-      sizeBucketTolerance: 2,
-      alignTolerance: 3,
-      includeTimestamp: false,
-      includeLegend: false,
-      pageNote: '',
-      platform: 'web',
-      platformId: 'web'
+      containmentThreshold: 0.85, rowClusterThreshold: 16, gridBandThreshold: 32,
+      sizeBucketTolerance: 2, alignTolerance: 3, includeTimestamp: false,
+      includeLegend: false, pageNote: '', platform: 'web', platformId: 'web'
     }));
   };
 
@@ -208,7 +203,9 @@ export const InspectorShell = memo(function InspectorShell({
       ref={panelRef}
       role="complementary"
       aria-label="Inspector and Document Settings"
-      className="markdraw-unified-inspector w-[300px] h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] border-l border-[var(--md-line-subtle)] text-xs text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col"
+      className={`markdraw-unified-inspector h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] text-xs text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col ${
+        hideHeader ? 'w-full border-none' : 'w-[300px] border-l border-[var(--md-line-subtle)]'
+      }`}
       data-ismobile={isMobile}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
@@ -216,33 +213,35 @@ export const InspectorShell = memo(function InspectorShell({
       onClick={(e) => e.stopPropagation()}
     >
       {/* Global Header */}
-      <div className="h-9 px-3 border-b border-[var(--md-line-subtle)] flex items-center justify-between bg-[var(--md-surface-1)] shrink-0">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-xs font-semibold text-[var(--md-ink-primary)] truncate">
-            {count === 0
-              ? 'Inspector & Canvas'
-              : count === 1
-              ? currentRole
-                ? `${currentRole} (${firstShape?.kind || 'shape'})`
-                : `Untagged (${firstShape?.kind || 'shape'})`
-              : `${count} shapes selected`}
-          </span>
-          {count > 0 && currentUnitId && (
-            <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-purple-600 text-white rounded shrink-0">
-              UNIT
+      {!hideHeader && (
+        <div className="h-9 px-3 border-b border-[var(--md-line-subtle)] flex items-center justify-between bg-[var(--md-surface-1)] shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-xs font-semibold text-[var(--md-ink-primary)] truncate">
+              {count === 0
+                ? 'Inspector & Canvas'
+                : count === 1
+                ? currentRole
+                  ? `${currentRole} (${firstShape?.kind || 'shape'})`
+                  : `Untagged (${firstShape?.kind || 'shape'})`
+                : `${count} shapes selected`}
             </span>
-          )}
+            {count > 0 && currentUnitId && (
+              <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-purple-600 text-white rounded shrink-0">
+                UNIT
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer shrink-0"
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            aria-label={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
+            aria-expanded={!isCollapsed}
+          >
+            {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          </button>
         </div>
-        <button
-          type="button"
-          className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer shrink-0"
-          onClick={() => setIsCollapsed((prev) => !prev)}
-          aria-label={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
-          aria-expanded={!isCollapsed}
-        >
-          {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-        </button>
-      </div>
+      )}
 
       {!isCollapsed && (
         <div className="flex-1 overflow-y-auto divide-y divide-[var(--md-line-subtle)]">

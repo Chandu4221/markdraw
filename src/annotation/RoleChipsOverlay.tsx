@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { CanvasDriver } from '../canvas/port/CanvasDriver';
 import { CanvasShape } from '../canvas/port/CanvasShape';
+import { MarkDrawChip } from '../components/ui/MarkDrawChip';
 import { getShapeMeta } from './shapeMeta';
 import { MarkDrawCompiler } from '../core/compiler';
 import { canvasShapesToCompilerShapes } from '../hooks/useCompilation';
@@ -239,24 +240,23 @@ export const RoleChipsOverlay: React.FC<RoleChipsOverlayProps> = ({
                   if (driver) {
                     await driver.setSelection([chip.shapeId]);
                   } else if (editor) {
-                    editor.setSelectedShapes([chip.shapeId as any]);
+                    editor.setSelectedShapes([chip.shapeId]);
                   }
                   onChipClick?.(chip.shapeId);
                 }}
-                className={`px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[3px] border shadow-xs transition-all cursor-pointer ${
+                className={`transition-all cursor-pointer rounded-[3px] ${
                   chip.isSelected
-                    ? 'ring-2 ring-blue-500 font-bold opacity-100 scale-105'
-                    : 'opacity-80 hover:opacity-100'
-                } ${
-                  chip.isUnit
-                    ? 'bg-purple-600 text-white border-purple-700'
-                    : chip.isUntagged
-                    ? 'bg-[var(--md-surface)] text-[var(--md-text-subtle)] border-dashed border-[var(--md-border)]'
-                    : 'bg-blue-600 text-white border-blue-700'
+                    ? 'ring-2 ring-[var(--md-primary)] font-bold opacity-100 scale-105'
+                    : 'opacity-85 hover:opacity-100'
                 }`}
                 title={`Role: ${chip.label} (click to configure)`}
               >
-                {chip.isUnit ? `[#${chip.label}]` : chip.label}
+                <MarkDrawChip
+                  variant={chip.isUnit ? 'unit' : chip.isUntagged ? 'untagged' : 'role'}
+                  role={chip.isUntagged || chip.isUnit ? undefined : chip.label}
+                  label={chip.label}
+                  size="sm"
+                />
               </button>
             </div>
 

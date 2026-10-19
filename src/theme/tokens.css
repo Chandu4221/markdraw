@@ -31,6 +31,20 @@
   --color-untagged-chip-bg: var(--md-untagged-chip-bg);
   --color-untagged-chip-text: var(--md-untagged-chip-text);
 
+  /* Role Category Colors (§2.2, §4.2) */
+  --color-role-structure: var(--md-role-structure);
+  --color-role-structure-bg: var(--md-role-structure-bg);
+  --color-role-content: var(--md-role-content);
+  --color-role-content-bg: var(--md-role-content-bg);
+  --color-role-interaction: var(--md-role-interaction);
+  --color-role-interaction-bg: var(--md-role-interaction-bg);
+  --color-role-nav: var(--md-role-nav);
+  --color-role-nav-bg: var(--md-role-nav-bg);
+  --color-role-feedback: var(--md-role-feedback);
+  --color-role-feedback-bg: var(--md-role-feedback-bg);
+  --color-role-utility: var(--md-role-utility);
+  --color-role-utility-bg: var(--md-role-utility-bg);
+
   /* Radii scale: 4px base (sm: 4px, md: 6px, lg: 8px, full: 9999px) */
   --radius-sm: var(--md-radius-sm);
   --radius-md: var(--md-radius-md);
@@ -94,6 +108,20 @@
   --md-untagged-chip-bg: rgba(100, 116, 139, 0.15);
   --md-untagged-chip-text: #94a3b8;
 
+  /* Role Category Colors (Dark) */
+  --md-role-structure: #a78bfa;
+  --md-role-structure-bg: rgba(167, 139, 250, 0.15);
+  --md-role-content: #38bdf8;
+  --md-role-content-bg: rgba(56, 189, 248, 0.15);
+  --md-role-interaction: #60a5fa;
+  --md-role-interaction-bg: rgba(96, 165, 250, 0.15);
+  --md-role-nav: #34d399;
+  --md-role-nav-bg: rgba(52, 211, 153, 0.15);
+  --md-role-feedback: #f87171;
+  --md-role-feedback-bg: rgba(248, 113, 113, 0.15);
+  --md-role-utility: #94a3b8;
+  --md-role-utility-bg: rgba(100, 116, 139, 0.15);
+
   /* Backward Compatibility Mappings */
   --md-bg: var(--md-surface-0);
   --md-surface: var(--md-surface-1);
@@ -151,6 +179,20 @@
   --md-untagged-chip-bg: rgba(148, 163, 184, 0.15);
   --md-untagged-chip-text: #64748b;
 
+  /* Role Category Colors (Light) */
+  --md-role-structure: #7c3aed;
+  --md-role-structure-bg: rgba(124, 58, 237, 0.12);
+  --md-role-content: #0284c7;
+  --md-role-content-bg: rgba(2, 132, 199, 0.12);
+  --md-role-interaction: #2563eb;
+  --md-role-interaction-bg: rgba(37, 99, 235, 0.12);
+  --md-role-nav: #059669;
+  --md-role-nav-bg: rgba(5, 150, 105, 0.12);
+  --md-role-feedback: #dc2626;
+  --md-role-feedback-bg: rgba(220, 38, 38, 0.12);
+  --md-role-utility: #64748b;
+  --md-role-utility-bg: rgba(100, 116, 139, 0.12);
+
   /* Backward Compatibility Mappings */
   --md-bg: var(--md-surface-0);
   --md-surface: var(--md-surface-1);
@@ -197,6 +239,20 @@
     --md-untagged-chip-bg: rgba(148, 163, 184, 0.15);
     --md-untagged-chip-text: #64748b;
 
+    /* Role Category Colors (Light) */
+    --md-role-structure: #7c3aed;
+    --md-role-structure-bg: rgba(124, 58, 237, 0.12);
+    --md-role-content: #0284c7;
+    --md-role-content-bg: rgba(2, 132, 199, 0.12);
+    --md-role-interaction: #2563eb;
+    --md-role-interaction-bg: rgba(37, 99, 235, 0.12);
+    --md-role-nav: #059669;
+    --md-role-nav-bg: rgba(5, 150, 105, 0.12);
+    --md-role-feedback: #dc2626;
+    --md-role-feedback-bg: rgba(220, 38, 38, 0.12);
+    --md-role-utility: #64748b;
+    --md-role-utility-bg: rgba(100, 116, 139, 0.12);
+
     --md-bg: var(--md-surface-0);
     --md-surface: var(--md-surface-1);
     --md-surface-raised: var(--md-surface-2);
@@ -211,6 +267,51 @@
     --md-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
     --md-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
   }
+}
+
+/* Excalidraw De-Excalidraw Theme Harmonization via Official CSS Variables (§2.2) */
+.excalidraw {
+  --ui-font: var(--md-font-sans);
+  --color-primary: var(--md-accent);
+  --color-primary-darker: var(--md-accent-hover);
+  --color-primary-darkest: var(--md-accent-hover);
+  --color-primary-light: var(--md-accent-subtle);
+  --color-primary-hover: var(--md-accent-hover);
+  --island-bg-color: var(--md-surface-1);
+  --default-bg-color: var(--md-surface-0);
+  --input-bg-color: var(--md-surface-2);
+  --input-border-color: var(--md-line-subtle);
+  --input-hover-bg-color: var(--md-surface-3);
+  --sidebar-bg-color: var(--md-surface-1);
+  --sidebar-border-color: var(--md-line-subtle);
+  --border-radius-md: var(--md-radius-md);
+  --border-radius-lg: var(--md-radius-lg);
+  --color-on-surface: var(--md-ink-primary);
+  --text-primary-color: var(--md-ink-primary);
+  --popup-bg-color: var(--md-surface-1);
+  --popup-secondary-bg-color: var(--md-surface-2);
+  --popup-text-color: var(--md-ink-primary);
+  --button-hover-bg: var(--md-surface-2);
+  --button-active-bg: var(--md-surface-3);
+  --right-sidebar-width: 320px;
+}
+
+.excalidraw.theme--dark {
+  --island-bg-color: var(--md-surface-1);
+  --default-bg-color: var(--md-surface-0);
+  --input-bg-color: var(--md-surface-2);
+  --input-border-color: var(--md-line-subtle);
+  --input-hover-bg-color: var(--md-surface-3);
+  --sidebar-bg-color: var(--md-surface-1);
+  --sidebar-border-color: var(--md-line-subtle);
+  --popup-bg-color: var(--md-surface-1);
+  --popup-secondary-bg-color: var(--md-surface-2);
+  --popup-text-color: var(--md-ink-primary);
+  --color-primary: var(--md-accent);
+  --color-primary-darker: var(--md-accent-hover);
+  --color-primary-darkest: var(--md-accent-hover);
+  --color-primary-light: var(--md-accent-subtle);
+  --color-primary-hover: var(--md-accent-hover);
 }
 
 /* Canvas Labels Toggle */

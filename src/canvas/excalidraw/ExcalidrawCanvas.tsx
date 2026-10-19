@@ -1,10 +1,16 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Excalidraw } from '@excalidraw/excalidraw';
+import { Excalidraw, Sidebar } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
 import { CanvasDriver } from '../port/CanvasDriver';
+import { CanvasShape } from '../port/CanvasShape';
 import { ExcalidrawDriver } from './ExcalidrawDriver';
 import { RoleChipsOverlay } from '../../annotation/RoleChipsOverlay';
+import { InspectorShell } from '../../components/inspector/InspectorShell';
+import { MarkDrawChip } from '../../components/ui/MarkDrawChip';
+import { getShapeMeta } from '../../annotation/shapeMeta';
+import { CompilationOptions } from '../../core/types';
+import { UnitDefinition } from '../../annotation/units';
 
 export interface ExcalidrawCanvasProps {
   persistenceKey: string;
@@ -15,6 +21,15 @@ export interface ExcalidrawCanvasProps {
   onCopyContract?: (shapeId: string, contractText: string) => void;
   onEditorMount?: (api: ExcalidrawImperativeAPI) => (() => void) | void;
   theme?: 'light' | 'dark';
+  selectedIds?: string[];
+  options?: Required<CompilationOptions>;
+  onOptionsChange?: (
+    newOptsOrUpdater:
+      | Required<CompilationOptions>
+      | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)
+  ) => void;
+  units?: UnitDefinition[];
+  onUnitsChange?: (units: UnitDefinition[]) => void;
 }
 
 export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
@@ -24,11 +39,34 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
   showUntaggedChips = false,
   onChipClick,
   onCopyContract,
-  theme = 'dark'
+  theme = 'dark',
+  selectedIds = [],
+  options,
+  onOptionsChange,
+  units,
+  onUnitsChange
 }) => {
   const driverRef = useRef<ExcalidrawDriver | null>(null);
   const [driverState, setDriverState] = useState<CanvasDriver | null>(null);
   const cleanupRef = useRef<(() => void) | void>(undefined);
+  const [selectedShapes, setSelectedShapes] = useState<CanvasShape[]>([]);
+  const prevSelectedIdsRef = useRef<string[]>([]);
+
+  const [isDocked, setIsDocked] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('markdraw_sidebar_docked');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const handleDock = (docked: boolean) => {
+    setIsDocked(docked);
+    try {
+      localStorage.setItem('markdraw_sidebar_docked', String(docked));
+    } catch {}
+  };
 
   const handleApiReady = useCallback(
     (api: ExcalidrawImperativeAPI) => {
@@ -43,6 +81,11 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         setDriverState(driver);
         onDriverReady(driver, api);
 
+        // Open docked inspector on start if preferred
+        if (isDocked) {
+          api.toggleSidebar({ name: 'markdraw-inspector', force: true });
+        }
+
         if (onEditorMount) {
           if (typeof cleanupRef.current === 'function') {
             cleanupRef.current();
@@ -51,8 +94,43 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         }
       }
     },
-    [onDriverReady, onEditorMount]
+    [onDriverReady, onEditorMount, isDocked]
   );
+
+  // Update selected shapes when driver or selection changes
+  const refreshSelectedShapes = useCallback(async () => {
+    if (!driverState || selectedIds.length === 0) {
+      setSelectedShapes([]);
+      return;
+    }
+    const shapes = await Promise.all(selectedIds.map((id) => driverState.getShape(id)));
+    setSelectedShapes(shapes.filter((s): s is CanvasShape => s !== null));
+  }, [driverState, selectedIds]);
+
+  useEffect(() => {
+    void refreshSelectedShapes();
+    if (!driverState) return;
+    const unsub = driverState.onShapesChanged(() => {
+      void refreshSelectedShapes();
+    });
+    return unsub;
+  }, [driverState, refreshSelectedShapes]);
+
+  // Open sidebar when selection becomes non-empty or changes
+  useEffect(() => {
+    if (!driverRef.current?.rawApi) return;
+    const prev = prevSelectedIdsRef.current;
+    prevSelectedIdsRef.current = selectedIds;
+
+    if (selectedIds.length > 0) {
+      const isDifferent =
+        prev.length !== selectedIds.length ||
+        prev.some((id, idx) => id !== selectedIds[idx]);
+      if (isDifferent) {
+        driverRef.current.rawApi.toggleSidebar({ name: 'markdraw-inspector', force: true });
+      }
+    }
+  }, [selectedIds]);
 
   useEffect(() => {
     return () => {
@@ -65,6 +143,14 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
     };
   }, []);
 
+  const firstSelected = selectedShapes[0];
+  const firstMeta = firstSelected ? getShapeMeta(firstSelected) : null;
+  const shortId = firstSelected
+    ? firstSelected.id.length <= 6
+      ? firstSelected.id
+      : firstSelected.id.slice(0, 5)
+    : '';
+
   return (
     <div className="w-full h-full relative markdraw-excalidraw-container">
       <Excalidraw
@@ -74,6 +160,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         zenModeEnabled={false}
         viewModeEnabled={false}
         UIOptions={{
+          dockedSidebarBreakpoint: 0,
           canvasActions: {
             loadScene: false,
             saveToActiveFile: false,
@@ -82,7 +169,48 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
             saveAsImage: false
           }
         }}
-      />
+      >
+        <Sidebar
+          name="markdraw-inspector"
+          docked={isDocked}
+          onDock={handleDock}
+          className="markdraw-inspector-sidebar"
+        >
+          <Sidebar.Header className="markdraw-sidebar-header">
+            <div className="flex items-center gap-2 min-w-0 font-mono text-xs">
+              {selectedShapes.length === 0 ? (
+                <span className="font-semibold font-sans text-[var(--md-ink-primary)]">
+                  Canvas Overview
+                </span>
+              ) : selectedShapes.length === 1 ? (
+                <>
+                  <span className="font-bold text-[var(--md-ink-primary)]">#{shortId}</span>
+                  <span className="text-[var(--md-ink-muted)]">·</span>
+                  <MarkDrawChip
+                    variant={firstMeta?.role ? 'role' : 'untagged'}
+                    role={firstMeta?.role || undefined}
+                    label={firstMeta?.role || 'untagged'}
+                    size="sm"
+                  />
+                </>
+              ) : (
+                <span className="font-semibold font-sans text-[var(--md-ink-primary)]">
+                  Inspector · {selectedShapes.length} selected
+                </span>
+              )}
+            </div>
+          </Sidebar.Header>
+          <InspectorShell
+            selectedIds={selectedIds}
+            driver={driverState}
+            units={units}
+            onUnitsChange={onUnitsChange}
+            options={options}
+            onOptionsChange={onOptionsChange}
+            hideHeader={true}
+          />
+        </Sidebar>
+      </Excalidraw>
       <RoleChipsOverlay
         driver={driverState}
         showChips={showRoleChips}
@@ -93,3 +221,4 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
     </div>
   );
 };
+

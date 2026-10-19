@@ -13,7 +13,6 @@ import { AppHeader } from './components/layout';
 import { OnboardingModal } from './components/modals/OnboardingModal';
 import { StarterTemplate } from './canvas/templates/starterTemplates';
 import { OutputPanel, OutputTab, OutputDisplayMode } from './components/output';
-import { InspectorShell } from './components/inspector';
 import {
   useDocumentManagement,
   usePanelResize,
@@ -289,6 +288,9 @@ export const App: React.FC = () => {
                     }}
                     theme={theme}
                     showRoleChips={showRoleChips}
+                    selectedIds={selectedIds}
+                    options={options}
+                    onOptionsChange={handleOptionsChange}
                     onCopyContract={() => showToast('Copied contract to clipboard')}
                   />
 
@@ -300,14 +302,6 @@ export const App: React.FC = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Docked Inspector Shell */}
-                <InspectorShell
-                  selectedIds={selectedIds}
-                  driver={driver}
-                  options={options}
-                  onOptionsChange={handleOptionsChange}
-                />
               </div>
 
               {/* Split Resizer Divider */}
@@ -350,6 +344,10 @@ export const App: React.FC = () => {
                 onDownload={handleDownload}
                 coverage={coverage}
                 onLintClick={handleLintClick}
+                onSelectShape={(id) => {
+                  driver?.setSelection([id]);
+                  driver?.panTo(id);
+                }}
               />
             </div>
           </div>

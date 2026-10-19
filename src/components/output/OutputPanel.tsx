@@ -38,6 +38,7 @@ export interface OutputPanelProps {
   onDownload: () => void;
   coverage?: { tagged: number; total: number };
   onLintClick?: (lint: string) => void;
+  onSelectShape?: (shapeId: string) => void;
 }
 
 export const OutputPanel: React.FC<OutputPanelProps> = ({
@@ -60,7 +61,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   onCopyFullContract,
   onDownload,
   coverage,
-  onLintClick
+  onLintClick,
+  onSelectShape
 }) => {
   return (
     <aside
@@ -74,6 +76,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
       className={`h-full flex flex-col bg-[var(--md-surface)] overflow-hidden shrink-0 relative ${
         activeDrag === 'right' ? 'transition-none' : 'transition-[width] duration-200 ease-out'
       } ${isRightPanelOpen ? 'border-l border-[var(--md-border)]' : 'border-l-0 pointer-events-none'}`}
+      // v5-token-exception: dynamic panel resize width
       style={{
         width: isRightPanelOpen ? `calc(${100 - canvasPercent}% - 5px)` : '0px',
         minWidth: isRightPanelOpen ? '380px' : '0px'
@@ -329,7 +332,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
         {/* Output Viewport */}
         <div className="flex-1 overflow-auto p-3 bg-[var(--md-bg)]">
           {(outputTab === 'spec' || outputTab === 'grid') && outputDisplayMode === 'preview' ? (
-            <MarkdownPreview content={activeContent} />
+            <MarkdownPreview content={activeContent} onSelectShape={onSelectShape} />
           ) : (
             <pre className="text-xs font-mono leading-relaxed text-[var(--md-text)] whitespace-pre-wrap select-text">
               <code>{activeContent}</code>
