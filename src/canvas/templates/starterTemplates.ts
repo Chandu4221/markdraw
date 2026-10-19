@@ -275,7 +275,7 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
         bounds: { x: 260, y: 260, w: 1000, h: 520, rotation: 0 },
         parentId: 'tpl_dash_page',
         name: 'Data Table',
-        text: 'User ID | Customer | Plan | Status | MRR\n#101 | Stripe | Enterprise | Active | $4,200\n#102 | Vercel | Pro | Active | $1,800',
+        text: 'User ID | Customer | Plan | Status | MRR\nUSR-101 | Stripe | Enterprise | Active | $4,200\nUSR-102 | Vercel | Pro | Active | $1,800',
         arrowEndpoints: null,
         meta: {
           markdraw: {

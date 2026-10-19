@@ -83,7 +83,7 @@ export const CanvasOverviewSection: React.FC<CanvasOverviewSectionProps> = ({
                       className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--md-accent)] hover:bg-[var(--md-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent)] transition-colors cursor-pointer"
                     >
                       {copiedFrameId === f.id ? (
-                        <Check size={14} className="text-green-500" />
+                        <Check size={14} className="text-[var(--color-success)]" />
                       ) : (
                         <Copy size={14} />
                       )}

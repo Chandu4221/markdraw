@@ -179,6 +179,7 @@ export class ExcalidrawDriver implements CanvasDriver {
     const partial = canvasShapeToPartialExcalidrawElement(fullShape);
 
     const newElement: any = {
+      // v5-token-exception: excalidraw element default stroke
       strokeColor: '#000000',
       backgroundColor: 'transparent',
       fillStyle: 'solid',

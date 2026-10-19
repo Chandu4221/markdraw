@@ -70,7 +70,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center w-screen h-screen bg-[var(--color-surface-0)] text-[var(--color-ink-primary)] p-6 box-border font-sans">
-          <div className="max-w-[560px] w-full bg-[var(--color-surface-1)] border border-[var(--color-line-strong)] rounded-lg p-7 shadow-xl flex flex-col gap-5">
+          <div className="max-w-xl w-full bg-[var(--color-surface-1)] border border-[var(--color-line-strong)] rounded-lg p-7 shadow-xl flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="bg-[var(--color-ink-primary)] text-[var(--color-surface-0)] font-extrabold text-sm px-2 py-0.5 rounded">
                 MD
@@ -86,7 +86,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
 
             {this.state.error && (
-              <pre className="bg-[var(--color-surface-0)] border border-[var(--color-line-subtle)] rounded p-3 text-sm font-mono text-[var(--color-ink-primary)] overflow-x-auto max-h-[140px]">
+              <pre className="bg-[var(--color-surface-0)] border border-[var(--color-line-subtle)] rounded p-3 text-sm font-mono text-[var(--color-ink-primary)] overflow-x-auto max-h-36">
                 {this.state.error.message}
                 {'\n'}
                 {this.state.error.stack?.split('\n').slice(1, 4).join('\n')}

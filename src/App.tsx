@@ -345,7 +345,7 @@ export const App: React.FC = () => {
                   <aside
                     role="complementary"
                     aria-label="Semantics Inspector"
-                    className="w-[300px] h-full border-l border-[var(--md-border)] bg-[var(--md-surface)] flex flex-col shrink-0 overflow-hidden z-10 select-text"
+                    className="w-72 h-full border-l border-[var(--md-border)] bg-[var(--md-surface)] flex flex-col shrink-0 overflow-hidden z-10 select-text"
                     data-testid="markdraw-docked-inspector"
                   >
                     <div className="h-10 px-3 border-b border-[var(--md-border)] bg-[var(--md-surface-raised)] flex items-center justify-between shrink-0 select-none">
@@ -353,7 +353,7 @@ export const App: React.FC = () => {
                         <Tag size={16} className="text-[var(--md-accent)]" />
                         <span>Inspector</span>
                         {selectedIds.length > 0 && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-blue-600 text-white">
+                          <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-[var(--color-accent)] text-white">
                             {selectedIds.length}
                           </span>
                         )}
@@ -391,7 +391,7 @@ export const App: React.FC = () => {
                 aria-orientation="vertical"
                 aria-label="Resize canvas and output panels"
                 tabIndex={isRightPanelOpen ? 0 : -1}
-                className={`w-[5px] h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
+                className={`w-1.5 h-full cursor-col-resize shrink-0 relative flex items-center justify-center group hover:bg-[var(--md-accent)] transition-[opacity,width] duration-200 select-none ${
                   isRightPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none w-0 overflow-hidden'
                 } ${
                   activeDrag === 'right' ? 'bg-[var(--md-accent)]' : 'bg-transparent'
@@ -400,7 +400,7 @@ export const App: React.FC = () => {
                 onDoubleClick={() => setCanvasPercent(55)}
                 title="Drag to resize (Double-click to reset 55/45)"
               >
-                <div className="w-[1px] h-full bg-[var(--md-border)] group-hover:bg-transparent" />
+                <div className="w-px h-full bg-[var(--md-border)] group-hover:bg-transparent" />
               </div>
 
               {/* Right Pane: Live Reactive Output */}

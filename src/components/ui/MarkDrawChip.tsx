@@ -85,13 +85,13 @@ export const MarkDrawChip: React.FC<MarkDrawChipProps> = ({
     variantClasses = `${catStyle.bg} ${catStyle.text} border ${catStyle.border}`;
   } else if (variant === 'unit') {
     variantClasses =
-      'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-mono font-bold';
+      'bg-[var(--color-type-structure)]/15 text-[var(--color-type-structure)] border border-[var(--color-type-structure)]/30 font-mono font-bold';
   } else if (variant === 'untagged') {
     variantClasses =
       'bg-[var(--md-untagged-chip-bg)] text-[var(--md-untagged-chip-text)] border border-dashed border-[var(--md-line-subtle)]';
   } else if (variant === 'lint') {
     variantClasses =
-      'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30';
+      'bg-[var(--color-warning)]/15 text-[var(--color-warning)] border border-[var(--color-warning)]/30';
   }
 
   const interactiveClasses = clickable

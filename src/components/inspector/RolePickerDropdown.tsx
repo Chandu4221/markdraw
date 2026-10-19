@@ -79,7 +79,7 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
             type="button"
             aria-label="Clear semantic role"
             onClick={() => handleSelectRole(null)}
-            className="text-sm font-medium text-red-500 hover:underline cursor-pointer"
+            className="text-sm font-medium text-[var(--color-danger)] hover:underline cursor-pointer"
           >
             Clear
           </button>
@@ -169,7 +169,7 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
                       </div>
                       {r.aliases.length > 0 && (
                         <span
-                          className={`text-sm truncate max-w-[100px] ${
+                          className={`text-sm truncate max-w-24 ${
                             currentRole === r.name
                               ? 'text-white/80'
                               : 'text-[var(--md-ink-muted)]'
@@ -191,14 +191,14 @@ export const RolePickerDropdown: React.FC<RolePickerDropdownProps> = ({
       {!currentRole && suggestedRole && (
         <div className="space-y-1 pt-1">
           <div className="text-sm font-semibold text-[var(--md-ink-muted)] flex items-center gap-1">
-            <Sparkles size={14} className="text-amber-500 shrink-0" />
+            <Sparkles size={14} className="text-[var(--color-warning)] shrink-0" />
             <span>Suggested Role</span>
           </div>
           <button
             type="button"
             aria-label={`Assign suggested role ${suggestedRole}`}
             onClick={() => handleSelectRole(suggestedRole)}
-            className="px-2.5 py-1 text-sm font-semibold rounded-[var(--md-radius-sm)] border border-blue-500/40 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors cursor-pointer"
+            className="px-2.5 py-1 text-sm font-semibold rounded-[var(--md-radius-sm)] border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 transition-colors cursor-pointer"
           >
             +{suggestedRole}
           </button>

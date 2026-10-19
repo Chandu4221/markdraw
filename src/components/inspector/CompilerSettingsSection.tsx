@@ -36,7 +36,7 @@ export const CompilerSettingsSection: React.FC<CompilerSettingsSectionProps> = (
           <span className="text-sm font-semibold tracking-wider uppercase text-[var(--md-ink-muted)] group-hover:text-[var(--md-ink-primary)] transition-colors whitespace-nowrap shrink-0">
             Compiler & Settings
           </span>
-          <span className="px-1.5 py-0.5 text-sm font-mono font-medium text-[var(--md-accent)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] rounded shrink-0 truncate max-w-[100px]">
+          <span className="px-1.5 py-0.5 text-sm font-mono font-medium text-[var(--md-accent)] bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] rounded shrink-0 truncate max-w-24">
             {options.platform || 'web'}
           </span>
         </div>

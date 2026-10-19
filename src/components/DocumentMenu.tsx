@@ -129,7 +129,7 @@ export const DocumentMenu: React.FC<DocumentMenuProps> = ({
             aria-label="Click to switch or manage documents, double-click to rename"
           >
             <FileText size={15} className="text-[var(--md-text-muted)]" />
-            <span className="max-w-[140px] truncate text-sm">{activeDoc.name}</span>
+            <span className="max-w-36 truncate text-sm">{activeDoc.name}</span>
             <ChevronDown size={14} className="text-[var(--md-text-muted)] opacity-70" />
           </button>
         </DropdownMenuTrigger>

@@ -154,6 +154,7 @@ export function storedDocumentToExcalidrawElements(
     }
 
     return {
+      // v5-token-exception: excalidraw export element default stroke
       strokeColor: '#000000',
       backgroundColor: 'transparent',
       fillStyle: 'solid',

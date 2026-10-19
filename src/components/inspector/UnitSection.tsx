@@ -80,7 +80,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => onStampUnit(u)}
-                      className="px-2.5 py-1 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] transition-colors cursor-pointer"
                     >
                       Stamp
                     </button>
@@ -88,7 +88,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                       type="button"
                       aria-label={`Delete custom unit ${u.name}`}
                       onClick={(e) => onDeleteUnit(u.id, e)}
-                      className="p-1 rounded text-[var(--md-ink-muted)] hover:text-red-500 hover:bg-[var(--md-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition-colors cursor-pointer"
+                      className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--md-surface-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] transition-colors cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -113,7 +113,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
           >
             <div className="flex items-center justify-between border-b border-[var(--md-line-subtle)] pb-2">
               <div className="flex items-center gap-1.5 font-bold text-sm text-[var(--md-ink-primary)]">
-                <Box size={14} className="text-purple-500" />
+                <Box size={14} className="text-[var(--color-accent)]" />
                 <span>Save as Custom Unit</span>
               </div>
             </div>
@@ -165,7 +165,7 @@ export const UnitSection: React.FC<UnitSectionProps> = ({
                 type="button"
                 onClick={onSaveUnit}
                 disabled={!newUnitName.trim()}
-                className="px-3 py-1.5 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-sm font-semibold rounded-[var(--md-radius-sm)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Save Unit
               </button>

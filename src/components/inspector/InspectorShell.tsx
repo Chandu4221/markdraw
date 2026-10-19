@@ -203,7 +203,7 @@ export const InspectorShell = memo(function InspectorShell({
       role="complementary"
       aria-label="Inspector and Document Settings"
       className={`markdraw-unified-inspector h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] text-sm text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col ${
-        hideHeader ? 'w-full border-none' : 'w-[300px] border-l border-[var(--md-line-subtle)]'
+        hideHeader ? 'w-full border-none' : 'w-72 border-l border-[var(--md-line-subtle)]'
       }`}
       data-ismobile={isMobile}
       onPointerDown={(e) => e.stopPropagation()}
@@ -225,7 +225,7 @@ export const InspectorShell = memo(function InspectorShell({
                 : `${count} shapes selected`}
             </span>
             {count > 0 && currentUnitId && (
-              <span className="px-1.5 py-0.2 text-sm font-mono font-bold bg-purple-600 text-white rounded shrink-0">
+              <span className="px-1.5 py-0.2 text-sm font-mono font-bold bg-[var(--color-accent)] text-white rounded shrink-0">
                 UNIT
               </span>
             )}

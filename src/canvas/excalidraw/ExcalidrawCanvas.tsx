@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
+import '../../theme/excalidraw-theme.css';
 import { CanvasDriver } from '../port/CanvasDriver';
 import { ExcalidrawDriver } from './ExcalidrawDriver';
 import { ChipsOverlay } from '../../annotation/ChipsOverlay';
@@ -113,7 +114,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
                   <Tag size={15} />
                   <span>Inspector</span>
                   {selectedIds.length > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-blue-600 text-white">
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-[var(--md-accent)] text-white">
                       {selectedIds.length}
                     </span>
                   )}

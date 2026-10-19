@@ -89,7 +89,7 @@ export function renderFormattedCell(
                     ? 'bg-[var(--color-surface-2)] text-[var(--color-ink-muted)]'
                     : isId
                     ? 'bg-[var(--color-accent-subtle)] text-[var(--color-accent)] border border-[var(--color-line-subtle)] hover:border-[var(--color-accent)] cursor-pointer'
-                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
                 }`}
                 title={isId ? `Click to select ${seg} on canvas` : undefined}
               >
@@ -111,7 +111,7 @@ export function renderFormattedCell(
   // 3. Semantics Column (e.g. <Header>, <Page>, <Button>)
   if (hLower.includes('semantics') || (trimmed.startsWith('<') && trimmed.endsWith('>'))) {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-sm bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-sm bg-[var(--color-type-structure)]/10 text-[var(--color-type-structure)] border border-[var(--color-type-structure)]/20">
         {trimmed}
       </span>
     );
@@ -120,10 +120,10 @@ export function renderFormattedCell(
   // 4. Placement Column
   if (hLower.includes('placement')) {
     let colorClass = 'bg-[var(--color-surface-2)] text-[var(--color-ink-muted)]';
-    if (trimmed === 'header') colorClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-    if (trimmed === 'body') colorClass = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-    if (trimmed === 'footer') colorClass = 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-    if (trimmed === 'nested') colorClass = 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+    if (trimmed === 'header') colorClass = 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]';
+    if (trimmed === 'body') colorClass = 'bg-[var(--color-success)]/10 text-[var(--color-success)]';
+    if (trimmed === 'footer') colorClass = 'bg-[var(--color-type-structure)]/10 text-[var(--color-type-structure)]';
+    if (trimmed === 'nested') colorClass = 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]';
 
     return (
       <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-sm font-medium ${colorClass}`}>
@@ -138,8 +138,8 @@ export function renderFormattedCell(
     const isCol = trimmed.includes('Column');
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-sm font-medium bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] text-[var(--color-ink-primary)]">
-        {isRow && <ArrowRight size={14} className="text-blue-500" />}
-        {isCol && <ArrowDown size={14} className="text-emerald-500" />}
+        {isRow && <ArrowRight size={14} className="text-[var(--color-accent)]" />}
+        {isCol && <ArrowDown size={14} className="text-[var(--color-success)]" />}
         <span>{trimmed}</span>
       </span>
     );
@@ -153,19 +153,19 @@ export function renderFormattedCell(
         {tokens.map((tok, tIdx) => {
           let badgeColor = 'bg-[var(--color-surface-2)] border-[var(--color-line-subtle)] text-[var(--color-ink-muted)]';
           if (tok === 'sticky' || tok === 'fixed' || tok === 'overlay' || tok === 'fullscreen') {
-            badgeColor = 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold';
+            badgeColor = 'bg-[var(--color-warning)]/15 border-[var(--color-warning)]/30 text-[var(--color-warning)] font-semibold';
           } else if (tok.startsWith('responsive:') || tok.startsWith('tablet:')) {
-            badgeColor = 'bg-purple-500/15 border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold';
+            badgeColor = 'bg-[var(--color-accent)]/15 border-[var(--color-accent)]/30 text-[var(--color-accent)] font-semibold';
           } else if (tok.startsWith('sm:order-')) {
-            badgeColor = 'bg-blue-500/15 border-blue-500/30 text-blue-700 dark:text-blue-300 font-semibold';
+            badgeColor = 'bg-[var(--color-accent)]/15 border-[var(--color-accent)]/30 text-[var(--color-accent)] font-semibold';
           } else if (tok === 'sm:hidden') {
-            badgeColor = 'bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold';
+            badgeColor = 'bg-[var(--color-warning)]/20 border-[var(--color-warning)]/40 text-[var(--color-warning)] font-semibold';
           } else if (tok.startsWith('cols:')) {
-            badgeColor = 'bg-sky-500/15 border-sky-500/30 text-sky-700 dark:text-sky-400 font-semibold';
+            badgeColor = 'bg-[var(--color-accent)]/15 border-[var(--color-accent)]/30 text-[var(--color-accent)] font-semibold';
           } else if (tok.includes('w-') || tok.includes('full-width') || tok.includes('(sm:full)')) {
-            badgeColor = 'bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400';
+            badgeColor = 'bg-[var(--color-surface-2)] border-[var(--color-line-subtle)] text-[var(--color-ink-primary)]';
           } else if (tok.includes('align') || tok.includes('dist:')) {
-            badgeColor = 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400';
+            badgeColor = 'bg-[var(--color-surface-2)] border-[var(--color-line-subtle)] text-[var(--color-ink-primary)]';
           }
 
           return (

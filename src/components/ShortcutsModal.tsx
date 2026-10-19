@@ -80,7 +80,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
                       {item.keys.map((k, ki) => (
                         <kbd
                           key={ki}
-                          className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-sm font-mono font-medium rounded border border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-bold)] shadow-xs"
+                          className="inline-flex items-center justify-center min-w-6 h-6 px-2 text-sm font-mono font-medium rounded border border-[var(--md-border)] bg-[var(--md-surface)] text-[var(--md-text-bold)] shadow-xs"
                         >
                           {k}
                         </kbd>

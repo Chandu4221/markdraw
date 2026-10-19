@@ -1,0 +1,72 @@
+/* MarkDraw v5.2 Excalidraw Variable Mapping (§2.2) */
+/* Upgrade-safe: maps official exposed CSS variables without !important */
+.excalidraw {
+  --ui-font: var(--font-sans);
+  --font-family: var(--font-sans);
+
+  /* Primary & Accent tokens */
+  --color-primary: var(--color-accent);
+  --color-primary-darker: var(--color-accent-hover);
+  --color-primary-darkest: var(--color-accent-hover);
+  --color-primary-hover: var(--color-accent-hover);
+  --color-primary-light: var(--color-surface-2);
+  --color-brand-hover: var(--color-accent-hover);
+  --color-brand-active: var(--color-accent);
+  --color-selection: var(--color-accent);
+  --focus-highlight-color: var(--color-accent);
+
+  /* Surfaces & Backgrounds */
+  --island-bg-color: var(--color-surface-1);
+  --default-bg-color: var(--color-surface-0);
+  --input-bg-color: var(--color-surface-2);
+  --input-hover-bg-color: var(--color-surface-3);
+  --sidebar-bg-color: var(--color-surface-1);
+  --popup-bg-color: var(--color-surface-1);
+  --popup-secondary-bg-color: var(--color-surface-2);
+  --overlay-bg-color: var(--color-surface-0);
+  --color-surface-high: var(--color-surface-3);
+  --color-surface-mid: var(--color-surface-2);
+  --color-surface-low: var(--color-surface-1);
+  --color-surface-lowest: var(--color-surface-0);
+
+  /* Borders & Lines */
+  --default-border-color: var(--color-line-subtle);
+  --border-color: var(--color-line-subtle);
+  --input-border-color: var(--color-line-subtle);
+  --sidebar-border-color: var(--color-line-subtle);
+  --dialog-border-color: var(--color-line-strong);
+  --color-border-outline: var(--color-line-subtle);
+  --color-border-outline-variant: var(--color-line-strong);
+
+  /* Radii scale */
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+
+  /* Ink & Typography */
+  --color-on-surface: var(--color-ink-primary);
+  --text-primary-color: var(--color-ink-primary);
+  --text-color: var(--color-ink-primary);
+  --popup-text-color: var(--color-ink-primary);
+  --color-muted: var(--color-ink-muted);
+  --ExcTextField--color: var(--color-ink-primary);
+  --ExcTextField--placeholder: var(--color-ink-muted);
+  --ExcTextField--background: var(--color-surface-2);
+  --ExcTextField--border: var(--color-line-subtle);
+
+  /* Buttons */
+  --button-hover-bg: var(--color-surface-2);
+  --button-active-bg: var(--color-surface-3);
+  --button-selected-bg: var(--color-surface-3);
+  --button-selected-border: var(--color-line-strong);
+  --button-bg: var(--color-surface-2);
+  --button-border: var(--color-line-subtle);
+  --button-color: var(--color-ink-primary);
+
+  /* Semantic status */
+  --color-danger: var(--color-danger);
+  --color-danger-text: var(--color-danger);
+  --color-success: var(--color-success);
+  --color-success-text: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-warning-text: var(--color-warning);
+}

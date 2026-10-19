@@ -177,7 +177,7 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
 
         {/* Suggestions chip */}
         {suggestions.length > 0 && (
-          <span className="flex items-center gap-1 text-sm text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded">
+          <span className="flex items-center gap-1 text-sm text-[var(--color-warning)] bg-[var(--color-warning)]/15 border border-[var(--color-warning)]/30 px-2 py-0.5 rounded">
             <Lightbulb size={13} />
             <span>{suggestions[0]}</span>
           </span>
@@ -212,10 +212,10 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           return (
             <div
               key={node.shapeId}
-              className="absolute pointer-events-none rounded-[var(--md-radius-md)] border-2 border-[var(--md-accent)] shadow-xl bg-slate-900/40"
+              className="absolute pointer-events-none rounded-[var(--md-radius-md)] border-2 border-[var(--md-accent)] shadow-xl bg-[var(--color-surface-0)]/40"
               style={{ left: screenX, top: screenY, width: screenW, height: screenH }} // v5-token-exception: dynamic simulation geometry
             >
-              <div className="absolute top-1.5 right-2 text-[10px] font-mono font-semibold text-[var(--md-accent)]">
+              <div className="absolute top-1.5 right-2 text-sm font-mono font-semibold text-[var(--md-accent)]">
                 {simWidth}px viewport
               </div>
             </div>
@@ -226,10 +226,10 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           return (
             <div
               key={node.shapeId}
-              className="absolute pointer-events-none rounded border border-dashed border-[var(--md-line-strong)] opacity-30 flex items-center justify-center p-1 bg-slate-500/10"
+              className="absolute pointer-events-none rounded border border-dashed border-[var(--md-line-strong)] opacity-30 flex items-center justify-center p-1 bg-[var(--color-surface-2)]/50"
               style={{ left: screenX, top: screenY, width: screenW, height: screenH }} // v5-token-exception: dynamic simulation geometry
             >
-              <span className="text-[10px] font-mono text-[var(--md-ink-muted)]">[hidden]</span>
+              <span className="text-sm font-mono text-[var(--md-ink-muted)]">[hidden]</span>
             </div>
           );
         }
@@ -241,7 +241,7 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
               className="absolute pointer-events-none rounded border border-[var(--md-accent)] bg-[var(--md-surface-2)] shadow-md flex items-center justify-between px-2"
               style={{ left: screenX, top: screenY, width: screenW, height: screenH }} // v5-token-exception: dynamic simulation geometry
             >
-              <span className="text-[11px] font-semibold text-[var(--md-accent)]">
+              <span className="text-sm font-semibold text-[var(--md-accent)]">
                 {node.collapseKind === 'hamburger' ? '☰ Menu' : node.collapseKind === 'bottom-bar' ? '⬇ Bottom Bar' : '⊞ Drawer Rail'}
               </span>
               <MarkDrawChip variant="role" role={role || undefined} label={`${role || 'nav'} (${node.collapseKind})`} size="sm" />
@@ -265,7 +265,7 @@ export const ReflowPreview: React.FC<ReflowPreviewProps> = ({
           >
             <div className="flex items-center justify-between gap-1">
               <MarkDrawChip variant={role ? 'role' : 'untagged'} role={role || undefined} category={cat} label={role || 'box'} size="sm" />
-              <span className="text-sm font-mono text-[var(--md-ink-muted)] truncate max-w-[80px]">#{node.shapeId.slice(0, 5)}</span>
+              <span className="text-sm font-mono text-[var(--md-ink-muted)] truncate max-w-20">#{node.shapeId.slice(0, 5)}</span>
             </div>
 
             {originalShape?.text ? (

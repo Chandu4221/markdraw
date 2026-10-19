@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]',
+  'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-accent-ring)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-95',
   {
     variants: {
       variant: {
@@ -18,20 +18,20 @@ const buttonVariants = cva(
         accent:
           'bg-[var(--md-accent-subtle)] text-[var(--md-accent)] border border-[var(--md-accent)] font-semibold hover:bg-[var(--md-accent)] hover:text-white hover:border-[var(--md-accent)]',
         brand:
-          'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/25 border border-blue-400/30 font-medium',
+          'bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white shadow-xs border border-[var(--color-line-subtle)] font-medium',
         primary:
-          'bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-500/20 font-medium',
+          'bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white shadow-xs font-medium',
         success:
-          'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20 font-medium',
+          'bg-[var(--color-success)] hover:opacity-90 text-white shadow-xs font-medium',
         danger:
-          'text-[var(--md-danger)] bg-transparent hover:bg-red-500/15 hover:text-red-500 border border-transparent hover:border-red-500/30'
+          'text-[var(--color-danger)] bg-transparent hover:bg-[var(--color-surface-2)] border border-transparent hover:border-[var(--color-danger)]'
       },
       size: {
-        default: 'h-8 px-3 rounded-[6px]',
-        sm: 'h-7 px-2.5 text-sm rounded-[6px]',
-        lg: 'h-9 px-4 text-base rounded-[8px]',
-        icon: 'h-7 w-7 rounded-[6px] p-0 flex items-center justify-center',
-        'icon-sm': 'h-7 w-7 rounded-[6px] p-0 flex items-center justify-center'
+        default: 'h-8 px-3 rounded-md',
+        sm: 'h-7 px-2.5 text-sm rounded-md',
+        lg: 'h-9 px-4 text-base rounded-lg',
+        icon: 'h-7 w-7 rounded-md p-0 flex items-center justify-center',
+        'icon-sm': 'h-7 w-7 rounded-md p-0 flex items-center justify-center'
       }
     },
     defaultVariants: {

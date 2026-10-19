@@ -155,7 +155,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
             Semantic Role
           </span>
           {currentRole && (
-            <span className="px-2 py-0.5 text-sm font-mono font-semibold bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-[var(--md-ink-primary)] rounded truncate max-w-[100px]">
+            <span className="px-2 py-0.5 text-sm font-mono font-semibold bg-[var(--md-surface-2)] border border-[var(--md-line-subtle)] text-[var(--md-ink-primary)] rounded truncate max-w-24">
               {currentRole}
             </span>
           )}
@@ -201,7 +201,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => handleSetParent(null)}
-                  className="text-sm font-medium text-blue-500 hover:underline cursor-pointer"
+                  className="text-sm font-medium text-[var(--color-accent)] hover:underline cursor-pointer"
                 >
                   Auto (Geometry)
                 </button>
@@ -285,7 +285,7 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
               <button
                 type="button"
                 onClick={onSaveUnitGesture}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-sm font-semibold rounded-[var(--md-radius-sm)] border border-purple-500/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-sm font-semibold rounded-[var(--md-radius-sm)] border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 transition-colors cursor-pointer"
               >
                 <Box size={15} className="shrink-0" />
                 <span>Save {count} shapes as Unit...</span>

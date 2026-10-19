@@ -97,9 +97,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 role="tab"
                 aria-selected={outputTab === 'spec'}
                 aria-label="Spec Table view"
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                   outputTab === 'spec'
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-[var(--color-accent)] text-white shadow-xs'
                     : 'text-[var(--md-text-muted)] hover:text-[var(--md-text)]'
                 }`}
                 onClick={() => setOutputTab('spec')}
@@ -111,9 +111,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 role="tab"
                 aria-selected={outputTab === 'grid'}
                 aria-label="Spatial Grid view"
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                   outputTab === 'grid'
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-[var(--color-accent)] text-white shadow-xs'
                     : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => setOutputTab('grid')}
@@ -125,9 +125,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 role="tab"
                 aria-selected={outputTab === 'ascii'}
                 aria-label="ASCII layout view"
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                   outputTab === 'ascii'
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-[var(--color-accent)] text-white shadow-xs'
                     : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => setOutputTab('ascii')}
@@ -139,9 +139,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 role="tab"
                 aria-selected={outputTab === 'json'}
                 aria-label="JSON AST view"
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                   outputTab === 'json'
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-[var(--color-accent)] text-white shadow-xs'
                     : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
                 }`}
                 onClick={() => setOutputTab('json')}
@@ -161,7 +161,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 <button
                   type="button"
                   aria-pressed={outputDisplayMode === 'preview'}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                     outputDisplayMode === 'preview'
                       ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
                       : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -170,13 +170,13 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   title="Formatted Markdown Preview"
                   aria-label="Formatted preview mode"
                 >
-                  <Eye size={14} className={outputDisplayMode === 'preview' ? 'text-blue-500' : ''} />
+                  <Eye size={14} className={outputDisplayMode === 'preview' ? 'text-[var(--color-accent)]' : ''} />
                   <span>Preview</span>
                 </button>
                 <button
                   type="button"
                   aria-pressed={outputDisplayMode === 'raw'}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                     outputDisplayMode === 'raw'
                       ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] shadow-xs font-semibold'
                       : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -185,7 +185,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   title="Raw Markdown Syntax"
                   aria-label="Raw Markdown mode"
                 >
-                  <Code size={14} className={outputDisplayMode === 'raw' ? 'text-blue-500' : ''} />
+                  <Code size={14} className={outputDisplayMode === 'raw' ? 'text-[var(--color-accent)]' : ''} />
                   <span>Raw</span>
                 </button>
               </div>
@@ -217,7 +217,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => setCompileScopeMode('all')}
-                  className={`px-2 py-1 text-sm font-medium rounded-[3px] transition-colors cursor-pointer ${
+                  className={`px-2 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                     compileScopeMode === 'all'
                       ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
                       : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -229,7 +229,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => setCompileScopeMode('selection')}
-                  className={`px-2 py-1 text-sm font-medium rounded-[3px] transition-colors cursor-pointer ${
+                  className={`px-2 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer ${
                     compileScopeMode === 'selection'
                       ? 'bg-[var(--md-surface-raised)] text-[var(--md-text)] font-semibold shadow-xs'
                       : 'text-[var(--md-text-muted)] hover:bg-[var(--md-surface-raised)] hover:text-[var(--md-text-bold)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--md-accent)]'
@@ -313,7 +313,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
 
         {/* Informational Lints Banner (§11: Clickable Lints) */}
         {compilation.lints && compilation.lints.length > 0 && (
-          <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 text-sm text-amber-700 dark:text-amber-400 space-y-1">
+          <div className="bg-[var(--color-warning)]/10 border-b border-[var(--color-warning)]/20 px-3 py-2 text-sm text-[var(--color-warning)] space-y-1">
             {compilation.lints.map((lint, idx) => (
               <button
                 key={idx}
@@ -322,7 +322,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 className="w-full text-left flex items-center gap-1.5 hover:underline cursor-pointer focus-visible:outline-none"
                 title="Click to locate and select shape on canvas"
               >
-                <AlertCircle size={14} className="shrink-0 text-amber-500" />
+                <AlertCircle size={14} className="shrink-0 text-[var(--color-warning)]" />
                 <span className="truncate">{lint}</span>
               </button>
             ))}

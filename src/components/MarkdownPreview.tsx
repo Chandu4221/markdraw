@@ -44,7 +44,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
         <div className="flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] font-medium">
           <span>Viewport Simulation:</span>
           {viewportMode === 'mobile' && (
-            <span className="text-sm text-purple-600 dark:text-purple-400 font-mono font-semibold">
+            <span className="text-sm text-[var(--color-accent)] font-mono font-semibold">
               (mobile stack active)
             </span>
           )}
@@ -57,7 +57,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           <button
             type="button"
             aria-pressed={viewportMode === 'desktop'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] ${
               viewportMode === 'desktop'
                 ? 'bg-[var(--color-accent)] text-white shadow-xs'
                 : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-2)]'
@@ -70,9 +70,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           <button
             type="button"
             aria-pressed={viewportMode === 'mobile'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-[4px] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] ${
               viewportMode === 'mobile'
-                ? 'bg-purple-600 text-white shadow-xs'
+                ? 'bg-[var(--color-accent)] text-white shadow-xs'
                 : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-2)]'
             }`}
             onClick={() => setViewportMode('mobile')}
@@ -89,13 +89,13 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
             return (
               <div
                 key={idx}
-                className="p-3.5 rounded-lg border border-blue-500/25 bg-blue-500/8 dark:bg-blue-950/20 text-sm shadow-xs"
+                className="p-3.5 rounded-lg border border-[var(--color-accent)]/25 bg-[var(--color-surface-2)] text-sm shadow-xs"
               >
-                <div className="flex items-center gap-1.5 font-semibold text-blue-700 dark:text-blue-300 mb-1.5 select-none">
-                  <Sparkles size={14} className="text-blue-500" />
+                <div className="flex items-center gap-1.5 font-semibold text-[var(--color-accent)] mb-1.5 select-none">
+                  <Sparkles size={14} className="text-[var(--color-accent)]" />
                   <span>AI Layout Directive (Binding Contract)</span>
                 </div>
-                <div className="space-y-1 text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
+                <div className="space-y-1 text-[var(--color-ink-primary)] leading-relaxed font-sans">
                   {block.lines.map((line, lIdx) => (
                     <p key={lIdx}>{renderInlineFormatting(line, onSelectShape)}</p>
                   ))}
@@ -170,7 +170,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
                         key={rIdx}
                         className={`hover:bg-[var(--color-surface-2)]/50 transition-colors ${
                           viewportMode === 'mobile' && isHiddenOnMobile
-                            ? 'opacity-40 bg-amber-500/5'
+                            ? 'opacity-40 bg-[var(--color-warning)]/5'
                             : ''
                         }`}
                       >
@@ -178,7 +178,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
                           <td key={cIdx} className="px-3 py-2 whitespace-nowrap align-middle">
                             {renderFormattedCell(cell, block.table.headers[cIdx], onSelectShape)}
                             {viewportMode === 'mobile' && isHiddenOnMobile && cIdx === 0 && (
-                              <span className="ml-1.5 px-1 py-0.5 rounded text-sm font-sans font-medium bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                              <span className="ml-1.5 px-1 py-0.5 rounded text-sm font-sans font-medium bg-[var(--color-warning)]/20 text-[var(--color-warning)]">
                                 hidden on mobile
                               </span>
                             )}
