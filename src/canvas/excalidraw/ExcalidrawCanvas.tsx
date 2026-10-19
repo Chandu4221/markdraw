@@ -109,8 +109,8 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
       />
       <ChipsOverlay
         driver={driverState}
-        showChips={showRoleChips && breakpoint === 1200}
-        showUntagged={showUntaggedChips && breakpoint === 1200}
+        showChips={showRoleChips}
+        showUntagged={showUntaggedChips}
         onChipClick={(shapeId) => {
           if (!isInspectorOpen && onToggleInspector) {
             onToggleInspector();

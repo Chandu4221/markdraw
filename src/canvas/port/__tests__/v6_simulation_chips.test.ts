@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 describe('v6 Defect 6: Chips hidden during simulation (§1.2.6)', () => {
-  it.fails('ExcalidrawCanvas does not gate showChips or showUntagged on breakpoint === 1200 (§1.2.6 RED REPRO)', () => {
+  it('ExcalidrawCanvas does not gate showChips or showUntagged on breakpoint === 1200 (§1.2.6)', () => {
     const canvasFilePath = path.resolve(__dirname, '../../excalidraw/ExcalidrawCanvas.tsx');
     const source = fs.readFileSync(canvasFilePath, 'utf-8');
     expect(source.includes('breakpoint === 1200')).toBe(false);
