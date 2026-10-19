@@ -19,16 +19,18 @@ MarkDraw takes a different approach: keep freehand drawing (no rigid widget libr
 ## Key Features
 
 - ✏️ **Freehand canvas (Excalidraw MIT)** — pencil, geometric shapes, text, arrows, frames; powered by a vendor-neutral Hexagonal Architecture (`CanvasDriver`).
-- 🏷️ **31 semantic roles** — closed vocabulary:
+- 🏷️ **34 semantic roles** — canonical vocabulary:
   - **Structure**: `page`, `section`, `card`, `footer`, `separator`
   - **Content**: `heading`, `para`, `img`, `video`, `table`, `carousel`, `stat`
   - **Interaction**: `button`, `input`, `textarea`, `select`, `checkbox`, `radio`, `switch`, `slider`, `stepper`
   - **Navigation**: `navbar`, `sidebar`, `tabs`, `steps`, `nav`
   - **Feedback**: `avatar`, `badge`, `banner`, `dialog`
   - **Utility**: `group`
-- 🎨 **Unified Design System & Inspector** — single-authority CSS tokens (`tokens.css`), decomposed panels (`≤ 389 lines`), role badges, behavior flags, responsive props, and variant selectors.
+  - **Platform**: `fab`, `bottom_sheet`, `scaffold` (Material 3 platform roles)
+- 📱 **Platform-Aware Tagging** — profile loader (`profileLoader.ts`) for Web and Android Material 3. Search and dropdown present platform vocabulary (`TopAppBar`, `NavigationBar`) while maintaining canonical role storage invariants.
+- 📐 **Responsive Simulation Mode** — pure DOM-free layout reflow engine (`reflow.ts`) with interactive width slider (375px–1200px) and ghost overlay preview (`ReflowPreview.tsx`). Non-destructive, exact match with compiler `sm:` tokens.
+- 🎨 **Unified Design System & Docked Sidebar** — Inspector integrated directly into Excalidraw's official `<Sidebar>` with single-authority CSS tokens (`tokens.css`), unified `MarkDrawChip`, responsive props, and variant selectors.
 - 📦 **Custom Units** — save an annotated group as a reusable unit (e.g. `Follow Card`), stamp it anywhere, reference it by name in contracts.
-- 📱 **Platform profiles** — Web (semantic HTML/CSS conventions) and Android/Material 3 (TopAppBar, NavigationBar, Scaffold conventions) as compile-time output translations.
 - 💻 **Headless CLI (`bin/markdraw`)** — compile stored documents directly in terminal/CI pipelines (`markdraw compile <file> [--root <id|name>] [--platform <web|android-material>] [--scope <all|id>] [--json]`).
 - 🧭 **Authoring UX & Diagnostics**:
   - **Coverage indicator**: `Tagged X/Y shapes` in the compile panel header.

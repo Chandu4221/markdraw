@@ -305,7 +305,10 @@ var ROLE_DEFAULT_PROPS = {
   stat: {},
   steps: { options: "Step 1, Step 2, Step 3" },
   nav: { options: "Link 1, Link 2, Link 3" },
-  group: {}
+  group: {},
+  fab: {},
+  bottom_sheet: {},
+  scaffold: {}
 };
 function getRoleDefaultProps(role) {
   return ROLE_DEFAULT_PROPS[role] || {};
@@ -855,7 +858,10 @@ var ROLE_NAMES = Object.freeze([
   "stat",
   "steps",
   "nav",
-  "group"
+  "group",
+  "fab",
+  "bottom_sheet",
+  "scaffold"
 ]);
 var ROLE_DEFINITIONS = Object.freeze({
   page: {
@@ -1073,6 +1079,27 @@ var ROLE_DEFINITIONS = Object.freeze({
     aliases: ["unit wrapper"],
     decisionRule: "invisible semantic grouping, no visual box",
     category: "utility",
+    flags: []
+  },
+  fab: {
+    name: "fab",
+    aliases: ["floating action button", "action button"],
+    decisionRule: "floating action button for the primary screen action",
+    category: "platform",
+    flags: ["extended"]
+  },
+  bottom_sheet: {
+    name: "bottom_sheet",
+    aliases: ["bottom sheet", "modal sheet", "sheet"],
+    decisionRule: "bottom-anchored modal sheet",
+    category: "platform",
+    flags: ["modal", "persistent"]
+  },
+  scaffold: {
+    name: "scaffold",
+    aliases: ["app scaffold", "screen scaffold"],
+    decisionRule: "app-level layout skeleton wrapping the page",
+    category: "platform",
     flags: []
   }
 });
