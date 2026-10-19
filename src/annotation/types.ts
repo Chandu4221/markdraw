@@ -12,6 +12,8 @@ export interface MarkDrawMeta {
   role?: string | null;          // backward compat alias for transition
   unitId: string | null;         // custom unit this shape was stamped from, else null
   parentId: string | null;       // explicit parent override (shape id); null = use frame/group membership
+  parentOverride?: string | null;// §1.2.2 explicit parent override
+  platform?: string | null;      // §1.2.3 per-root platform
   responsive: RoleResponsive | null;
   props: RoleProps;
   flags?: string[];

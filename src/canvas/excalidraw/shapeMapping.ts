@@ -53,9 +53,12 @@ export function excalidrawElementToCanvasShape(
 ): CanvasShape {
   const anyEl = el as any;
 
-  // Resolve parentId (§6: frameId or virtual:<groupId>)
+  // Resolve parentId (§6: frameId or virtual:<groupId>, with meta.markdraw.parentOverride winning)
   let parentId: string | null = null;
-  if (el.frameId) {
+  const markdrawMeta = anyEl.customData?.markdraw;
+  if (markdrawMeta?.parentOverride !== undefined) {
+    parentId = markdrawMeta.parentOverride;
+  } else if (el.frameId) {
     parentId = el.frameId;
   } else if (el.groupIds && el.groupIds.length > 0) {
     parentId = `virtual:${el.groupIds[0]}`;

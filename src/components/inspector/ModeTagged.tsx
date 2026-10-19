@@ -85,12 +85,14 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
     onUpdateMeta({ flags: updated });
   };
 
-  const handleParentChange = (parentId: string | null) => onUpdateMeta({ parentId });
+  const handleParentOverrideChange = (parentOverride: string | null) => {
+    onUpdateMeta({ parentOverride, parentId: parentOverride });
+  };
   const handleStyleNoteChange = (styleNote: string) => {
     onUpdateMeta({ props: { ...meta.props, styleNote: styleNote || undefined } });
   };
 
-  // Candidate parent shapes for override
+  // Candidate parent shapes for override (≤4 frames per §1.2.2)
   const candidateParents = React.useMemo(() => {
     return allShapes.filter((s) => {
       if (s.id === shape.id) return false;
@@ -102,7 +104,7 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
         m?.type === 'card' ||
         m?.type === 'group'
       );
-    });
+    }).slice(0, 4);
   }, [allShapes, shape.id]);
 
   return (
@@ -241,26 +243,52 @@ export const ModeTagged: React.FC<ModeTaggedProps> = ({
           </button>
           {openRow === 'advanced' && (
             <div className="p-3 border-t border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] space-y-3">
-              {/* Parent dropdown with clean helper text (§3.3) */}
-              <div className="space-y-1">
-                <label htmlFor="mode-tagged-parent-select" className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)] block select-none">
+              {/* Parent segmented control: Auto + enclosing frames (≤4) (§1.2.2) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink-muted)] block select-none">
                   Parent
                 </label>
-                <select
-                  id="mode-tagged-parent-select"
-                  value={meta.parentId || ''}
-                  onChange={(e) => handleParentChange(e.target.value || null)}
-                  className="w-full h-9 px-2 rounded-md border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-sm text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] cursor-pointer"
+                <div
+                  role="group"
+                  aria-label="Parent Selection"
+                  className="flex flex-wrap items-center gap-1 p-1 bg-[var(--color-surface-2)] border border-[var(--color-line-subtle)] rounded-md"
                 >
-                  <option value="">Automatic</option>
+                  <button
+                    type="button"
+                    aria-pressed={!meta.parentOverride && !meta.parentId}
+                    onClick={() => handleParentOverrideChange(null)}
+                    className={cn(
+                      'px-2.5 py-1 text-sm font-medium rounded transition-colors cursor-pointer select-none',
+                      !meta.parentOverride && !meta.parentId
+                        ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
+                        : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-3)]'
+                    )}
+                  >
+                    Auto
+                  </button>
                   {candidateParents.map((p) => {
                     const pMeta = parseMarkDrawMeta(p);
                     const label = p.name || pMeta.props?.label || `${pMeta.type || p.kind} (#${p.id.slice(0, 5)})`;
+                    const isSelected = (meta.parentOverride || meta.parentId) === p.id;
                     return (
-                      <option key={p.id} value={p.id}>{label}</option>
+                      <button
+                        key={p.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => handleParentOverrideChange(p.id)}
+                        className={cn(
+                          'px-2.5 py-1 text-sm font-medium rounded transition-colors cursor-pointer select-none truncate max-w-28',
+                          isSelected
+                            ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
+                            : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-3)]'
+                        )}
+                        title={label}
+                      >
+                        {label}
+                      </button>
                     );
                   })}
-                </select>
+                </div>
                 <p className="text-sm text-[var(--color-ink-muted)]">
                   Automatic — from your frames & groups
                 </p>

@@ -397,8 +397,11 @@ function buildAnnotationIRTree(
     const meta = getShapeMeta(s);
     let assignedParentId: string | null = null;
 
-    // 1) Explicit parentId check
-    if (meta?.parentId) {
+    // 1) Explicit parent override check (§1.2.2: parentOverride wins over geometry)
+    const overrideId = (meta as any)?.parentOverride ?? (s.meta as any)?.markdraw?.parentOverride;
+    if (overrideId && allShapesMap.has(overrideId) && nodeMap.has(overrideId)) {
+      assignedParentId = overrideId;
+    } else if (meta?.parentId) {
       const targetShape = allShapesMap.get(meta.parentId);
       const targetNode = nodeMap.get(meta.parentId);
       if (targetShape && targetNode && targetNode.id !== node.id) {

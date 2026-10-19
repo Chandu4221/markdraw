@@ -16,7 +16,7 @@ export function canvasShapesToCompilerShapes(canvasShapes: CanvasShape[]): any[]
     x: s.bounds.x,
     y: s.bounds.y,
     rotation: s.bounds.rotation || 0,
-    parentId: s.parentId,
+    parentId: (s.meta as any)?.markdraw?.parentOverride ?? s.parentId,
     props: {
       geo: s.kind === 'ellipse' ? 'ellipse' : s.kind === 'diamond' ? 'diamond' : 'rectangle',
       w: s.bounds.w,

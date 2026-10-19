@@ -6,7 +6,7 @@ import { MarkDrawCompiler } from '../../core/compiler';
 import { excalidrawElementToCanvasShape } from '../../canvas/excalidraw/shapeMapping';
 
 describe('v6 Defect 2: Parent/reparent missing & override wins over geometry (§1.2.2)', () => {
-  it.fails('driver parent resolution honors meta.markdraw.parentOverride (RED REPRO)', () => {
+  it('driver parent resolution honors meta.markdraw.parentOverride', () => {
     const el: any = {
       id: 'btn_outside',
       type: 'rectangle',
@@ -29,7 +29,7 @@ describe('v6 Defect 2: Parent/reparent missing & override wins over geometry (§
     expect(canvasShape.parentId).toBe('frame_hero');
   });
 
-  it.fails('compiler hierarchy honors parentOverride over geometry when shape is outside frame (RED REPRO)', () => {
+  it('compiler hierarchy honors parentOverride over geometry when shape is outside frame', () => {
     const frameId = 'frame_hero';
     const childBtnId = 'btn_remote';
 
