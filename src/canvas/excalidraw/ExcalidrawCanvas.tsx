@@ -8,7 +8,6 @@ import { ExcalidrawDriver } from './ExcalidrawDriver';
 import { ChipsOverlay } from '../../annotation/ChipsOverlay';
 import { ReflowPreview } from '../../components/simulation/ReflowPreview';
 import { Breakpoint } from '../../components/ui/BreakpointSwitch';
-import { Tag } from 'lucide-react';
 
 export interface ExcalidrawCanvasProps {
   persistenceKey: string;
@@ -35,7 +34,6 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
   onChipClick,
   onCopyContract,
   theme = 'dark',
-  selectedIds = [],
   isInspectorOpen = true,
   onToggleInspector,
   breakpoint = 1200,
@@ -97,33 +95,6 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
             const api = driverRef.current.rawApi;
             driverRef.current.handleSceneChange(api.getSceneElements(), api.getAppState());
           }
-        }}
-        renderTopRightUI={(_isMobile) => {
-          return (
-            <div className="flex items-center gap-1.5 pointer-events-auto">
-              {onToggleInspector && (
-                <button
-                  type="button"
-                  onClick={onToggleInspector}
-                  className={`h-9 px-3 rounded-[var(--radius-sm)] border text-sm font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
-                    isInspectorOpen
-                      ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
-                      : 'bg-[var(--color-surface-raised)] text-[var(--color-ink-secondary)] border-[var(--color-line-subtle)] hover:bg-[var(--color-surface-2)] hover:border-[var(--color-line-strong)]'
-                  }`}
-                  title={isInspectorOpen ? 'Collapse Semantics Inspector (Alt+I)' : 'Open Semantics Inspector (Alt+I)'}
-                  aria-label={isInspectorOpen ? 'Collapse Semantics Inspector (Alt+I)' : 'Open Semantics Inspector (Alt+I)'}
-                >
-                  <Tag size={15} />
-                  <span>Inspector</span>
-                  {selectedIds.length > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-sm font-mono font-bold bg-[var(--color-accent)] text-white">
-                      {selectedIds.length}
-                    </span>
-                  )}
-                </button>
-              )}
-            </div>
-          );
         }}
         UIOptions={{
           dockedSidebarBreakpoint: 0,

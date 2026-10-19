@@ -23,7 +23,7 @@ describe('v6 Defect 5: Floating Inspector button removal (§1.2.5)', () => {
     globalThis.document = originalDocument;
   });
 
-  it.fails('ExcalidrawCanvas source does not contain renderTopRightUI (§1.2.5 RED REPRO)', () => {
+  it('ExcalidrawCanvas source does not contain renderTopRightUI (§1.2.5)', () => {
     const canvasFilePath = path.resolve(__dirname, '../../excalidraw/ExcalidrawCanvas.tsx');
     const source = fs.readFileSync(canvasFilePath, 'utf-8');
     expect(source.includes('renderTopRightUI')).toBe(false);
