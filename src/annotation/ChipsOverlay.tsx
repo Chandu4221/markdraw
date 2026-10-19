@@ -89,9 +89,14 @@ export const ChipsOverlay: React.FC<ChipsOverlayProps> = ({
       setDriverSelection(sel);
     });
 
+    const unlistenVp = driver.onViewportChanged?.((vp) => {
+      setViewport(vp);
+    });
+
     return () => {
       unlistenShapes();
       unlistenSel();
+      unlistenVp?.();
     };
   }, [driver]);
 
