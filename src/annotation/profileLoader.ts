@@ -23,3 +23,10 @@ export function getProfile(platformId: string): PlatformProfile {
   }
   return profile;
 }
+
+/**
+ * Asynchronously loads the platform profile for the given platform ID.
+ */
+export async function loadPlatformProfile(platformId: string): Promise<PlatformProfile> {
+  return getProfile(platformId);
+}

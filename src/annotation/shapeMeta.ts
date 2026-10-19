@@ -3,6 +3,8 @@ import { MarkDrawMeta, ROLE_SCHEMA_VERSION, createDefaultMarkDrawMeta } from './
 import { RoleName } from './roles';
 import { CanvasDriver } from '../canvas/port/CanvasDriver';
 
+export type { MarkDrawMeta } from './types';
+
 export interface ShapeLike {
   id?: string;
   kind?: string;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RotateCcw, Sliders } from 'lucide-react';
 import { CompilationOptions } from '../core/types';
 import {
@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   showRoleChips = true,
   onToggleRoleChips
 }) => {
+  const [activeTab, setActiveTab] = useState<'general' | 'advanced'>('general');
 
   const handleReset = () => {
     onChange({
@@ -56,151 +58,161 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="flex items-center gap-2">
             <Sliders size={16} className="text-[var(--md-accent)]" />
             <DialogTitle className="text-sm font-semibold text-[var(--md-text-bold)]">
-              Compiler Settings
+              Document Settings
             </DialogTitle>
           </div>
           <DialogDescription className="sr-only">
-            Tune spatial containment, tolerances, and output settings
+            Spatial containment, tolerances, and output settings
           </DialogDescription>
         </DialogHeader>
 
         <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Containment Threshold */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-sm">
-              <label className="font-medium text-[var(--md-text)]">
-                Containment Threshold
-              </label>
-              <span className="font-mono text-[var(--md-text-muted)]">
-                {Math.round(options.containmentThreshold * 100)}%
-              </span>
-            </div>
-            <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
-              Minimum AABB overlap required to infer parent-child hierarchy.
-            </p>
-            <input
-              type="range"
-              min="0.5"
-              max="1.0"
-              step="0.05"
-              value={options.containmentThreshold}
-              onChange={(e) =>
-                onChange({
-                  ...options,
-                  containmentThreshold: parseFloat(e.target.value)
-                })
-              }
-              className="w-full accent-[var(--md-accent)] cursor-pointer"
-            />
-          </div>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'general' | 'advanced')}>
+            <TabsList className="w-full grid grid-cols-2 mb-3">
+              <TabsTrigger value="general" className="text-sm">General</TabsTrigger>
+              <TabsTrigger value="advanced" className="text-sm">Advanced</TabsTrigger>
+            </TabsList>
 
-          {/* Size Bucket Tolerance (A.5) */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-sm">
-              <label className="font-medium text-[var(--md-text)]">
-                Size Bucket Tolerance (±%)
-              </label>
-              <span className="font-mono text-[var(--md-text-muted)]">
-                ±{options.sizeBucketTolerance ?? 2}%
-              </span>
-            </div>
-            <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
-              Snapping tolerance for width buckets (e.g. 48–52% snaps to 50%).
-            </p>
-            <Input
-              type="number"
-              min="0"
-              max="10"
-              value={options.sizeBucketTolerance ?? 2}
-              onChange={(e) =>
-                onChange({
-                  ...options,
-                  sizeBucketTolerance: parseInt(e.target.value, 10) || 0
-                })
-              }
-              className="h-8 w-24 text-sm font-mono"
-            />
-          </div>
-
-          {/* Align Tolerance (A.5) */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-sm">
-              <label className="font-medium text-[var(--md-text)]">
-                Alignment Tolerance (±%)
-              </label>
-              <span className="font-mono text-[var(--md-text-muted)]">
-                ±{options.alignTolerance ?? 3}%
-              </span>
-            </div>
-            <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
-              Center-alignment tolerance within parent container.
-            </p>
-            <Input
-              type="number"
-              min="0"
-              max="10"
-              value={options.alignTolerance ?? 3}
-              onChange={(e) =>
-                onChange({
-                  ...options,
-                  alignTolerance: parseInt(e.target.value, 10) || 0
-                })
-              }
-              className="h-8 w-24 text-sm font-mono"
-            />
-          </div>
-
-          {/* Output Toggles */}
-          <div className="pt-2 border-t border-[var(--md-border)] space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-[var(--md-text)]">
-                  Include Semantic Legend
+            <TabsContent value="general" className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--md-text)]">
+                      Include Legend
+                    </div>
+                    <div className="text-sm text-[var(--md-text-subtle)]">
+                      Appends bracket-tag documentation to markdown output
+                    </div>
+                  </div>
+                  <Switch
+                    checked={options.includeLegend}
+                    onCheckedChange={(checked) =>
+                      onChange({ ...options, includeLegend: checked })
+                    }
+                  />
                 </div>
-                <div className="text-sm text-[var(--md-text-subtle)]">
-                  Appends bracket-tag documentation to markdown output
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--md-text)]">
+                      Include Timestamp
+                    </div>
+                    <div className="text-sm text-[var(--md-text-subtle)]">
+                      Disabled by default for byte-for-byte determinism
+                    </div>
+                  </div>
+                  <Switch
+                    checked={options.includeTimestamp}
+                    onCheckedChange={(checked) =>
+                      onChange({ ...options, includeTimestamp: checked })
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--md-text)]">
+                      Show Canvas Type Chips
+                    </div>
+                    <div className="text-sm text-[var(--md-text-subtle)]">
+                      Display type badge overlays directly on shapes
+                    </div>
+                  </div>
+                  <Switch
+                    checked={showRoleChips}
+                    onCheckedChange={(checked) => onToggleRoleChips?.(checked)}
+                  />
                 </div>
               </div>
-              <Switch
-                checked={options.includeLegend}
-                onCheckedChange={(checked) =>
-                  onChange({ ...options, includeLegend: checked })
-                }
-              />
-            </div>
+            </TabsContent>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-[var(--md-text)]">
-                  Include Timestamp
+            <TabsContent value="advanced" className="space-y-4">
+              {/* Containment Overlap */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <label className="font-medium text-[var(--md-text)]">
+                    Containment Overlap
+                  </label>
+                  <span className="font-mono text-[var(--md-text-muted)]">
+                    {Math.round(options.containmentThreshold * 100)}%
+                  </span>
                 </div>
-                <div className="text-sm text-[var(--md-text-subtle)]">
-                  Disabled by default for byte-for-byte determinism
-                </div>
+                <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
+                  Minimum overlap required for parent-child hierarchy.
+                </p>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.0"
+                  step="0.05"
+                  value={options.containmentThreshold}
+                  onChange={(e) =>
+                    onChange({
+                      ...options,
+                      containmentThreshold: parseFloat(e.target.value)
+                    })
+                  }
+                  className="w-full accent-[var(--md-accent)] cursor-pointer"
+                />
               </div>
-              <Switch
-                checked={options.includeTimestamp}
-                onCheckedChange={(checked) =>
-                  onChange({ ...options, includeTimestamp: checked })
-                }
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-[var(--md-text)]">
-                  Show Canvas Role Chips
+              {/* Size Bucket Tolerance (A.5) */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <label className="font-medium text-[var(--md-text)]">
+                    Size Bucket Tolerance (±%)
+                  </label>
+                  <span className="font-mono text-[var(--md-text-muted)]">
+                    ±{options.sizeBucketTolerance ?? 2}%
+                  </span>
                 </div>
-                <div className="text-sm text-[var(--md-text-subtle)]">
-                  Display semantic badge overlays directly on shapes
-                </div>
+                <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
+                  Snapping tolerance for width buckets (e.g. 48–52% snaps to 50%).
+                </p>
+                <Input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={options.sizeBucketTolerance ?? 2}
+                  onChange={(e) =>
+                    onChange({
+                      ...options,
+                      sizeBucketTolerance: parseInt(e.target.value, 10) || 0
+                    })
+                  }
+                  className="h-8 w-24 text-sm font-mono"
+                />
               </div>
-              <Switch
-                checked={showRoleChips}
-                onCheckedChange={(checked) => onToggleRoleChips?.(checked)}
-              />
-            </div>
-          </div>
+
+              {/* Align Tolerance (A.5) */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <label className="font-medium text-[var(--md-text)]">
+                    Alignment Tolerance (±%)
+                  </label>
+                  <span className="font-mono text-[var(--md-text-muted)]">
+                    ±{options.alignTolerance ?? 3}%
+                  </span>
+                </div>
+                <p className="text-sm text-[var(--md-text-subtle)] leading-normal">
+                  Center-alignment tolerance within parent container.
+                </p>
+                <Input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={options.alignTolerance ?? 3}
+                  onChange={(e) =>
+                    onChange({
+                      ...options,
+                      alignTolerance: parseInt(e.target.value, 10) || 0
+                    })
+                  }
+                  className="h-8 w-24 text-sm font-mono"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <DialogFooter className="h-12 px-4 border-t border-[var(--md-border)] flex items-center justify-between sm:justify-between bg-[var(--md-surface)]">

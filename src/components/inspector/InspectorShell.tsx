@@ -1,299 +1,295 @@
-import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { getShapeMeta } from '../../annotation/shapeMeta';
-import { MarkDrawCompiler } from '../../core/compiler';
-import {
-  UnitDefinition,
-  getStoredUnits,
-  saveStoredUnit,
-  deleteStoredUnit,
-  createUnitDefinition,
-  stampUnitWithDriver
-} from '../../annotation/units';
-import { RoleName } from '../../annotation/roles';
-import { useCompilationOptions } from '../../core/CompilationOptionsContext';
-import { CompilationOptions } from '../../core/types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Tag, Box } from 'lucide-react';
 import { CanvasDriver } from '../../canvas/port/CanvasDriver';
 import { CanvasShape } from '../../canvas/port/CanvasShape';
-import { canvasShapesToCompilerShapes } from '../../hooks/useCompilation';
-import { RoleSection } from './RoleSection';
-import { StyleSection } from './StyleSection';
-import { CompilerSettingsSection } from './CompilerSettingsSection';
-import { UnitSection } from './UnitSection';
-import { CanvasOverviewSection } from './CanvasOverviewSection';
+import { CompilationOptions } from '../../core/types';
+import { UnitDefinition } from '../../annotation/units';
+import { getShapeMeta, hasType, updateDriverShapeMeta, MarkDrawMeta } from '../../annotation/shapeMeta';
+import { loadPlatformProfile } from '../../annotation/profileLoader';
+import { PlatformProfile } from '../../annotation/profiles/types';
+import { ModeCanvas } from './ModeCanvas';
+import { ModeUntagged } from './ModeUntagged';
+import { ModeTagged } from './ModeTagged';
+import { ModeTaggedMulti } from './ModeTaggedMulti';
+import { Breakpoint } from '../ui/BreakpointSwitch';
 
 export interface InspectorShellProps {
-  selectedIds?: string[];
-  driver?: CanvasDriver | null;
+  selectedIds: string[];
+  driver: CanvasDriver | null;
   units?: UnitDefinition[];
   onUnitsChange?: (units: UnitDefinition[]) => void;
   options?: Required<CompilationOptions>;
-  onOptionsChange?: (newOpts: Required<CompilationOptions> | ((prev: Required<CompilationOptions>) => Required<CompilationOptions>)) => void;
-  isMobile?: boolean;
+  onOptionsChange?: (options: Required<CompilationOptions>) => void;
   hideHeader?: boolean;
   isSimulating?: boolean;
   onToggleSimulate?: () => void;
+  breakpoint?: Breakpoint;
+  onBreakpointChange?: (bp: Breakpoint) => void;
 }
 
-export const InspectorShell = memo(function InspectorShell({
+export const InspectorShell: React.FC<InspectorShellProps> = ({
   selectedIds,
-  driver = null,
-  units,
+  driver,
+  units = [],
   onUnitsChange,
-  options: propOptions,
-  onOptionsChange: propOnOptionsChange,
-  isMobile,
+  options,
   hideHeader = false,
-  isSimulating = false,
-  onToggleSimulate
-}: InspectorShellProps = {}) {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  const compilationCtx = useCompilationOptions();
-  const effectiveOptions = propOptions || compilationCtx?.options;
-  const effectiveSetOptions = propOnOptionsChange || compilationCtx?.setOptions;
-
-  const [allShapes, setAllShapes] = useState<CanvasShape[]>([]);
-  const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [storedUnits, setStoredUnits] = useState<UnitDefinition[]>(() => units || getStoredUnits());
+  breakpoint = 1200,
+  onBreakpointChange
+}) => {
+  const [shapes, setShapes] = useState<CanvasShape[]>([]);
+  const [platformProfile, setPlatformProfile] = useState<PlatformProfile | null>(null);
   const [showSaveUnitDialog, setShowSaveUnitDialog] = useState(false);
   const [newUnitName, setNewUnitName] = useState('');
-  const [newUnitBaseRole, setNewUnitBaseRole] = useState<RoleName>('card');
-  const [stampOffsetCount, setStampOffsetCount] = useState(0);
-  const [copiedFrameId, setCopiedFrameId] = useState<string | null>(null);
+  const [newUnitBaseRole, setNewUnitBaseRole] = useState('card');
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+  // Load platform profile when options change
+  useEffect(() => {
+    let mounted = true;
+    const platId = options?.platformId ?? options?.platform ?? 'web';
+    loadPlatformProfile(platId).then((p) => {
+      if (mounted) setPlatformProfile(p);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [options?.platformId, options?.platform]);
+
+  // Synchronize canvas shapes
+  const refreshShapes = useCallback(async () => {
+    if (!driver) return;
     try {
-      const saved = localStorage.getItem('markdraw_inspector_sections');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { semantics: true, styles: true, settings: false, units: true };
-  });
+      const list = await driver.listShapes();
+      setShapes(list);
+    } catch (err) {
+      console.error('Failed to list shapes in InspectorShell', err);
+    }
+  }, [driver]);
 
-  const toggleSection = (key: string) => {
-    setOpenSections((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      try {
-        localStorage.setItem('markdraw_inspector_sections', JSON.stringify(next));
-      } catch {}
-      return next;
+  useEffect(() => {
+    if (!driver) return;
+    refreshShapes();
+    const unsub = driver.onShapesChanged(() => {
+      refreshShapes();
+    });
+    return () => {
+      unsub();
+    };
+  }, [driver, refreshShapes]);
+
+  // Selected shapes
+  const selectedShapes = useMemo(() => {
+    const idSet = new Set(selectedIds);
+    return shapes.filter((s) => idSet.has(s.id));
+  }, [shapes, selectedIds]);
+
+  // Update handlers
+  const handleUpdateName = async (shapeId: string, name: string) => {
+    if (!driver) return;
+    try {
+      await driver.updateShape(shapeId, { name });
+      await updateDriverShapeMeta(driver, [shapeId], {
+        props: { label: name || undefined }
+      });
+      await refreshShapes();
+    } catch (err) {
+      console.error('Failed to update shape name', err);
+    }
+  };
+
+  const handleUpdateMeta = async (shapeId: string, patch: Partial<MarkDrawMeta>) => {
+    if (!driver) return;
+    try {
+      await updateDriverShapeMeta(driver, [shapeId], patch);
+      await refreshShapes();
+    } catch (err) {
+      console.error('Failed to update shape meta', err);
+    }
+  };
+
+  const handleSelectType = async (shapeId: string, type: string | null) => {
+    await handleUpdateMeta(shapeId, {
+      type,
+      role: type
     });
   };
 
-  const refreshShapes = useCallback(async () => {
-    if (!driver) {
-      setAllShapes([]);
-      return;
-    }
-    const s = await driver.listShapes();
-    setAllShapes(s);
-  }, [driver]);
-
-  useEffect(() => {
-    void refreshShapes();
+  const handleBulkSelectType = async (type: string | null) => {
     if (!driver) return;
-    const unsub = driver.onShapesChanged(() => {
-      void refreshShapes();
-    });
-    return unsub;
-  }, [driver, refreshShapes]);
-
-  useEffect(() => {
-    if (!driver) return;
-    const unsub = driver.onSelectionChanged((ids) => {
-      setInternalSelectedIds(ids);
-    });
-    return unsub;
-  }, [driver]);
-
-  useEffect(() => {
-    if (units) setStoredUnits(units);
-  }, [units]);
-
-  const activeSelectedIds = selectedIds !== undefined ? selectedIds : internalSelectedIds;
-
-  useEffect(() => {
-    if (activeSelectedIds.length > 0 && panelRef.current) {
-      panelRef.current.scrollTop = 0;
+    try {
+      await updateDriverShapeMeta(driver, selectedIds, {
+        type,
+        role: type
+      });
+      await refreshShapes();
+    } catch (err) {
+      console.error('Failed to bulk update shape type', err);
     }
-  }, [activeSelectedIds]);
+  };
 
-  const selectedShapes = useMemo(() => {
-    if (activeSelectedIds.length === 0) return [];
-    const idSet = new Set(activeSelectedIds);
-    return allShapes.filter((s) => idSet.has(s.id));
-  }, [allShapes, activeSelectedIds]);
-
-  const count = activeSelectedIds.length;
-  const firstShape = selectedShapes[0];
-  const firstMeta = firstShape ? getShapeMeta(firstShape) : null;
-  const currentRole = firstMeta?.role;
-  const currentUnitId = firstMeta?.unitId;
+  const handleSelectShape = (shapeId: string) => {
+    if (!driver) return;
+    driver.setSelection([shapeId]);
+    driver.panTo(shapeId);
+  };
 
   const handleSaveUnit = () => {
-    if (!newUnitName.trim() || selectedShapes.length === 0) return;
-    const unit = createUnitDefinition(newUnitName.trim(), newUnitBaseRole, selectedShapes);
-    saveStoredUnit(unit);
-    const updated = getStoredUnits();
-    setStoredUnits(updated);
-    onUnitsChange?.(updated);
+    if (!newUnitName.trim() || selectedIds.length === 0) return;
+    const memberRoles = selectedShapes
+      .map((s) => getShapeMeta(s)?.type)
+      .filter((t): t is string => Boolean(t));
+    const now = Date.now();
+    const newUnit: UnitDefinition = {
+      id: `u_${now}_${Math.random().toString(36).slice(2, 6)}`,
+      name: newUnitName.trim(),
+      tag: newUnitName.trim(),
+      baseRole: newUnitBaseRole,
+      memberRoles,
+      createdAt: now,
+      updatedAt: now
+    };
+    onUnitsChange?.([...units, newUnit]);
     setShowSaveUnitDialog(false);
     setNewUnitName('');
   };
 
-  const handleStampUnit = async (unit: UnitDefinition) => {
-    if (!driver) return;
-    const offset = { x: stampOffsetCount * 20, y: stampOffsetCount * 20 };
-    setStampOffsetCount((prev) => (prev + 1) % 10);
-    await stampUnitWithDriver(driver, unit, offset);
-  };
-
-  const handleDeleteUnit = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    deleteStoredUnit(id);
-    const updated = getStoredUnits();
-    setStoredUnits(updated);
-    onUnitsChange?.(updated);
-  };
-
-  const handleCopyFrameContract = async (frameId: string) => {
-    if (!driver) return;
-    const all = await driver.listShapes();
-    const descendants: string[] = [];
-    const findChildren = (pid: string) => {
-      for (const s of all) {
-        const meta = getShapeMeta(s);
-        if (s.parentId === pid || meta?.parentId === pid) {
-          descendants.push(s.id);
-          findChildren(s.id);
-        }
-      }
-    };
-    findChildren(frameId);
-    const scopeIds = [frameId, ...descendants];
-    const frame = all.find((s) => s.id === frameId);
-    const frameName = frame?.name || getShapeMeta(frame || {})?.props?.label || 'Page';
-    const compilerShapes = canvasShapesToCompilerShapes(all);
-    const res = MarkDrawCompiler.compile(compilerShapes, null, {
-      ...(effectiveOptions || {}),
-      scope: { shapeIds: scopeIds, scopeName: frameName }
-    });
-    await navigator.clipboard.writeText(res.markdownSpec);
-    setCopiedFrameId(frameId);
-    setTimeout(() => setCopiedFrameId(null), 2000);
-  };
-
-  const handleUpdateOption = (key: keyof CompilationOptions, value: unknown) => {
-    effectiveSetOptions?.((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleResetOptions = () => {
-    effectiveSetOptions?.((prev) => ({
-      ...prev,
-      containmentThreshold: 0.85, rowClusterThreshold: 16, gridBandThreshold: 32,
-      sizeBucketTolerance: 2, alignTolerance: 3, includeTimestamp: false,
-      includeLegend: false, pageNote: '', platform: 'web', platformId: 'web'
-    }));
-  };
+  const count = selectedIds.length;
+  const singleShape = count === 1 ? selectedShapes[0] || shapes.find((s) => s.id === selectedIds[0]) : null;
+  const isTagged = singleShape ? hasType(singleShape.meta) : false;
 
   return (
     <div
-      ref={panelRef}
       role="complementary"
       aria-label="Inspector and Document Settings"
-      className={`markdraw-unified-inspector h-full overflow-y-auto font-sans select-none bg-[var(--md-surface-1)] text-sm text-[var(--md-ink-primary)] shrink-0 z-20 flex flex-col ${
-        hideHeader ? 'w-full border-none' : 'w-72 border-l border-[var(--md-line-subtle)]'
-      }`}
-      data-ismobile={isMobile}
+      className="markdraw-unified-inspector h-full overflow-y-auto font-sans select-none bg-[var(--color-surface-1)] text-sm text-[var(--color-ink-primary)] shrink-0 z-20 flex flex-col w-full"
+      data-testid="markdraw-docked-inspector"
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Global Header */}
+      {/* Header if not hidden */}
       {!hideHeader && (
-        <div className="h-9 px-3 border-b border-[var(--md-line-subtle)] flex items-center justify-between bg-[var(--md-surface-1)] shrink-0">
+        <div className="h-9 px-3 border-b border-[var(--color-line-subtle)] flex items-center justify-between bg-[var(--color-surface-1)] shrink-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-sm font-semibold text-[var(--md-ink-primary)] truncate">
+            <Tag size={16} className="text-[var(--color-accent)] shrink-0" />
+            <span className="text-sm font-semibold text-[var(--color-ink-primary)] truncate">
               {count === 0
                 ? 'Inspector & Canvas'
                 : count === 1
-                ? currentRole
-                  ? `${currentRole} (${firstShape?.kind || 'shape'})`
-                  : `Untagged (${firstShape?.kind || 'shape'})`
+                ? isTagged
+                  ? `${getShapeMeta(singleShape!)?.type || 'Tagged'} (${singleShape?.kind || 'shape'})`
+                  : `Untagged (${singleShape?.kind || 'shape'})`
                 : `${count} shapes selected`}
             </span>
-            {count > 0 && currentUnitId && (
-              <span className="px-1.5 py-0.2 text-sm font-mono font-bold bg-[var(--color-accent)] text-white rounded shrink-0">
-                UNIT
-              </span>
-            )}
           </div>
-          <button
-            type="button"
-            className="p-1 rounded text-[var(--md-ink-muted)] hover:text-[var(--md-ink-primary)] hover:bg-[var(--md-surface-2)] transition-colors cursor-pointer shrink-0"
-            onClick={() => setIsCollapsed((prev) => !prev)}
-            aria-label={isCollapsed ? 'Expand Inspector' : 'Collapse Inspector'}
-            aria-expanded={!isCollapsed}
-          >
-            {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </button>
         </div>
       )}
 
-      {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto divide-y divide-[var(--md-line-subtle)]">
-          {count > 0 && driver ? (
-            <RoleSection
-              selectedShapes={selectedShapes}
-              allShapes={allShapes}
-              driver={driver}
-              isOpen={openSections.semantics}
-              onToggle={() => toggleSection('semantics')}
-              onSaveUnitGesture={() => setShowSaveUnitDialog(true)}
-              platformId={effectiveOptions?.platformId ?? effectiveOptions?.platform ?? 'web'}
-              isSimulating={isSimulating}
-              onToggleSimulate={onToggleSimulate}
-            />
-          ) : (
-            <CanvasOverviewSection
-              shapes={allShapes}
-              driver={driver}
-              onCopyFrameContract={handleCopyFrameContract}
-              copiedFrameId={copiedFrameId}
-            />
-          )}
-
-          <StyleSection
-            isOpen={openSections.styles}
-            onToggle={() => toggleSection('styles')}
+      {/* Mode Matrix (§3.1): Exact 4 states */}
+      <div className="flex-1 overflow-y-auto">
+        {count === 0 && <ModeCanvas shapes={shapes} driver={driver} onSelectShape={handleSelectShape} />}
+        {count === 1 && singleShape && !isTagged && (
+          <ModeUntagged
+            shape={singleShape}
+            onSelectType={(t) => handleSelectType(singleShape.id, t)}
+            onUpdateName={(name) => handleUpdateName(singleShape.id, name)}
+            platformProfile={platformProfile}
           />
+        )}
 
-          <CompilerSettingsSection
-            isOpen={openSections.settings}
-            onToggle={() => toggleSection('settings')}
-            options={effectiveOptions}
-            onUpdateOption={handleUpdateOption}
-            onResetOptions={handleResetOptions}
+        {count === 1 && singleShape && isTagged && (
+          <ModeTagged
+            shape={singleShape}
+            allShapes={shapes}
+            onSelectType={(t) => handleSelectType(singleShape.id, t)}
+            onUpdateName={(name) => handleUpdateName(singleShape.id, name)}
+            onUpdateMeta={(patch) => handleUpdateMeta(singleShape.id, patch)}
+            platformProfile={platformProfile}
+            breakpoint={breakpoint}
+            onBreakpointChange={onBreakpointChange}
           />
+        )}
 
-          <UnitSection
-            isOpen={openSections.units}
-            onToggle={() => toggleSection('units')}
-            units={storedUnits}
-            onStampUnit={handleStampUnit}
-            onDeleteUnit={handleDeleteUnit}
-            showSaveDialog={showSaveUnitDialog}
-            onCloseSaveDialog={() => setShowSaveUnitDialog(false)}
-            onSaveUnit={handleSaveUnit}
-            newUnitName={newUnitName}
-            onNewUnitNameChange={setNewUnitName}
-            newUnitBaseRole={newUnitBaseRole}
-            onNewUnitBaseRoleChange={setNewUnitBaseRole}
+        {count > 1 && (
+          <ModeTaggedMulti
+            shapes={selectedShapes}
+            onBulkSelectType={handleBulkSelectType}
+            onSaveUnitGesture={() => setShowSaveUnitDialog(true)}
+            platformProfile={platformProfile}
           />
+        )}
+      </div>
+
+      {/* Save Unit Dialog */}
+      {showSaveUnitDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+          <div
+            className="w-80 rounded-xl border border-[var(--color-line-subtle)] bg-[var(--color-surface-1)] p-4 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2">
+              <div className="flex items-center gap-1.5 font-bold text-sm text-[var(--color-ink-primary)]">
+                <Box size={16} className="text-[var(--color-accent)]" />
+                <span>Save as Custom Unit</span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider block">Unit Name</label>
+              <input
+                type="text"
+                autoFocus
+                placeholder="e.g. Follow Card, Pricing Tier"
+                value={newUnitName}
+                onChange={(e) => setNewUnitName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveUnit();
+                  if (e.key === 'Escape') setShowSaveUnitDialog(false);
+                }}
+                className="w-full h-8 px-2.5 rounded-md border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-sm text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider block">Base Spec Type</label>
+              <select
+                value={newUnitBaseRole}
+                onChange={(e) => setNewUnitBaseRole(e.target.value)}
+                className="w-full h-8 px-2 rounded-md border border-[var(--color-line-subtle)] bg-[var(--color-surface-2)] text-sm text-[var(--color-ink-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] cursor-pointer"
+              >
+                <option value="card">Card (Container)</option>
+                <option value="section">Section</option>
+                <option value="navbar">Navbar</option>
+                <option value="dialog">Dialog / Modal</option>
+                <option value="group">Group (Generic)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-line-subtle)]">
+              <button
+                type="button"
+                onClick={() => setShowSaveUnitDialog(false)}
+                className="px-3 py-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink-primary)] hover:bg-[var(--color-surface-2)] rounded-md transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveUnit}
+                disabled={!newUnitName.trim()}
+                className="px-3 py-1.5 text-sm font-semibold rounded-md bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors cursor-pointer"
+              >
+                Save Unit
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
-});
+};

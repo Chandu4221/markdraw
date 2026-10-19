@@ -14,6 +14,7 @@ export interface MarkDrawMeta {
   parentId: string | null;       // explicit parent override (shape id); null = use frame/group membership
   responsive: RoleResponsive | null;
   props: RoleProps;
+  flags?: string[];
 }
 
 export interface RoleResponsive {
@@ -34,6 +35,7 @@ export interface RoleProps {
   count?: number;          // parent of a repeated group: exact child count is binding
   options?: string;        // select/tabs: comma list
   note?: string;           // free-text hint to AI — NON-BINDING, always emitted as note:"..."
+  styleNote?: string;      // visual style hint (e.g. rounded-xl, primary color)
   variant?: string;        // role-specific variant (e.g. card: elevated|outline|ghost)
   behaviors?: string[];    // role behavior flags (§4 allow-list)
 }

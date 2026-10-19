@@ -57,8 +57,10 @@ describe('Inspector Mount & Wiring (§1.2)', () => {
       <InspectorShell selectedIds={[]} driver={driver} />
     );
 
-    expect(html).toContain('Select a shape to tag it');
-    expect(html).toContain('Tagged Coverage:');
+    expect(html).toContain('tagged');
+    expect(html).toContain('Draw');
+    expect(html).toContain('Tag it');
+    expect(html).toContain('Copy');
     expect(html).toContain('Inspector &amp; Canvas');
   });
 
