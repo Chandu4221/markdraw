@@ -7,6 +7,7 @@ import { CompilationResult, CompilationOptions } from '../core/types';
 import { migrateShapes, isV3Widget, backupDocumentBeforeMigration } from '../annotation/migrate';
 import { touchDocument, getDemoCanvasShapes, MarkDrawDocMeta } from '../core/documents';
 import { OutputTab } from '../components/output';
+import { getShapeMeta } from '../annotation/shapeMeta';
 
 export function canvasShapesToCompilerShapes(canvasShapes: CanvasShape[]): any[] {
   return canvasShapes.map((s) => ({
@@ -85,11 +86,12 @@ export function useCompilation({
         return;
       }
 
-      // Coverage calculation (§11)
-      const total = shapes.length;
-      const tagged = shapes.filter((s) => {
-        const m = s.meta?.markdraw as any;
-        return m && m.role && m.role !== 'none' && m.role !== 'untagged';
+      // Coverage calculation (§1.4: shapes with non-null role / total non-frame shapes)
+      const nonFrameShapes = shapes.filter((s) => s.type !== 'frame' && s.kind !== 'frame');
+      const total = nonFrameShapes.length;
+      const tagged = nonFrameShapes.filter((s) => {
+        const m = getShapeMeta(s);
+        return Boolean(m && m.role && m.role !== 'none' && m.role !== 'untagged');
       }).length;
       setCoverage({ tagged, total });
 
