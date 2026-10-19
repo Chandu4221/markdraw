@@ -15,6 +15,7 @@ import { StarterTemplate } from './canvas/templates/starterTemplates';
 import { OutputPanel, OutputTab, OutputDisplayMode } from './components/output';
 import { InspectorShell } from './components/inspector/InspectorShell';
 import { getShapeMeta } from './annotation/shapeMeta';
+import { migrateLocalStorageRoleKeys } from './annotation/storageMigration';
 import {
   useDocumentManagement,
   usePanelResize,
@@ -156,16 +157,17 @@ export const App: React.FC = () => {
     [showToast]
   );
 
-  // Canvas Role Chips Toggle (§1.3)
+  // Canvas Type Chips Toggle (§1.1, §1.2)
   const [showRoleChips, setShowRoleChips] = useState<boolean>(() => {
-    const saved = localStorage.getItem('markdraw_show_role_chips');
+    migrateLocalStorageRoleKeys();
+    const saved = localStorage.getItem('markdraw_show_type_chips') ?? localStorage.getItem('markdraw_show_role_chips');
     return saved !== null ? saved === 'true' : true;
   });
 
   const handleToggleRoleChips = (show: boolean) => {
     setShowRoleChips(show);
     try {
-      localStorage.setItem('markdraw_show_role_chips', String(show));
+      localStorage.setItem('markdraw_show_type_chips', String(show));
     } catch {}
   };
 

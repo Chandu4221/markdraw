@@ -4,7 +4,7 @@ import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
 import { CanvasDriver } from '../port/CanvasDriver';
 import { ExcalidrawDriver } from './ExcalidrawDriver';
-import { RoleChipsOverlay } from '../../annotation/RoleChipsOverlay';
+import { ChipsOverlay } from '../../annotation/ChipsOverlay';
 import { ReflowPreview } from '../../components/simulation/ReflowPreview';
 import { Tag } from 'lucide-react';
 
@@ -133,7 +133,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
           }
         }}
       />
-      <RoleChipsOverlay
+      <ChipsOverlay
         driver={driverState}
         showChips={showRoleChips && !simulationRootId}
         showUntagged={showUntaggedChips && !simulationRootId}

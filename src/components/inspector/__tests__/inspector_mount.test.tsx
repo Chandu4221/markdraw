@@ -168,6 +168,7 @@ describe('Inspector Mount & Wiring (§1.2)', () => {
       meta: {
         markdraw: {
           schema: 1,
+          type: 'card',
           role: 'card',
           unitId: null,
           parentId: null,

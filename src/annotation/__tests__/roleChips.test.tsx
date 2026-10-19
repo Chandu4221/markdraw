@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { RoleChipsOverlay } from '../RoleChipsOverlay';
+import { ChipsOverlay } from '../ChipsOverlay';
 import { CanvasDriver } from '../../canvas/port/CanvasDriver';
 import { CanvasShape } from '../../canvas/port/CanvasShape';
 
@@ -57,7 +57,7 @@ describe('Role Chips Verification & Toggle (§1.3)', () => {
   it('renders 1 chip with text "button" when showChips is true', () => {
     const driver = createMockDriver(shapes);
     const html = renderToStaticMarkup(
-      <RoleChipsOverlay driver={driver} showChips={true} showUntagged={false} initialShapes={shapes} />
+      <ChipsOverlay driver={driver} showChips={true} showUntagged={false} initialShapes={shapes} />
     );
 
     expect(html).toContain('button');
@@ -67,7 +67,7 @@ describe('Role Chips Verification & Toggle (§1.3)', () => {
   it('renders 0 chips when showChips is false', () => {
     const driver = createMockDriver(shapes);
     const html = renderToStaticMarkup(
-      <RoleChipsOverlay driver={driver} showChips={false} showUntagged={false} initialShapes={shapes} />
+      <ChipsOverlay driver={driver} showChips={false} showUntagged={false} initialShapes={shapes} />
     );
 
     expect(html).toBe('');

@@ -1,7 +1,7 @@
 // src/annotation/roles.ts
 import { PlatformProfile } from './profiles/types';
 
-export const ROLE_NAMES = Object.freeze([
+export const TYPE_VOCABULARY = Object.freeze([
   'page',
   'section',
   'card',
@@ -38,10 +38,17 @@ export const ROLE_NAMES = Object.freeze([
   'scaffold'
 ] as const);
 
-export type RoleName = (typeof ROLE_NAMES)[number];
-export const ALL_ROLES = ROLE_NAMES;
+export type TypeName = (typeof TYPE_VOCABULARY)[number];
+/** @deprecated use TYPE_VOCABULARY */
+export const ROLE_NAMES = TYPE_VOCABULARY;
+/** @deprecated use TypeName */
+export type RoleName = TypeName;
+/** @deprecated use TYPE_VOCABULARY */
+export const ALL_ROLES = TYPE_VOCABULARY;
+/** @deprecated use TYPE_VOCABULARY */
+export const ALL_TYPES = TYPE_VOCABULARY;
 
-export type RoleCategory =
+export type TypeCategory =
   | 'structure'
   | 'content'
   | 'interaction'
@@ -50,15 +57,21 @@ export type RoleCategory =
   | 'utility'
   | 'platform';
 
-export interface RoleDefinition {
-  name: RoleName;
+/** @deprecated use TypeCategory */
+export type RoleCategory = TypeCategory;
+
+export interface TypeDefinition {
+  name: TypeName;
   aliases: string[];
   decisionRule: string;
-  category: RoleCategory;
+  category: TypeCategory;
   flags: string[];
 }
 
-export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = Object.freeze({
+/** @deprecated use TypeDefinition */
+export type RoleDefinition = TypeDefinition;
+
+export const TYPE_DEFINITIONS: Record<TypeName, TypeDefinition> = Object.freeze({
   page: {
     name: 'page',
     aliases: ['screen', 'artboard'],
@@ -299,20 +312,27 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = Object.freeze(
   }
 });
 
-export const ROLE_LIST: readonly RoleDefinition[] = Object.freeze(
-  ROLE_NAMES.map((name) => ROLE_DEFINITIONS[name])
+/** @deprecated use TYPE_DEFINITIONS */
+export const ROLE_DEFINITIONS = TYPE_DEFINITIONS;
+
+export const TYPE_LIST: readonly TypeDefinition[] = Object.freeze(
+  TYPE_VOCABULARY.map((name) => TYPE_DEFINITIONS[name])
 );
+/** @deprecated use TYPE_LIST */
+export const ROLE_LIST = TYPE_LIST;
 
-export function isValidRole(role: string): role is RoleName {
-  return (ROLE_NAMES as readonly string[]).includes(role);
+export function isValidType(type: string): type is TypeName {
+  return (TYPE_VOCABULARY as readonly string[]).includes(type);
 }
+/** @deprecated use isValidType */
+export const isValidRole = isValidType;
 
-export function resolveAliasToRole(query: string, profile?: PlatformProfile): RoleName | null {
+export function resolveAliasToType(query: string, profile?: PlatformProfile | null): TypeName | null {
   const clean = query.trim().toLowerCase();
   if (!clean) return null;
 
-  if (isValidRole(clean)) {
-    const def = ROLE_DEFINITIONS[clean];
+  if (isValidType(clean)) {
+    const def = TYPE_DEFINITIONS[clean];
     if (def.category === 'platform' && !profile?.extraRoles?.[clean]) {
       return null;
     }
@@ -320,17 +340,17 @@ export function resolveAliasToRole(query: string, profile?: PlatformProfile): Ro
   }
 
   if (profile?.roleAliases) {
-    for (const [canonicalRole, alias] of Object.entries(profile.roleAliases)) {
+    for (const [canonicalType, alias] of Object.entries(profile.roleAliases)) {
       if (
         alias.toLowerCase() === clean ||
         alias.toLowerCase().replace(/\s+/g, '') === clean.replace(/\s+/g, '')
       ) {
-        if (isValidRole(canonicalRole)) return canonicalRole;
+        if (isValidType(canonicalType)) return canonicalType;
       }
     }
   }
 
-  for (const def of ROLE_LIST) {
+  for (const def of TYPE_LIST) {
     if (def.category === 'platform' && !profile?.extraRoles?.[def.name]) {
       continue;
     }
@@ -341,12 +361,14 @@ export function resolveAliasToRole(query: string, profile?: PlatformProfile): Ro
   }
   return null;
 }
+/** @deprecated use resolveAliasToType */
+export const resolveAliasToRole = resolveAliasToType;
 
-export function searchRoles(query: string, profile?: PlatformProfile): RoleDefinition[] {
+export function searchTypes(query: string, profile?: PlatformProfile | null): TypeDefinition[] {
   const clean = query.trim().toLowerCase();
   const cleanCompact = clean.replace(/\s+/g, '');
 
-  return ROLE_LIST.filter((def) => {
+  return TYPE_LIST.filter((def) => {
     if (def.category === 'platform') {
       if (!profile?.extraRoles?.[def.name]) {
         return false;
@@ -378,8 +400,13 @@ export function searchRoles(query: string, profile?: PlatformProfile): RoleDefin
     return false;
   });
 }
+/** @deprecated use searchTypes */
+export const searchRoles = searchTypes;
 
-export function isAllowedRoleFlag(role: string, flag: string): boolean {
-  if (!isValidRole(role)) return false;
-  return ROLE_DEFINITIONS[role].flags.includes(flag);
+export function isAllowedTypeFlag(type: string, flag: string): boolean {
+  if (!isValidType(type)) return false;
+  return TYPE_DEFINITIONS[type].flags.includes(flag);
 }
+/** @deprecated use isAllowedTypeFlag */
+export const isAllowedRoleFlag = isAllowedTypeFlag;
+

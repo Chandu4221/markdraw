@@ -19,7 +19,12 @@ export function getShapeMeta(shape: { meta?: Record<string, unknown> }): MarkDra
   if (!meta || typeof meta !== 'object') return null;
   const m = meta as Partial<MarkDrawMeta>;
   if (m.schema !== ROLE_SCHEMA_VERSION) return null;
-  return meta as MarkDrawMeta;
+  const resolvedType = m.type ?? m.role ?? null;
+  return {
+    ...m,
+    type: resolvedType,
+    role: resolvedType
+  } as MarkDrawMeta;
 }
 
 export function parseMarkDrawMeta(shape?: { meta?: Record<string, unknown> } | null): MarkDrawMeta {
@@ -32,9 +37,12 @@ export function serializeMarkDrawMeta(
   currentMeta?: MarkDrawMeta | null
 ): MarkDrawMeta {
   const base = currentMeta || createDefaultMarkDrawMeta();
+  const nextType = patch.type !== undefined ? patch.type : (patch.role !== undefined ? patch.role : base.type);
   return {
     ...base,
     ...patch,
+    type: nextType,
+    role: nextType,
     schema: ROLE_SCHEMA_VERSION,
     props: {
       ...base.props,
@@ -64,10 +72,13 @@ export async function updateDriverShapeMeta(
   }
 }
 
-export function hasRole(shape: { meta?: Record<string, unknown> }): boolean {
+export function hasType(shape: { meta?: Record<string, unknown> }): boolean {
   const meta = getShapeMeta(shape);
-  return Boolean(meta && meta.role);
+  return Boolean(meta && (meta.type || meta.role));
 }
+
+/** @deprecated use hasType */
+export const hasRole = hasType;
 
 export function updateShapeMeta(
   editor: Editor,
@@ -110,11 +121,11 @@ export function updateShapeMeta(
  * Geometric heuristic suggestion for shapes (§5 section 1).
  * "Suggestion != assignment. The suggestion NEVER auto-assigns."
  */
-export function suggestRoleForShape(
+export function suggestTypeForShape(
   shape: ShapeLike,
   editor?: Editor | null
 ): RoleName | null {
-  if (hasRole(shape)) return null;
+  if (hasType(shape)) return null;
 
   let w = 100;
   let h = 100;
@@ -181,3 +192,7 @@ export function suggestRoleForShape(
 
   return null;
 }
+
+/** @deprecated use suggestTypeForShape */
+export const suggestRoleForShape = suggestTypeForShape;
+
