@@ -21,6 +21,8 @@ interface RoleSectionProps {
   onToggle: () => void;
   onSaveUnitGesture: () => void;
   platformId?: string;
+  isSimulating?: boolean;
+  onToggleSimulate?: () => void;
 }
 
 export const RoleSection: React.FC<RoleSectionProps> = ({
@@ -30,7 +32,9 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
   isOpen,
   onToggle,
   onSaveUnitGesture,
-  platformId
+  platformId,
+  isSimulating,
+  onToggleSimulate
 }) => {
   const count = selectedShapes.length;
   const firstShape = selectedShapes[0];
@@ -257,6 +261,8 @@ export const RoleSection: React.FC<RoleSectionProps> = ({
             firstMeta={firstMeta}
             hasResponsiveRoot={hasResponsiveRoot}
             onUpdateResponsive={handleUpdateResponsive}
+            isSimulating={isSimulating}
+            onToggleSimulate={onToggleSimulate}
           />
 
           {/* Style Note */}

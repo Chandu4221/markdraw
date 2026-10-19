@@ -35,6 +35,8 @@ export interface InspectorShellProps {
   ) => void;
   isMobile?: boolean;
   hideHeader?: boolean;
+  isSimulating?: boolean;
+  onToggleSimulate?: () => void;
 }
 
 export const InspectorShell = memo(function InspectorShell({
@@ -45,7 +47,9 @@ export const InspectorShell = memo(function InspectorShell({
   options: propOptions,
   onOptionsChange: propOnOptionsChange,
   isMobile,
-  hideHeader = false
+  hideHeader = false,
+  isSimulating = false,
+  onToggleSimulate
 }: InspectorShellProps = {}) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -68,12 +72,7 @@ export const InspectorShell = memo(function InspectorShell({
       const saved = localStorage.getItem('markdraw_inspector_sections');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return {
-      semantics: true,
-      styles: true,
-      settings: false,
-      units: true
-    };
+    return { semantics: true, styles: true, settings: false, units: true };
   });
 
   const toggleSection = (key: string) => {
@@ -254,6 +253,8 @@ export const InspectorShell = memo(function InspectorShell({
               onToggle={() => toggleSection('semantics')}
               onSaveUnitGesture={() => setShowSaveUnitDialog(true)}
               platformId={effectiveOptions?.platformId ?? effectiveOptions?.platform ?? 'web'}
+              isSimulating={isSimulating}
+              onToggleSimulate={onToggleSimulate}
             />
           ) : (
             <CanvasOverviewSection

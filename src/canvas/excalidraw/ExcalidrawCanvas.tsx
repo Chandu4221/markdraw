@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Excalidraw, Sidebar } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
@@ -8,6 +8,7 @@ import { ExcalidrawDriver } from './ExcalidrawDriver';
 import { RoleChipsOverlay } from '../../annotation/RoleChipsOverlay';
 import { InspectorShell } from '../../components/inspector/InspectorShell';
 import { MarkDrawChip } from '../../components/ui/MarkDrawChip';
+import { ReflowPreview } from '../../components/simulation/ReflowPreview';
 import { getShapeMeta } from '../../annotation/shapeMeta';
 import { CompilationOptions } from '../../core/types';
 import { UnitDefinition } from '../../annotation/units';
@@ -51,6 +52,29 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
   const cleanupRef = useRef<(() => void) | void>(undefined);
   const [selectedShapes, setSelectedShapes] = useState<CanvasShape[]>([]);
   const prevSelectedIdsRef = useRef<string[]>([]);
+  const [simulationRootId, setSimulationRootId] = useState<string | null>(null);
+
+  const responsiveRootShape = useMemo(() => {
+    for (const shape of selectedShapes) {
+      const meta = getShapeMeta(shape);
+      if (meta?.role === 'page' && meta.props?.behaviors?.includes('responsive')) {
+        return shape;
+      }
+    }
+    return null;
+  }, [selectedShapes]);
+
+  useEffect(() => {
+    if (!responsiveRootShape && simulationRootId) {
+      setSimulationRootId(null);
+    }
+  }, [responsiveRootShape, simulationRootId]);
+
+  const handleToggleSimulate = useCallback(() => {
+    if (responsiveRootShape) {
+      setSimulationRootId((prev) => (prev ? null : responsiveRootShape.id));
+    }
+  }, [responsiveRootShape]);
 
   const [isDocked, setIsDocked] = useState<boolean>(() => {
     try {
@@ -208,16 +232,26 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
             options={options}
             onOptionsChange={onOptionsChange}
             hideHeader={true}
+            isSimulating={Boolean(simulationRootId)}
+            onToggleSimulate={responsiveRootShape ? handleToggleSimulate : undefined}
           />
         </Sidebar>
       </Excalidraw>
       <RoleChipsOverlay
         driver={driverState}
-        showChips={showRoleChips}
-        showUntagged={showUntaggedChips}
+        showChips={showRoleChips && !simulationRootId}
+        showUntagged={showUntaggedChips && !simulationRootId}
         onChipClick={onChipClick}
         onCopyContract={onCopyContract}
       />
+      {simulationRootId && (
+        <ReflowPreview
+          rootId={simulationRootId}
+          driver={driverState}
+          onClose={() => setSimulationRootId(null)}
+          defaultBreakpoint={768}
+        />
+      )}
     </div>
   );
 };

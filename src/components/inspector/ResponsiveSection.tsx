@@ -6,12 +6,16 @@ export interface ResponsiveSectionProps {
   firstMeta: MarkDrawMeta | null;
   hasResponsiveRoot: boolean;
   onUpdateResponsive: (patch: Partial<RoleResponsive> | null) => void;
+  isSimulating?: boolean;
+  onToggleSimulate?: () => void;
 }
 
 export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
   firstMeta,
   hasResponsiveRoot,
-  onUpdateResponsive
+  onUpdateResponsive,
+  isSimulating = false,
+  onToggleSimulate
 }) => {
   const currentResponsive = firstMeta?.responsive;
 
@@ -81,6 +85,29 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
               <span>Full Width (Mobile)</span>
             </label>
           </div>
+          {/* Simulate Responsive Toggle */}
+          {onToggleSimulate && (
+            <div className="flex items-center justify-between pt-1.5 border-t border-[var(--md-line-subtle)]">
+              <span className="text-xs font-medium text-[var(--md-ink-primary)]">
+                Simulate responsive
+              </span>
+              <button
+                type="button"
+                onClick={onToggleSimulate}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  isSimulating ? 'bg-[var(--md-accent)]' : 'bg-[var(--md-surface-3)]'
+                }`}
+                role="switch"
+                aria-checked={isSimulating}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                    isSimulating ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-[11px] text-[var(--md-ink-muted)] italic py-1">
