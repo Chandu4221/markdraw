@@ -15,6 +15,7 @@ interface ChipsOverlayProps {
   onChipClick?: (shapeId: string) => void;
   onCopyContract?: (shapeId: string, contractText: string) => void;
   initialShapes?: CanvasShape[];
+  onChipRender?: (shapeId: string) => void;
 }
 
 interface ChipItem {
@@ -36,7 +37,8 @@ export const ChipsOverlay: React.FC<ChipsOverlayProps> = ({
   showUntagged = false,
   onChipClick,
   onCopyContract,
-  initialShapes
+  initialShapes,
+  onChipRender
 }) => {
   const [, setTick] = useState<number>(0);
   const [copiedRootId, setCopiedRootId] = useState<string | null>(null);
@@ -176,6 +178,7 @@ export const ChipsOverlay: React.FC<ChipsOverlayProps> = ({
       aria-hidden="true"
     >
       {chips.map((chip) => {
+        onChipRender?.(chip.shapeId);
         const TypeIcon = chip.type ? getTypeIcon(chip.type) : null;
         const displayText = chip.name || chip.type || (chip.isUntagged ? '?' : '');
 
